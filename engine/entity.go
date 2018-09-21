@@ -7,7 +7,6 @@ type Entity struct {
 }
 
 type EntityType uint
-type EntityProperty uint
 
 func (e *Entity) GetProperty (prop string) interface{} {
     value := e.properties[prop]
