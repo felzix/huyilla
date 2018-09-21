@@ -1,0 +1,13 @@
+{
+    "contracts": [
+        {
+            "vm": "plugin",
+            "format": "plugin",
+            "name": "huyilla",
+            "location": "huyilla:0.0.1",
+            "init": {
+
+            }
+        }
+    ]
+}
