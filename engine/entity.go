@@ -8,10 +8,14 @@ type Entity struct {
 
 type EntityType uint
 
-func (e *Entity) GetProperty (prop string) interface{} {
+func MakeEntity (eType EntityType) *Entity {
+    return &Entity{eType: eType}
+}
+
+func (e *Entity) GetProperty (content *Content, prop string) interface{} {
     value := e.properties[prop]
     if value == nil {
-        value = 12
+        value = content.EP[e.eType]
     }
     return value
 }

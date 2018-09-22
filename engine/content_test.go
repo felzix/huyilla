@@ -1,8 +1,6 @@
 package engine
 
 import (
-    "path"
-    "runtime"
     "testing"
 )
 
@@ -14,10 +12,35 @@ func TestLoadContent(t *testing.T) {
         t.Fatal(err)
     }
 
-    if content.ET[1].InventoryCapacity != 10 {
+    if content.ET["player"] != 1 {
+        t.Error("Player entity has wrong type or is not present:", content)
+    }
+
+    if content.EP[1].InventoryCapacity != 10 {
         t.Error("Entity inventory capacity was incorrect or not present:", content)
     }
 }
+
+
+func TestLoadEntities(t *testing.T) {
+    directory := getDirectory(t)
+
+    entityTypes, entityProperties, err := loadEntities(directory)
+
+    if err != nil {
+        t.Fatal(err)
+    }
+
+
+    if entityTypes["player"] != 1 {
+        t.Error("Player entity has wrong type or is not present:", entityTypes)
+    }
+
+    if entityProperties[1].InventoryCapacity != 10 {
+        t.Error("Entity inventory capacity was incorrect or not present:", entityProperties)
+    }
+}
+
 
 func TestLoadEntity(t *testing.T) {
     directory := getDirectory(t)
@@ -30,29 +53,4 @@ func TestLoadEntity(t *testing.T) {
     if entityProperties.InventoryCapacity != 10 {
         t.Error("Entity inventory capacity was incorrect or not present:", entityProperties)
     }
-}
-
-
-func TestLoadEntities(t *testing.T) {
-    directory := getDirectory(t)
-
-    entityTypes, err := loadEntities(directory)
-
-    if err != nil {
-        t.Fatal(err)
-    }
-
-    // 1 -> player
-    if entityTypes[1].InventoryCapacity != 10 {
-        t.Error("Entity inventory capacity was incorrect or not present:", entityTypes)
-    }
-}
-
-func getDirectory (t *testing.T) string {
-    _, filename, _, ok := runtime.Caller(0)
-    if !ok {
-        t.Fatal("Failed to discover current directory")
-    }
-
-    return path.Dir(filename) + "/../content"
 }
