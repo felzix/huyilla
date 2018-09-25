@@ -1,1 +1,6 @@
-{}
+{
+  "WearableHead": true,
+  "PiercingProtection": 3,
+  "BluntProtection": 3,
+  "Insulation": 2
+}

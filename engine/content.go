@@ -24,22 +24,7 @@ type EntityProperty struct {
     Tags              []string `json:"tags"`
     InventoryCapacity uint     `json:"inventory_capacity"`
 }
-type MaterialProperty struct {
-    Metallic bool
-    Wooden bool
-    Fleshy bool
-    Salty bool
 
-    PH uint
-    SolidAt Kelvin
-    GasAt Kelvin
-}
-type FormProperty struct {
-    Wieldable bool
-    Wearable bool
-}
-
-type Kelvin uint
 
 func Celsius (k uint) Kelvin {
     return Kelvin(k + 273)
