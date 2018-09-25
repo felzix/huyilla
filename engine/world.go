@@ -50,3 +50,18 @@ func (world *World) SetVoxel (p AbsolutePoint, v Voxel) {
     chunk := world.GetChunk(p.ChunkCoords)
     chunk.Set(p.VoxelCoords, v)
 }
+
+func (world *World) GetEntity (who UniqueId, chunkCoords Point) *Entity {
+    chunk := world.GetChunk(chunkCoords)
+    return chunk.GetEntity(who)
+}
+
+func (world *World) SetEntity (entity *Entity, chunkCoords Point, where At) {
+    chunk := world.GetChunk(chunkCoords)
+    chunk.entities[entity.Id] = EntityAt{Who: entity, Where: where}
+}
+
+func (world *World) RemoveEntity (who UniqueId, chunkCoords Point) {
+    chunk := world.GetChunk(chunkCoords)
+    delete(chunk.entities, who)
+}

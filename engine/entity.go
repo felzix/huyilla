@@ -1,12 +1,13 @@
 package engine
 
-
 type Entity struct {
     Type      EntityType
-    Inventory []Item
+    Id        UniqueId
+    Inventory Inventory
 }
 
 type EntityType uint
+type UniqueId   string
 type Inventory  []Item
 
 type EntityProperty struct {
