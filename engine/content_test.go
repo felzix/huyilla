@@ -12,7 +12,7 @@ func TestLoadContent(t *testing.T) {
         t.Fatal(err)
     }
 
-    if content.ET["player"] != 1 {
+    if content.E["player"] != 1 {
         t.Error("Player entity has wrong type or is not present:", content)
     }
 

@@ -2,20 +2,19 @@ package engine
 
 
 type Entity struct {
-    eType EntityType
-    properties map[string]interface{}
+    Type EntityType
+    Inventory []Item
 }
 
 type EntityType uint
+type Inventory []Item
+
 
 func MakeEntity (eType EntityType) *Entity {
-    return &Entity{eType: eType}
+    return &Entity{Type: eType}
 }
 
-func (e *Entity) GetProperty (content *Content, prop string) interface{} {
-    value := e.properties[prop]
-    if value == nil {
-        value = content.EP[e.eType]
-    }
-    return value
+func (e *Entity) InventoryCapacity (content *Content) uint {
+    props := content.EP[e.Type]
+    return props.InventoryCapacity
 }

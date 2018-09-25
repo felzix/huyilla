@@ -1,0 +1,22 @@
+{
+  "elements": [
+    "voxel",
+
+    "pile",
+    "ingot",
+
+    "pole",
+    "sphere",
+    "cube",
+
+    "stick",
+    "log",
+
+    "nail",
+    "leather_strap",
+    "spearhead",
+
+    "spear",
+    "helm"
+  ]
+}
