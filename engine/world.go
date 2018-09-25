@@ -2,9 +2,9 @@ package engine
 
 
 type World struct {
-    Chunks SparseSpace
+    Chunks  SparseSpace
     Players map[string]Entity
-    Age Tick
+    Age     Tick
     Content *Content
 }
 

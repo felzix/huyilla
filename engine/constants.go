@@ -1,7 +1,7 @@
 package engine
 
 const (
-    ChunkSize = 16
+    ChunkSize       = 16
     PassiveVitality = 4
 )
 

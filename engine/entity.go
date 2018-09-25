@@ -2,12 +2,12 @@ package engine
 
 
 type Entity struct {
-    Type EntityType
+    Type      EntityType
     Inventory []Item
 }
 
 type EntityType uint
-type Inventory []Item
+type Inventory  []Item
 
 
 func MakeEntity (eType EntityType) *Entity {

@@ -3,14 +3,14 @@ package engine
 
 func NewSparseSpace() *SparseSpace {
     return &SparseSpace{
-        space: make(map[int]map[int]map[int]interface{}),
+        space:  make(map[int]map[int]map[int]interface{}),
         length: 0,
     }
 }
 
 
 type SparseSpace struct {
-    space map[int]map[int]map[int]interface{}
+    space  map[int]map[int]map[int]interface{}
     length uint
 }
 

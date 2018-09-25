@@ -13,12 +13,12 @@ type Content struct {
     F  Forms
     FP FormProperties
 }
-type EntityTypes map[string]EntityType
-type EntityProperties map[EntityType]EntityProperty
-type Materials map[string]Material
+type EntityTypes        map[string]EntityType
+type EntityProperties   map[EntityType]EntityProperty
+type Materials          map[string]Material
 type MaterialProperties map[Material]MaterialProperty
-type Forms map[string]Form
-type FormProperties map[Form]FormProperty
+type Forms              map[string]Form
+type FormProperties     map[Form]FormProperty
 
 type EntityProperty struct {
     Tags              []string `json:"tags"`

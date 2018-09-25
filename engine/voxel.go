@@ -7,7 +7,7 @@ type Voxel struct {
     physics    uint16
 }
 
-type VoxelType uint16
+type VoxelType     uint16
 type VoxelProperty uint
 
 

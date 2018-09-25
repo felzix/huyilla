@@ -21,45 +21,45 @@ type Material uint16
 type MaterialProperty struct {
     // Classifications
     Metallic bool
-    Wooden bool
-    Fleshy bool
-    Salty bool
+    Wooden   bool
+    Fleshy   bool
+    Salty    bool
 
     // Item Properties
     Sharpness Percentage  // for calculating piercing damage
-    Heft Percentage  // for calculating blunt damage; not used for mass
-    Strength Percentage  // for calculating how much damage the item can sustain
+    Heft      Percentage  // for calculating blunt damage; not used for mass
+    Strength  Percentage  // for calculating how much damage the item can sustain
 
     // Physical Properties
-    PH uint8
+    PH      uint8
     SolidAt Kelvin
-    GasAt Kelvin
+    GasAt   Kelvin
 }
 type FormProperty struct {
     // How it's used
     Wieldable1Handed bool
     Wieldable2Handed bool
 
-    WearableHead bool
-    WearableChest bool
-    WearableHands bool
-    WearableLegs bool
-    WearableFeet bool
+    WearableHead   bool
+    WearableChest  bool
+    WearableHands  bool
+    WearableLegs   bool
+    WearableFeet   bool
     WearableFinger bool
-    WearableNeck bool
-    WearableEyes bool
-    WearableWaist bool
+    WearableNeck   bool
+    WearableEyes   bool
+    WearableWaist  bool
 
     // Tool or Weapon
     Sharpness Percentage
-    Heft Percentage
-    Digging Percentage
-    Mining Percentage
+    Heft      Percentage
+    Digging   Percentage
+    Mining    Percentage
 
     // Clothing or Armor
     PiercingProtection Percentage  // with material, for calculating protection from arrows, swords ,etc
-    BluntProtection Percentage  // with material, for calculating protection from falling, clubs, etc
-    Insulation Percentage  // with material, for calculating resistance to hot or cold
+    BluntProtection    Percentage  // with material, for calculating protection from falling, clubs, etc
+    Insulation         Percentage  // with material, for calculating resistance to hot or cold
 
     // Both
     Strength Percentage
