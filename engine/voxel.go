@@ -2,9 +2,9 @@ package engine
 
 
 type Voxel struct {
-    vType      VoxelType
-    properties uint32
-    physics    uint16
+    Type      VoxelType
+    Properties uint32
+    Physics    uint16
 }
 
 type VoxelType     uint16

@@ -2,7 +2,12 @@ package engine
 
 
 type Chunk struct {
-	voxels [][][]Voxel
+	voxels VoxelCube
+}
+type VoxelCube [CHUNK_SIZE][CHUNK_SIZE][CHUNK_SIZE]Voxel
+
+func MakeChunk (voxels VoxelCube) *Chunk {
+    return &Chunk{voxels}
 }
 
 func (chunk *Chunk) Get (p Point) (*Voxel) {
