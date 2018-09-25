@@ -5,10 +5,14 @@ import (
     "testing"
 )
 
-func TestChunks(t *testing.T) {
+func TestChunkGeneration(t *testing.T) {
     world := NewWorld(getContent(t), NewPondWorldGenerator(12, 2))
-    world.GenerateChunk(Point{0, 0, 0})
     chunk := world.GetChunk(Point{0,0,0})
+
+    c2 := world.GetChunk(Point{0, 0, 0})
+    if chunk != c2 {
+        t.Error("Getting a chunk twice should yield exactly the same chunk but didn't")
+    }
 
     // helpful if there's a failure
     for y := 0; y < CHUNK_SIZE; y++ {
@@ -24,5 +28,4 @@ func TestChunks(t *testing.T) {
         t.Errorf(`Generator should have made water("%d") but instead made "%d"`,
             world.Content.V["water"], vt)
     }
-
 }

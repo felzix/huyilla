@@ -26,14 +26,15 @@ func (world *World) GetChunk (p Point) (*Chunk) {
     generic := world.Chunks.Get(p)
     chunk, ok := (generic).(*Chunk)
     if !ok {
-        return nil
+        return world.GenerateChunk(p)
     }
     return chunk
 }
 
-func (world *World) GenerateChunk (p Point) {
+func (world *World) GenerateChunk (p Point) *Chunk {
     c := GenerateChunk(world.Content, world.GeneratorFn, world.GeneratorSeed, p)
     world.Chunks.Set(p, c)
+    return c
 }
 
 
