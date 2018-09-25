@@ -8,7 +8,12 @@ type Voxel struct {
 }
 
 type VoxelType     uint16
-type VoxelProperty uint
+type VoxelProperty struct {
+    RigidSolid bool  // like stone
+    LooseSolid bool  // like sand
+    Liquid     bool  // like water
+    Gas        bool  // like air
+}
 
 
 func NewVoxel(vType VoxelType) Voxel {

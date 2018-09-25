@@ -6,10 +6,10 @@ type Chunk struct {
 }
 
 func (chunk *Chunk) Get (p Point) (*Voxel) {
-    return &chunk.voxels[p.y][p.x][p.z]
+    return &chunk.voxels[p.Y][p.X][p.Z]
 }
 
 
 func (chunk *Chunk) Set (p Point, v Voxel) {
-    chunk.voxels[p.y][p.x][p.z] = v
+    chunk.voxels[p.Y][p.X][p.Z] = v
 }

@@ -12,6 +12,8 @@ type Content struct {
     MP MaterialProperties
     F  Forms
     FP FormProperties
+    V  Voxels
+    VP VoxelProperties
 }
 type EntityTypes        map[string]EntityType
 type EntityProperties   map[EntityType]EntityProperty
@@ -19,11 +21,8 @@ type Materials          map[string]Material
 type MaterialProperties map[Material]MaterialProperty
 type Forms              map[string]Form
 type FormProperties     map[Form]FormProperty
-
-type EntityProperty struct {
-    Tags              []string `json:"tags"`
-    InventoryCapacity uint     `json:"inventory_capacity"`
-}
+type Voxels             map[string]VoxelType
+type VoxelProperties    map[VoxelType]VoxelProperty
 
 
 func Celsius (k uint) Kelvin {
@@ -58,6 +57,14 @@ func LoadContent (directory string) (*Content, error) {
         return &Content{}, err
     }
 
+    V, VP, err := loadVoxels(directory)
+    if err == nil {
+        content.V = V
+        content.VP = VP
+    } else {
+        return &Content{}, err
+    }
+
     return &content, nil
 }
 
@@ -83,13 +90,13 @@ func loadEntities (directory string) (EntityTypes, EntityProperties, error) {
 }
 
 func loadEntity(directory string, name string) (EntityProperty, error) {
-    rawEntityFile, err := ioutil.ReadFile(directory + "/entity/" + name + ".json")
+    rawDescriptor, err := getDescriptor(directory, "entity", name)
     if err != nil {
         return EntityProperty{}, err
     }
 
     var entityProperty EntityProperty
-    if err := json.Unmarshal(rawEntityFile, &entityProperty); err != nil {
+    if err := json.Unmarshal(rawDescriptor, &entityProperty); err != nil {
         return EntityProperty{}, err
     }
 
@@ -118,19 +125,18 @@ func loadMaterials (directory string) (Materials, MaterialProperties, error) {
 }
 
 func loadMaterial(directory string, name string) (MaterialProperty, error) {
-    rawMaterialFile, err := ioutil.ReadFile(directory + "/material/" + name + ".json")
+    rawDescriptor, err := getDescriptor(directory, "material", name)
     if err != nil {
         return MaterialProperty{}, err
     }
 
     var materialProperty MaterialProperty
-    if err := json.Unmarshal(rawMaterialFile, &materialProperty); err != nil {
+    if err := json.Unmarshal(rawDescriptor, &materialProperty); err != nil {
         return MaterialProperty{}, err
     }
 
     return materialProperty, nil
 }
-
 
 
 func loadForms (directory string) (Forms, FormProperties, error) {
@@ -154,13 +160,13 @@ func loadForms (directory string) (Forms, FormProperties, error) {
 }
 
 func loadForm(directory string, name string) (FormProperty, error) {
-    rawMaterialFile, err := ioutil.ReadFile(directory + "/form/" + name + ".json")
+    rawDescriptor, err := getDescriptor(directory, "form", name)
     if err != nil {
         return FormProperty{}, err
     }
 
     var formProperty FormProperty
-    if err := json.Unmarshal(rawMaterialFile, &formProperty); err != nil {
+    if err := json.Unmarshal(rawDescriptor, &formProperty); err != nil {
         return FormProperty{}, err
     }
 
@@ -168,6 +174,44 @@ func loadForm(directory string, name string) (FormProperty, error) {
 }
 
 
+func loadVoxels (directory string) (Voxels, VoxelProperties, error) {
+    manifest, err := getManifest(directory, "voxel")
+    if err != nil {
+        return nil, nil, err
+    }
+
+    voxels := Voxels{}
+    voxelProperties := VoxelProperties{}
+    for f, name := range manifest {
+        voxelType := VoxelType(f)  // voxels are 0-based so that air is 0
+        voxels[name] = voxelType
+        voxelProperties[voxelType], err = loadVoxel(directory, name)
+        if err != nil {
+            return nil, nil, err
+        }
+    }
+
+    return voxels, voxelProperties, nil
+}
+
+func loadVoxel(directory string, name string) (VoxelProperty, error) {
+    rawDescriptor, err := getDescriptor(directory, "voxel", name)
+    if err != nil {
+        return VoxelProperty{}, err
+    }
+
+    var voxelProperty VoxelProperty
+    if err := json.Unmarshal(rawDescriptor, &voxelProperty); err != nil {
+        return VoxelProperty{}, err
+    }
+
+    return voxelProperty, nil
+}
+
+
+func getDescriptor (directory string, subdirectory string, name string) ([]byte, error) {
+    return ioutil.ReadFile(directory + "/" + subdirectory + "/" + name + ".json")
+}
 
 
 func getManifest (directory string, subdirectory string) ([]string, error) {

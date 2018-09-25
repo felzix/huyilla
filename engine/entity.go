@@ -9,6 +9,11 @@ type Entity struct {
 type EntityType uint
 type Inventory  []Item
 
+type EntityProperty struct {
+    Tags              []string `json:"tags"`
+    InventoryCapacity uint     `json:"inventory_capacity"`
+}
+
 
 func MakeEntity (eType EntityType) *Entity {
     return &Entity{Type: eType}

@@ -15,35 +15,35 @@ type SparseSpace struct {
 }
 
 func (s *SparseSpace) Set (p Point, element interface{}) {
-    if _, ok := s.space[p.x]; !ok {
-        s.space[p.x] = make(map[int]map[int]interface{})
+    if _, ok := s.space[p.X]; !ok {
+        s.space[p.X] = make(map[int]map[int]interface{})
     }
-    if _, ok := s.space[p.x][p.y]; !ok {
-        s.space[p.x][p.y] = make(map[int]interface{})
+    if _, ok := s.space[p.X][p.Y]; !ok {
+        s.space[p.X][p.Y] = make(map[int]interface{})
     }
-    if _, ok := s.space[p.x][p.y][p.z]; !ok {
+    if _, ok := s.space[p.X][p.Y][p.Z]; !ok {
         s.length++  // new element
     }
 
-    s.space[p.x][p.y][p.z] = element
+    s.space[p.X][p.Y][p.Z] = element
 }
 
 func (s *SparseSpace) Get (p Point) interface{} {
-    return s.space[p.x][p.y][p.z]
+    return s.space[p.X][p.Y][p.Z]
 }
 
 func (s *SparseSpace) Delete (p Point) {
-    delete(s.space[p.x][p.y], p.z)
+    delete(s.space[p.X][p.Y], p.Z)
 
     // one fewer element
     s.length--
 
     // clean up
-    if line := s.space[p.x][p.y]; len(line) == 0 {
-        delete(s.space[p.x], p.y)
+    if line := s.space[p.X][p.Y]; len(line) == 0 {
+        delete(s.space[p.X], p.Y)
 
-        if plane := s.space[p.x]; len(plane) == 0 {
-            delete(s.space, p.x)
+        if plane := s.space[p.X]; len(plane) == 0 {
+            delete(s.space, p.X)
 
         }
     }
