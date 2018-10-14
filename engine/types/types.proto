@@ -1,0 +1,100 @@
+syntax = "proto3";
+
+message Age {
+    uint64 ticks = 1;
+}
+
+message Config {
+    PrimitiveMap options = 1;
+}
+
+message Players {
+    message AbsolutePoint {
+        int64 chunkX = 1;
+        int64 chunkY = 2;
+        int64 chunkZ = 3;
+        uint32 voxelX = 4;
+        uint32 voxelY = 5;
+        uint32 voxelZ = 6;
+    }
+    map<string, AbsolutePoint> players = 1;
+}
+
+message Chunk {
+    message Voxels {
+        message Plane {
+            message Row {
+                repeated uint64 voxel = 1;
+            }
+            repeated Row rows = 1;
+        }
+        repeated Plane planes = 1;
+    }
+    Voxels voxels = 1;
+
+    message Compound {
+        Inventory inventory = 1;
+        PrimitiveMap properties = 2;
+        Point multiblockChunk = 3;
+    }
+    map<uint32, Compound> compound = 2;
+
+    message EntityAtPoint {
+        Point point = 1;
+        Entity entity = 2;
+    }
+    repeated EntityAtPoint entities = 3;
+
+    message ItemAtPoint {
+        Point point = 1;
+        Item item = 2;
+    }
+    repeated ItemAtPoint items = 4;
+}
+
+message Inventory {
+    repeated Item items = 1;
+}
+
+message Entity {
+    bool player = 1;
+    uint32 type = 2;
+    PrimitiveMap properties = 3;
+    Inventory inventory = 4;
+}
+
+message Item {
+    message SimpleItem {
+        uint32 form = 1;
+        uint32 material = 2;
+        PrimitiveMap properties = 3;
+    }
+    message ComplexItem {
+        uint32 form = 1;
+        repeated Item components = 2;
+        PrimitiveMap properties = 3;
+    }
+    oneof item {
+        SimpleItem simple = 1;
+        ComplexItem complex = 2;
+    }
+}
+
+message Point {
+    int64 x = 1;
+    int64 y = 2;
+    int64 z = 3;
+}
+
+message PrimitiveMap {
+    map<string, Primitive> map = 1;
+}
+
+message Primitive {
+    oneof value {
+        string string = 1;
+        int64 int = 2;
+        bool bool = 3;
+        float float = 4;
+    }
+}
