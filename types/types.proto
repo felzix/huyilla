@@ -98,3 +98,5 @@ message Primitive {
         float float = 4;
     }
 }
+
+message Nothing {}

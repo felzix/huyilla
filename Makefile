@@ -1,0 +1,50 @@
+PKG = github.com/felzix/huyilla
+
+.PHONY: all clean test lint deps proto cli
+
+all: external-plugin
+
+internal-plugin: huyilla.so
+external-plugin: huyilla.0.0.1
+
+huyilla.0.0.1: proto
+	mkdir -p run/contracts
+	go build -o run/contracts/$@ ./huyilla.go
+
+cli: proto
+	go build -o run/cli ./cli
+
+huyilla.so: proto
+	mkdir -p run/contracts
+	go build -buildmode=plugin -o run/contracts/$@ ./huyilla.go
+
+%.pb.go: %.proto
+	protoc --go_out=. $<
+
+proto: types/types.pb.go
+
+# test: proto
+# 	go test $(PKG)/...
+
+lint:
+	golint ./...
+
+deps:
+	go get \
+		github.com/gogo/protobuf/jsonpb \
+		github.com/gogo/protobuf/proto \
+		github.com/spf13/cobra \
+		github.com/gomodule/redigo/redis \
+		github.com/gorilla/websocket \
+		github.com/pkg/errors \
+		github.com/grpc-ecosystem/go-grpc-prometheus \
+        github.com/hashicorp/go-plugin \
+		github.com/loomnetwork/go-loom
+
+clean:
+	go clean
+	rm -f \
+		types/types.pb.go \
+#		testdata/test.pb.go \
+		run/contracts/huyilla.so
+		run/contracts/huyilla.0.0.1
