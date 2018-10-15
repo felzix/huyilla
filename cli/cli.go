@@ -7,8 +7,9 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+    "reflect"
 
-	"github.com/pkg/errors"
+    "github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/ed25519"
 )
@@ -70,27 +71,59 @@ func main() {
 	}
     call.AddCommand(getAge)
 
-	// var ticks uint64
-    // setAge := &cobra.Command{
-    //     Use:           "set-age",
-    //     Short:         "set the world age, as number of ticks since its creation",
-    //     SilenceUsage:  true,
-    //     SilenceErrors: true,
-    //     RunE: func(cmd *cobra.Command, args []string) error {
-    //         var result types.Age
-    //         params := &types.Age {
-    //             Ticks: ticks,
-    //         }
-    //
-    //         if err := CallContract(defaultContract, "SetAge", params, &result); err != nil {
-    //             return err
-    //         }
-    //
-    //         return nil
-    //     },
-    // }
-    // setAge.Flags().Uint64VarP(&ticks, "ticks", "t", 0, "non-negative integer")
-	// call.AddCommand(setAge)
+    getConfig := &cobra.Command{
+        Use:           "get-config",
+        Short:         "get config options",
+        SilenceUsage:  true,
+        SilenceErrors: true,
+        RunE: func(cmd *cobra.Command, args []string) error {
+            var result types.Config
+
+            if err := StaticCallContract(defaultContract, "GetConfig", &types.Nothing{}, &result); err != nil {
+                return err
+            }
+
+            for k, v := range result.Options.Map {
+                log.Println(v)
+                log.Println(v.Value)
+                log.Println(v.GetValue())
+                log.Println(v.GetInt())
+                log.Println(v.GetString_())
+                log.Println(reflect.TypeOf(v))
+                log.Println(reflect.TypeOf(v.Value))
+                log.Println(reflect.TypeOf(v.GetValue()))
+                log.Println(reflect.TypeOf(v.GetInt()))
+                log.Println(reflect.TypeOf(v.GetString_()))
+                log.Printf(`%s -> %v`, k, v.GetValue())
+            }
+
+            return nil
+        },
+    }
+    call.AddCommand(getConfig)
+
+	var playerCapParam int64
+    setPlayerCap := &cobra.Command{
+        Use:           "config-player-cap",
+        Short:         "set PlayerCap config option",
+        SilenceUsage:  true,
+        SilenceErrors: true,
+        RunE: func(cmd *cobra.Command, args []string) error {
+            playerCap := &types.Primitive{Value: &types.Primitive_Int{Int: playerCapParam}}
+            optionsMap := map[string]*types.Primitive{
+                "PlayerCap": playerCap,
+            }
+            params := types.PrimitiveMap{Map: optionsMap}
+
+            if err := CallContract(defaultContract, "SetConfigOptions", &params, &types.Nothing{}); err != nil {
+                return err
+            }
+
+            return nil
+        },
+    }
+    setPlayerCap.Flags().Int64Var(&playerCapParam, "cap", 10, "1+")
+	call.AddCommand(setPlayerCap)
 
 	if err := root.Execute(); err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)

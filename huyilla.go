@@ -30,6 +30,14 @@ var PLAYERS = []byte("Players")
 
 func (c *Huyilla) Init (ctx contract.Context, req *plugin.Request) error {
     ctx.Set(AGE, &types.Age{Ticks: 1})  // starts at 1 because 0 counts as non-existent
+
+    playerCap := &types.Primitive{Value: &types.Primitive_Int{Int: 10}}
+    optionsMap := map[string]*types.Primitive{
+        "PlayerCap": playerCap,
+    }
+    config := &types.Config{Options: &types.PrimitiveMap{Map: optionsMap}}
+    ctx.Set(CONFIG, config)
+
     return nil
 }
 
@@ -41,13 +49,31 @@ func (c *Huyilla) GetAge (ctx contract.StaticContext, req *plugin.Request) (*typ
 
 func (c *Huyilla) incrementAge (ctx contract.Context, req *plugin.Request) (*types.Age, error) {
     age, err := c.GetAge(ctx, req)
-    if err != nil { return age, err }
+    if err != nil { return nil, err }
 
     age.Ticks ++
     err = ctx.Set(AGE, age)
     return age, err
 }
 
-// func (c *Huyilla) SetAge (ctx contract.Context, req *types.Age) error {
-//     return ctx.Set(AGE, req)
-// }
+func (c *Huyilla) GetConfig (ctx contract.StaticContext, req *plugin.Request) (*types.Config, error) {
+    return c.getConfig(ctx)
+}
+
+func (c *Huyilla) SetConfigOptions (ctx contract.Context, req *types.PrimitiveMap) error {
+    config, err := c.getConfig(ctx)
+    if err != nil { return err }
+
+    for k,v := range req.Map {
+        config.Options.Map[k] = v
+    }
+
+    return ctx.Set(CONFIG, config)
+}
+
+
+func (c *Huyilla) getConfig (ctx contract.StaticContext) (*types.Config, error) {
+    var config = &types.Config{}
+    err := ctx.Get(CONFIG, config)
+    return config, err
+}
