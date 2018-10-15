@@ -23,8 +23,8 @@ huyilla.so: proto
 
 proto: types/types.pb.go
 
-# test: proto
-# 	go test $(PKG)/...
+test: proto
+	go test $(PKG)/...
 
 lint:
 	golint ./...
@@ -45,6 +45,6 @@ clean:
 	go clean
 	rm -f \
 		types/types.pb.go \
-#		testdata/test.pb.go \
+		testdata/test.pb.go \
 		run/contracts/huyilla.so
 		run/contracts/huyilla.0.0.1
