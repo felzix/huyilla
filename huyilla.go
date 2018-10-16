@@ -31,11 +31,13 @@ var PLAYERS = []byte("Players")
 func (c *Huyilla) Init (ctx contract.Context, req *plugin.Request) error {
     ctx.Set(AGE, &types.Age{Ticks: 1})  // starts at 1 because 0 counts as non-existent
 
-    playerCap := &types.Primitive{Value: &types.Primitive_Int{Int: 10}}
-    optionsMap := map[string]*types.Primitive{
-        "PlayerCap": playerCap,
+    config := &types.Config{
+        Options: &types.PrimitiveMap{
+            Map: map[string]*types.Primitive{
+                "PlayerCap": &types.Primitive{Value: &types.Primitive_Int{Int: 10}},
+            },
+        },
     }
-    config := &types.Config{Options: &types.PrimitiveMap{Map: optionsMap}}
     ctx.Set(CONFIG, config)
 
     return nil

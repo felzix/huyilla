@@ -1,17 +1,15 @@
 package main
 
 import (
-	"github.com/felzix/huyilla/types"
-	"encoding/base64"
-	"fmt"
-	"io/ioutil"
-	"log"
-	"os"
-    "reflect"
-
+    "encoding/base64"
+    "fmt"
+    "github.com/felzix/huyilla/types"
     "github.com/pkg/errors"
-	"github.com/spf13/cobra"
-	"golang.org/x/crypto/ed25519"
+    "github.com/spf13/cobra"
+    "golang.org/x/crypto/ed25519"
+    "io/ioutil"
+    "log"
+    "os"
 )
 
 
@@ -84,17 +82,15 @@ func main() {
             }
 
             for k, v := range result.Options.Map {
-                log.Println(v)
-                log.Println(v.Value)
-                log.Println(v.GetValue())
-                log.Println(v.GetInt())
-                log.Println(v.GetString_())
-                log.Println(reflect.TypeOf(v))
-                log.Println(reflect.TypeOf(v.Value))
-                log.Println(reflect.TypeOf(v.GetValue()))
-                log.Println(reflect.TypeOf(v.GetInt()))
-                log.Println(reflect.TypeOf(v.GetString_()))
-                log.Printf(`%s -> %v`, k, v.GetValue())
+                out := fmt.Sprintf(`%s -> `, k)
+            	switch value := v.Value.(type) {
+                case *types.Primitive_Int: out += fmt.Sprint(value.Int)
+                case *types.Primitive_Bool: out += fmt.Sprint(value.Bool)
+                case *types.Primitive_String_: out += value.String_
+                case *types.Primitive_Float: out += fmt.Sprint(value.Float)
+                default: out = fmt.Sprintf(`ERROR: unrecognized type for "%v"="%v"`, k, v)
+                }
+                log.Print(out)
             }
 
             return nil
