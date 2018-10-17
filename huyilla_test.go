@@ -1,6 +1,7 @@
 package main
 
 import (
+    "github.com/felzix/huyilla/types"
     "github.com/loomnetwork/go-loom"
     "github.com/loomnetwork/go-loom/plugin"
     "github.com/loomnetwork/go-loom/plugin/contractpb"
@@ -37,5 +38,30 @@ func TestHuyilla_Age (t *testing.T) {
 
     if age.Ticks != 1 {
         t.Errorf(`Expected age to be the default of "1" not "%v"`, age.Ticks)
+    }
+}
+
+
+func TestHuyilla_Config (t *testing.T) {
+    h := &Huyilla{}
+
+    addr1 := loom.MustParseAddress("chain:0xb16a379ec18d4093666f8f38b11a3071c920207d")
+    ctx := contractpb.WrapPluginContext(plugin.CreateFakeContext(addr1, addr1))
+
+    h.Init(ctx, &plugin.Request{})
+
+    h.SetConfigOptions(ctx, &types.PrimitiveMap{
+        Map: map[string]*types.Primitive{
+            "PlayerCap": {Value: &types.Primitive_Int{Int: 101}},
+        }})
+
+    config, err := h.GetConfig(ctx, &plugin.Request{})
+    if err != nil {
+        t.Fatalf("Error: %v", err)
+    }
+
+    foundPlayerCap := config.Options.Map["PlayerCap"].GetInt()
+    if foundPlayerCap != 101 {
+        t.Errorf(`Expected player cap to be "101" not "%v"`, foundPlayerCap)
     }
 }
