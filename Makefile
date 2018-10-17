@@ -16,7 +16,7 @@ cli: proto
 
 huyilla.so: proto
 	mkdir -p run/contracts
-	go build -buildmode=plugin -o run/contracts/$@ ./huyilla.go
+	go build -buildmode=plugin -o run/contracts/$@ ./contract/huyilla.go
 
 %.pb.go: %.proto
 	protoc --gofast_out=. $<
