@@ -59,8 +59,17 @@ message InventorySlot {
 }
 
 message Entity {
-    bool player = 1;  // true=player, false=npc
-    bool loggedIn = 2;  // only used for player
+    message Player {
+        bool loggedIn = 1;
+    }
+    message NPC {
+        uint32 Algorithm = 1;
+    }
+
+    oneof control {
+        Player player = 1;
+        NPC npc = 2;
+    }
     uint32 type = 3;
     PrimitiveMap properties = 4;
     Inventory inventory = 5;
@@ -103,7 +112,7 @@ message Action {
     message CraftAction {
         uint32 verb = 1;
         AbsolutePoint objectLocation = 2;
-        repeated Item inputs = 3;
+        repeated InventorySlot inputs = 3;
         repeated uint32 outputForms = 4;
     }
 
