@@ -121,6 +121,30 @@ func main() {
     setPlayerCap.Flags().Int64Var(&playerCapParam, "cap", 10, "1+")
 	call.AddCommand(setPlayerCap)
 
+    var x, y, z int64
+    getChunk := &cobra.Command{
+        Use:           "get-chunk",
+        Short:         "get chunk",
+        SilenceUsage:  true,
+        SilenceErrors: true,
+        RunE: func(cmd *cobra.Command, args []string) error {
+            var chunk types.Chunk
+            point := types.Point{x, y, z}
+
+            if err := StaticCallContract(defaultContract, "GetChunk", &point, &chunk); err != nil {
+                return err
+            }
+
+            log.Print(chunk.Voxels)
+
+            return nil
+        },
+    }
+    getChunk.Flags().Int64VarP(&x, "x", "x", 0, "int64")
+    getChunk.Flags().Int64VarP(&y, "y", "y", 0, "int64")
+    getChunk.Flags().Int64VarP(&z, "z", "z", 0, "int64")
+    call.AddCommand(getChunk)
+
 	if err := root.Execute(); err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(1)

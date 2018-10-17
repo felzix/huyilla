@@ -21,16 +21,7 @@ message PlayerName {
 }
 
 message Chunk {
-    message Voxels {
-        message Plane {
-            message Row {
-                repeated uint64 voxel = 1;
-            }
-            repeated Row rows = 1;
-        }
-        repeated Plane planes = 1;
-    }
-    Voxels voxels = 1;
+    repeated uint64 voxels = 1;  // 3D array stored as a 1D array
 
     message Compound {
         Inventory inventory = 1;

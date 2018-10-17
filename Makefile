@@ -9,14 +9,14 @@ external-plugin: huyilla.0.0.1
 
 huyilla.0.0.1: proto
 	mkdir -p run/contracts
-	go build -o run/contracts/$@ ./huyilla.go
+	go build -o run/contracts/$@ ./contract
 
 cli: proto
 	go build -o run/cli ./cli
 
 huyilla.so: proto
 	mkdir -p run/contracts
-	go build -buildmode=plugin -o run/contracts/$@ ./contract/huyilla.go
+	go build -buildmode=plugin -o run/contracts/$@ ./contract
 
 %.pb.go: %.proto
 	protoc --gofast_out=. $<

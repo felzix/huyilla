@@ -1,6 +1,7 @@
 package main
 
 import (
+    "github.com/felzix/huyilla/engine"
     "github.com/felzix/huyilla/types"
     "github.com/loomnetwork/go-loom"
     "github.com/loomnetwork/go-loom/plugin"
@@ -9,7 +10,8 @@ import (
 )
 
 
-func TestHuyilla_Config (t *testing.T) {
+
+func TestHuyilla_Chunk (t *testing.T) {
     h := &Huyilla{}
 
     addr1 := loom.MustParseAddress(ADDR_FROM_LOOM_EXAMPLE)
@@ -17,18 +19,17 @@ func TestHuyilla_Config (t *testing.T) {
 
     h.Init(ctx, &plugin.Request{})
 
-    h.SetConfigOptions(ctx, &types.PrimitiveMap{
-        Map: map[string]*types.Primitive{
-            "PlayerCap": {Value: &types.Primitive_Int{Int: 101}},
-        }})
+    if err := h.GenChunk(ctx, &types.Point{0, 0, 0}); err != nil {
+        t.Fatalf(`Error: %v`, err)
+    }
 
-    config, err := h.GetConfig(ctx, &plugin.Request{})
+    chunk, err := h.GetChunk(ctx, &types.Point{0, 0, 0})
     if err != nil {
         t.Fatalf("Error: %v", err)
     }
 
-    foundPlayerCap := config.Options.Map["PlayerCap"].GetInt()
-    if foundPlayerCap != 101 {
-        t.Errorf(`Expected player cap to be "101" not "%v"`, foundPlayerCap)
+    expectedVoxelCount := engine.CHUNK_SIZE * engine.CHUNK_SIZE * engine.CHUNK_SIZE
+    if len(chunk.Voxels) != expectedVoxelCount {
+        t.Errorf(`Was expected %d voxels but got %d`, expectedVoxelCount, len(chunk.Voxels))
     }
 }

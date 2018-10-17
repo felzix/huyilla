@@ -1,4 +1,4 @@
-package contract
+package main
 
 import (
     "github.com/felzix/huyilla/types"
@@ -29,11 +29,7 @@ func TestHuyilla_Player (t *testing.T) {
 
     player, err := h.GetPlayer(ctx, &types.PlayerName{Name: "admin"})
 
-    if err != nil && err.Error() != "not found" {
-        t.Errorf(`Expected "not found" error but got "%v"`, err)
-    } else if err == nil && player != nil {
-        t.Errorf(`Expected "not found" error but player was actually returned: "%v"`, player)
-    } else if err == nil && player == nil {
-        t.Error(`Expected "not found" error but instead nil entity was returned`)
+    if err.Error() != `No such player "admin"` {
+        t.Errorf(`Expected 'No such player "admin'" but actually got "%v", "%v"`, player, err)
     }
 }

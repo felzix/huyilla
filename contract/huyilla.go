@@ -1,4 +1,4 @@
-package contract
+package main
 
 import (
     "github.com/felzix/huyilla/types"
@@ -25,7 +25,8 @@ func (c *Huyilla) Meta () (plugin.Meta, error) {
 }
 
 func (c *Huyilla) Init (ctx contract.Context, req *plugin.Request) error {
-    ctx.Set(AGE, &types.Age{Ticks: 1})  // starts at 1 because 0 counts as non-existent
+    err := ctx.Set(AGE, &types.Age{Ticks: 1})  // starts at 1 because 0 counts as non-existent
+    if err != nil { return err }
 
     config := &types.Config{
         Options: &types.PrimitiveMap{
@@ -34,12 +35,14 @@ func (c *Huyilla) Init (ctx contract.Context, req *plugin.Request) error {
             },
         },
     }
-    ctx.Set(CONFIG, config)
+    err = ctx.Set(CONFIG, config)
+    if err != nil { return err }
 
-    ctx.Set(PLAYERS, &types.Players{
+    err = ctx.Set(PLAYERS, &types.Players{
         Players: map[string]*types.AbsolutePoint{
             "admin": {Chunk: &types.Point{0, 0, 0}, Voxel: &types.Point{0, 0, 0}},
         }})
+    if err != nil { return err }
 
-    return nil
+    return c.genChunk(ctx, &types.Point{0, 0, 0})
 }

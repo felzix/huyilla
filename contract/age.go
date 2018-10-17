@@ -1,4 +1,4 @@
-package contract
+package main
 
 import (
     "github.com/felzix/huyilla/types"

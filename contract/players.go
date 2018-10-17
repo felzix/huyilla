@@ -1,4 +1,4 @@
-package contract
+package main
 
 import (
     "errors"
@@ -28,7 +28,7 @@ func (c *Huyilla) GetPlayer (ctx contract.StaticContext, req *types.PlayerName) 
     if err := ctx.Get(PLAYERS, players); err != nil { return nil, err }
     location := players.Players[req.Name]
 
-    chunk, err := c.getChunk(ctx, location)
+    chunk, err := c.getChunk(ctx, location.Chunk)
     if err != nil {
         return nil, err
     }
@@ -48,11 +48,4 @@ func (c *Huyilla) GetPlayer (ctx contract.StaticContext, req *types.PlayerName) 
     }
 
     return entity, nil
-}
-
-func (c *Huyilla) getChunk (ctx contract.StaticContext, point *types.AbsolutePoint) (*types.Chunk, error) {
-    key := []byte(fmt.Sprintf(`Chunk.%d.%d.%d`, point.Chunk.X, point.Chunk.Y, point.Chunk.Z))
-    var chunk types.Chunk
-    if err := ctx.Get(key, &chunk); err != nil { return nil, err }
-    return &chunk, nil
 }
