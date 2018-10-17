@@ -47,6 +47,17 @@ message Inventory {
     repeated Item items = 1;
 }
 
+message InventorySlot {
+    enum ContainerType {
+        VOXEL = 0;  // ex: chest
+        ENTITY = 1;  // ex: player
+        ITEM = 2;  // ex: pouch
+    }
+    ContainerType containerType = 1;
+    AbsolutePoint containerLocation = 2;
+    repeated uint32 slots = 3;  // if 2+ slots then the inventory is nested (bags in bags in bags in...)
+}
+
 message Entity {
     bool player = 1;  // true=player, false=npc
     bool loggedIn = 2;  // only used for player
@@ -56,20 +67,18 @@ message Entity {
 }
 
 message Item {
-    message SimpleItem {
-        uint32 form = 1;
+    message Components {
+        repeated Item components = 1;
+    }
+
+    uint32 form = 1;
+    oneof substance {
         uint32 material = 2;
-        PrimitiveMap properties = 3;
+        Components components = 3;
     }
-    message ComplexItem {
-        uint32 form = 1;
-        repeated Item components = 2;
-        PrimitiveMap properties = 3;
-    }
-    oneof item {
-        SimpleItem simple = 1;
-        ComplexItem complex = 2;
-    }
+    PrimitiveMap properties = 4;
+    Inventory inventory = 5;
+
 }
 
 message AbsolutePoint {
@@ -81,6 +90,29 @@ message Point {
     int64 x = 1;
     int64 y = 2;
     int64 z = 3;
+}
+
+message Actions {
+    repeated Action actions = 1;
+}
+
+message Action {
+    message MoveAction {
+        AbsolutePoint whereTo = 1;
+    }
+    message CraftAction {
+        uint32 verb = 1;
+        AbsolutePoint objectLocation = 2;
+        repeated Item inputs = 3;
+        repeated uint32 outputForms = 4;
+    }
+
+    string playerName = 1;
+    oneof action {
+        MoveAction move = 2;
+        CraftAction craft = 3;
+    }
+
 }
 
 message PrimitiveMap {

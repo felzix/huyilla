@@ -10,7 +10,7 @@ import (
 
 
 
-func TestHuyilla_Player (t *testing.T) {
+func TestHuyilla_Players (t *testing.T) {
     h := &Huyilla{}
 
     addr1 := loom.MustParseAddress(ADDR_FROM_LOOM_EXAMPLE)
