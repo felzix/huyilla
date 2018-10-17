@@ -9,15 +9,15 @@ message Config {
 }
 
 message Players {
-    message AbsolutePoint {
-        int64 chunkX = 1;
-        int64 chunkY = 2;
-        int64 chunkZ = 3;
-        uint32 voxelX = 4;
-        uint32 voxelY = 5;
-        uint32 voxelZ = 6;
-    }
     map<string, AbsolutePoint> players = 1;
+}
+
+message PlayerList {
+    repeated string names = 1;
+}
+
+message PlayerName {
+    string name = 1;
 }
 
 message Chunk {
@@ -57,10 +57,11 @@ message Inventory {
 }
 
 message Entity {
-    bool player = 1;
-    uint32 type = 2;
-    PrimitiveMap properties = 3;
-    Inventory inventory = 4;
+    bool player = 1;  // true=player, false=npc
+    bool loggedIn = 2;  // only used for player
+    uint32 type = 3;
+    PrimitiveMap properties = 4;
+    Inventory inventory = 5;
 }
 
 message Item {
@@ -78,6 +79,11 @@ message Item {
         SimpleItem simple = 1;
         ComplexItem complex = 2;
     }
+}
+
+message AbsolutePoint {
+    Point chunk = 1;
+    Point voxel = 2;
 }
 
 message Point {
