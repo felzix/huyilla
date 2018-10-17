@@ -19,7 +19,7 @@ huyilla.so: proto
 	go build -buildmode=plugin -o run/contracts/$@ ./huyilla.go
 
 %.pb.go: %.proto
-	protoc --go_out=. $<
+	protoc --gofast_out=. $<
 
 proto: types/types.pb.go
 
