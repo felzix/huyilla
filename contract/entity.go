@@ -12,13 +12,13 @@ func (c *Huyilla) GetEntity (ctx contract.StaticContext, id *types.EntityId) (*t
     return c.getEntity(ctx, id.Id)
 }
 
-func (c *Huyilla) makeEntityKey (id int64) []byte {
+func (c *Huyilla) entityKey (id int64) []byte {
     return []byte(fmt.Sprintf(`Entity.%d`, id))
 }
 
-func (c *Huyilla) newEntity (typeInt uint32, playerName string) (*types.Entity, error) {
+func (c *Huyilla) newEntity (ctx contract.StaticContext, typeInt uint32, playerName string) (*types.Entity, error) {
     entity := types.Entity{
-        Id: c.genRandomId(),
+        Id: c.genUniqueEntityId(ctx),
         Type: typeInt,
     }
     if playerName == "" {
@@ -33,16 +33,23 @@ func (c *Huyilla) newEntity (typeInt uint32, playerName string) (*types.Entity, 
 
 
 func (c *Huyilla) setEntity (ctx contract.Context, entity *types.Entity) error {
-    return ctx.Set(c.makeEntityKey(entity.Id), entity)
+    return ctx.Set(c.entityKey(entity.Id), entity)
 }
 
 func (c *Huyilla) getEntity (ctx contract.StaticContext, id int64) (*types.Entity, error) {
     var entity types.Entity
-    err := ctx.Get(c.makeEntityKey(id), &entity)
+    err := ctx.Get(c.entityKey(id), &entity)
     if err != nil {return nil, err}
     return &entity, nil
 }
 
-func (c *Huyilla) genRandomId () int64 {
-    return rand.Int63()
+func (c *Huyilla) genUniqueEntityId (ctx contract.StaticContext) int64 {
+    var id int64
+    for true {
+        id = rand.Int63()
+        if !ctx.Has(c.entityKey(id)) {
+            break
+        }
+    }
+    return id
 }

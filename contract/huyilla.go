@@ -38,7 +38,7 @@ func (c *Huyilla) Init (ctx contract.Context, req *plugin.Request) error {
     err = ctx.Set(CONFIG, config)
     if err != nil { return err }
 
-    adminEntity, err := c.newEntity(1, "admin")
+    adminEntity, err := c.newEntity(ctx, 1, "admin")
     if err != nil { return err }
     c.setEntity(ctx, adminEntity)
 
