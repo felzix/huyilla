@@ -27,8 +27,8 @@ func (c *Huyilla) GetPlayer (ctx contract.StaticContext, req *types.PlayerName) 
     if err != nil {return nil, errors.Wrap(err, "player not found")}
 
     entity, err := c.getEntity(ctx, player.Id)
-    if err != nil {return nil, errors.Wrap(err, "entity not found")}
 
+    // NOTE: entity can be nil
     details := &types.PlayerDetails{Player: player, Entity: entity}
     return details, nil
 }

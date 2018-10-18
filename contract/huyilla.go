@@ -42,13 +42,9 @@ func (c *Huyilla) Init (ctx contract.Context, req *plugin.Request) error {
     err = ctx.Set(CONFIG, config)
     if err != nil { return err }
 
-    adminEntity := c.newEntity(ctx, 1, "admin")
-    err = c.setEntity(ctx, adminEntity)
-    if err != nil {return err}
-
     err = ctx.Set(PLAYERS, &types.Players{
         Players: map[string]*types.Player{
-            "admin": {Id: adminEntity.Id,
+            "admin": {Id: -1,
                       Name: "admin",
                       LoggedIn: false}},
         })
@@ -69,7 +65,9 @@ func (c *Huyilla) SignUp(ctx contract.Context, req *types.PlayerName) error {
     }
 
     // Create new player
-    entity := c.newEntity(ctx, uint32(1), req.Name)
+    defaultLocation := newAbsolutePoint(0, 0, 0, 0, 0, 0)
+
+    entity := c.newEntity(ctx, uint32(1), req.Name, defaultLocation)
     err = c.setEntity(ctx, entity)
     if err != nil {return err}
 
@@ -77,6 +75,7 @@ func (c *Huyilla) SignUp(ctx contract.Context, req *types.PlayerName) error {
         Id:      entity.Id,
         Name:    req.Name,
         Address: c.thisUser(ctx),
+        Spawn:   defaultLocation,
     }
     players.Players[player.Name] = player
     err = ctx.Set(PLAYERS, players)
@@ -90,7 +89,7 @@ func (c *Huyilla) SignUp(ctx contract.Context, req *types.PlayerName) error {
         Method string
         Owner  string
         Addr   []byte
-    }{"CreatePlayer", player.Name, player.Address}
+    }{"SignUp", player.Name, player.Address}
     emitMsgJSON, err := json.Marshal(emitMsg)
     if err != nil {return err}
     ctx.EmitTopics(emitMsgJSON, "huyilla:" + emitMsg.Method)

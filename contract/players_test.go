@@ -35,7 +35,4 @@ func TestHuyilla_Players (t *testing.T) {
     if player.Player.Name != "admin" {
         t.Errorf(`Player name was "%v" instead of "admin"`, player.Player.Name)
     }
-    if player.Entity.Control != types.Entity_PLAYER {
-        t.Error(`Player's entity is an NPC`)
-    }
 }

@@ -53,3 +53,49 @@ func TestHuyilla_SignUp (t *testing.T) {
         t.Error("Expected player to have a private key-associated address but it does not")
     }
 }
+
+func TestHuyilla_Login (t *testing.T) {
+    h := &Huyilla{}
+
+    addr1 := loom.MustParseAddress(ADDR_FROM_LOOM_EXAMPLE)
+    ctx := contractpb.WrapPluginContext(plugin.CreateFakeContext(addr1, addr1))
+
+    h.Init(ctx, &plugin.Request{})
+
+    err := h.SignUp(ctx, &types.PlayerName{Name: "felzix"})
+    if err != nil {
+        t.Fatalf("Error: %v", err)
+    }
+
+    details, err := h.LogIn(ctx, &types.PlayerName{Name: "felzix"})
+    if err != nil {
+        t.Fatalf("Error: %v", err)
+    }
+
+    if details.Player.Spawn == nil {
+        t.Error("Player should have gotten a default spawn but did not")
+    }
+
+    if details.Entity.Location == nil {
+        t.Fatal("Player entity should have been created but it was not (no location)")
+    }
+
+    chunk, err := h.GetChunk(ctx, details.Entity.Location.Chunk)
+    if err != nil {
+        t.Fatalf("Error: %v", err)
+    }
+
+    entityIsPresent := false
+    for i := 0; i < len(chunk.Entities); i++ {
+        entity := chunk.Entities[i]
+        if entity == details.Entity.Id {
+            entityIsPresent = true
+        }
+    }
+    if !entityIsPresent {
+        t.Errorf(`Expected entity at chunk (%d,%d,%d) but it was not there`,
+            details.Entity.Location.Chunk.X,
+            details.Entity.Location.Chunk.Y,
+            details.Entity.Location.Chunk.Z)
+    }
+}
