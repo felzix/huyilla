@@ -59,6 +59,7 @@ func (c *Huyilla) Init (ctx contract.Context, req *plugin.Request) error {
 
 
 func (c *Huyilla) SignUp(ctx contract.Context, req *types.PlayerName) error {
+    // Make sure the player doesn't already exist
     players, err := c.getPlayers(ctx)
     if err != nil {return err}
 
@@ -67,6 +68,7 @@ func (c *Huyilla) SignUp(ctx contract.Context, req *types.PlayerName) error {
         return errors.New(fmt.Sprintf(`Name "%v" is taken. Try another.`, req.Name))
     }
 
+    // Create new player
     entity := c.newEntity(ctx, uint32(1), req.Name)
     err = c.setEntity(ctx, entity)
     if err != nil {return err}
@@ -80,8 +82,10 @@ func (c *Huyilla) SignUp(ctx contract.Context, req *types.PlayerName) error {
     err = ctx.Set(PLAYERS, players)
     if err != nil {return err}
 
+    // TODO what does this actually do?
     ctx.Logger().Info("Created player", "name", player.Name, "address", player.Address)
 
+    // Tell the client that the player was created (as well as everyone else listening, as a side effect)
     emitMsg := struct {
         Method string
         Owner  string
@@ -89,8 +93,8 @@ func (c *Huyilla) SignUp(ctx contract.Context, req *types.PlayerName) error {
     }{"CreatePlayer", player.Name, player.Address}
     emitMsgJSON, err := json.Marshal(emitMsg)
     if err != nil {return err}
-
     ctx.EmitTopics(emitMsgJSON, "huyilla:" + emitMsg.Method)
+
     return nil
 }
 
