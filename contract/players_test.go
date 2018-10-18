@@ -28,11 +28,33 @@ func TestHuyilla_Players (t *testing.T) {
     }
 
     player, err := h.GetPlayer(ctx, &types.PlayerName{Name: "admin"})
+    if err != nil {
+        t.Fatalf("Error: %v", err)
+    }
 
     if player.Player.Name != "admin" {
         t.Errorf(`Player name was "%v" instead of "admin"`, player.Player.Name)
     }
     if player.Entity.Control != types.Entity_PLAYER {
         t.Error(`Player's entity is an NPC`)
+    }
+
+    err = h.SignUp(ctx, &types.PlayerName{Name: "felzix"})
+    if err != nil {
+        t.Fatalf("Error: %v", err)
+    }
+
+    player, err = h.GetPlayer(ctx, &types.PlayerName{Name: "felzix"})
+    if err != nil {
+        t.Fatalf("Error: %v", err)
+    }
+
+    if player.Player.Name != player.Entity.PlayerName {
+        t.Errorf(
+            `Player's entity has wrong name: player="%v", entity="%v"`,
+            player.Player.Name, player.Entity.PlayerName)
+    }
+    if player.Player.Address == nil {
+        t.Error("Expected player to have a private key-associated address but it does not")
     }
 }

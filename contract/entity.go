@@ -16,7 +16,7 @@ func (c *Huyilla) entityKey (id int64) []byte {
     return []byte(fmt.Sprintf(`Entity.%d`, id))
 }
 
-func (c *Huyilla) newEntity (ctx contract.StaticContext, typeInt uint32, playerName string) (*types.Entity, error) {
+func (c *Huyilla) newEntity (ctx contract.StaticContext, typeInt uint32, playerName string) *types.Entity {
     entity := types.Entity{
         Id: c.genUniqueEntityId(ctx),
         Type: typeInt,
@@ -28,7 +28,7 @@ func (c *Huyilla) newEntity (ctx contract.StaticContext, typeInt uint32, playerN
         entity.PlayerName = playerName
     }
 
-    return &entity, nil
+    return &entity
 }
 
 
