@@ -16,19 +16,19 @@ func (c *Huyilla) GenChunk (ctx contract.Context, req *types.Point) error {
     return c.genChunk(ctx, req)
 }
 
-func (c *Huyilla) makeKey (point *types.Point) []byte {
+func (c *Huyilla) makeChunkKey (point *types.Point) []byte {
     return []byte(fmt.Sprintf(`Chunk.%d.%d.%d`, point.X, point.Y, point.Z))
 }
 
 func (c *Huyilla) getChunk (ctx contract.StaticContext, point *types.Point) (*types.Chunk, error) {
-    key := c.makeKey(point)
+    key := c.makeChunkKey(point)
     var chunk types.Chunk
     if err := ctx.Get(key, &chunk); err != nil { return nil, err }
     return &chunk, nil
 }
 
 func (c *Huyilla) setChunk (ctx contract.Context, point *types.Point, chunk *types.Chunk) error {
-    key := c.makeKey(point)
+    key := c.makeChunkKey(point)
     if err := ctx.Set(key, chunk); err != nil { return err }
     return nil
 }

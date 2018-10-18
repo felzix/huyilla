@@ -10,13 +10,16 @@
 	It has these top-level messages:
 		Age
 		Config
+		Player
 		Players
 		PlayerList
 		PlayerName
+		PlayerDetails
 		Chunk
 		Inventory
 		InventorySlot
 		Entity
+		EntityId
 		Item
 		AbsolutePoint
 		Point
@@ -70,8 +73,29 @@ func (x InventorySlot_ContainerType) String() string {
 	return proto.EnumName(InventorySlot_ContainerType_name, int32(x))
 }
 func (InventorySlot_ContainerType) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptorTypes, []int{7, 0}
+	return fileDescriptorTypes, []int{9, 0}
 }
+
+type Entity_Control int32
+
+const (
+	Entity_PLAYER Entity_Control = 0
+	Entity_NPC    Entity_Control = 1
+)
+
+var Entity_Control_name = map[int32]string{
+	0: "PLAYER",
+	1: "NPC",
+}
+var Entity_Control_value = map[string]int32{
+	"PLAYER": 0,
+	"NPC":    1,
+}
+
+func (x Entity_Control) String() string {
+	return proto.EnumName(Entity_Control_name, int32(x))
+}
+func (Entity_Control) EnumDescriptor() ([]byte, []int) { return fileDescriptorTypes, []int{10, 0} }
 
 type Age struct {
 	Ticks uint64 `protobuf:"varint,1,opt,name=ticks,proto3" json:"ticks,omitempty"`
@@ -105,16 +129,64 @@ func (m *Config) GetOptions() *PrimitiveMap {
 	return nil
 }
 
+type Player struct {
+	Id       int64          `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Address  []byte         `protobuf:"bytes,2,opt,name=address,proto3" json:"address,omitempty"`
+	Name     string         `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	LoggedIn bool           `protobuf:"varint,4,opt,name=loggedIn,proto3" json:"loggedIn,omitempty"`
+	Spawn    *AbsolutePoint `protobuf:"bytes,5,opt,name=spawn" json:"spawn,omitempty"`
+}
+
+func (m *Player) Reset()                    { *m = Player{} }
+func (m *Player) String() string            { return proto.CompactTextString(m) }
+func (*Player) ProtoMessage()               {}
+func (*Player) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{2} }
+
+func (m *Player) GetId() int64 {
+	if m != nil {
+		return m.Id
+	}
+	return 0
+}
+
+func (m *Player) GetAddress() []byte {
+	if m != nil {
+		return m.Address
+	}
+	return nil
+}
+
+func (m *Player) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+
+func (m *Player) GetLoggedIn() bool {
+	if m != nil {
+		return m.LoggedIn
+	}
+	return false
+}
+
+func (m *Player) GetSpawn() *AbsolutePoint {
+	if m != nil {
+		return m.Spawn
+	}
+	return nil
+}
+
 type Players struct {
-	Players map[string]*AbsolutePoint `protobuf:"bytes,1,rep,name=players" json:"players,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value"`
+	Players map[string]*Player `protobuf:"bytes,1,rep,name=players" json:"players,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value"`
 }
 
 func (m *Players) Reset()                    { *m = Players{} }
 func (m *Players) String() string            { return proto.CompactTextString(m) }
 func (*Players) ProtoMessage()               {}
-func (*Players) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{2} }
+func (*Players) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{3} }
 
-func (m *Players) GetPlayers() map[string]*AbsolutePoint {
+func (m *Players) GetPlayers() map[string]*Player {
 	if m != nil {
 		return m.Players
 	}
@@ -128,7 +200,7 @@ type PlayerList struct {
 func (m *PlayerList) Reset()                    { *m = PlayerList{} }
 func (m *PlayerList) String() string            { return proto.CompactTextString(m) }
 func (*PlayerList) ProtoMessage()               {}
-func (*PlayerList) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{3} }
+func (*PlayerList) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{4} }
 
 func (m *PlayerList) GetNames() []string {
 	if m != nil {
@@ -144,7 +216,7 @@ type PlayerName struct {
 func (m *PlayerName) Reset()                    { *m = PlayerName{} }
 func (m *PlayerName) String() string            { return proto.CompactTextString(m) }
 func (*PlayerName) ProtoMessage()               {}
-func (*PlayerName) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{4} }
+func (*PlayerName) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{5} }
 
 func (m *PlayerName) GetName() string {
 	if m != nil {
@@ -153,17 +225,41 @@ func (m *PlayerName) GetName() string {
 	return ""
 }
 
+type PlayerDetails struct {
+	Player *Player `protobuf:"bytes,1,opt,name=player" json:"player,omitempty"`
+	Entity *Entity `protobuf:"bytes,2,opt,name=entity" json:"entity,omitempty"`
+}
+
+func (m *PlayerDetails) Reset()                    { *m = PlayerDetails{} }
+func (m *PlayerDetails) String() string            { return proto.CompactTextString(m) }
+func (*PlayerDetails) ProtoMessage()               {}
+func (*PlayerDetails) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{6} }
+
+func (m *PlayerDetails) GetPlayer() *Player {
+	if m != nil {
+		return m.Player
+	}
+	return nil
+}
+
+func (m *PlayerDetails) GetEntity() *Entity {
+	if m != nil {
+		return m.Entity
+	}
+	return nil
+}
+
 type Chunk struct {
 	Voxels   []uint64                   `protobuf:"varint,1,rep,packed,name=voxels" json:"voxels,omitempty"`
 	Compound map[uint32]*Chunk_Compound `protobuf:"bytes,2,rep,name=compound" json:"compound,omitempty" protobuf_key:"varint,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value"`
-	Entities []*Chunk_EntityAtPoint     `protobuf:"bytes,3,rep,name=entities" json:"entities,omitempty"`
+	Entities []int64                    `protobuf:"varint,3,rep,packed,name=entities" json:"entities,omitempty"`
 	Items    []*Chunk_ItemAtPoint       `protobuf:"bytes,4,rep,name=items" json:"items,omitempty"`
 }
 
 func (m *Chunk) Reset()                    { *m = Chunk{} }
 func (m *Chunk) String() string            { return proto.CompactTextString(m) }
 func (*Chunk) ProtoMessage()               {}
-func (*Chunk) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{5} }
+func (*Chunk) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{7} }
 
 func (m *Chunk) GetVoxels() []uint64 {
 	if m != nil {
@@ -179,7 +275,7 @@ func (m *Chunk) GetCompound() map[uint32]*Chunk_Compound {
 	return nil
 }
 
-func (m *Chunk) GetEntities() []*Chunk_EntityAtPoint {
+func (m *Chunk) GetEntities() []int64 {
 	if m != nil {
 		return m.Entities
 	}
@@ -202,7 +298,7 @@ type Chunk_Compound struct {
 func (m *Chunk_Compound) Reset()                    { *m = Chunk_Compound{} }
 func (m *Chunk_Compound) String() string            { return proto.CompactTextString(m) }
 func (*Chunk_Compound) ProtoMessage()               {}
-func (*Chunk_Compound) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{5, 0} }
+func (*Chunk_Compound) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{7, 0} }
 
 func (m *Chunk_Compound) GetInventory() *Inventory {
 	if m != nil {
@@ -225,30 +321,6 @@ func (m *Chunk_Compound) GetMultiblockChunk() *Point {
 	return nil
 }
 
-type Chunk_EntityAtPoint struct {
-	Point  *Point  `protobuf:"bytes,1,opt,name=point" json:"point,omitempty"`
-	Entity *Entity `protobuf:"bytes,2,opt,name=entity" json:"entity,omitempty"`
-}
-
-func (m *Chunk_EntityAtPoint) Reset()                    { *m = Chunk_EntityAtPoint{} }
-func (m *Chunk_EntityAtPoint) String() string            { return proto.CompactTextString(m) }
-func (*Chunk_EntityAtPoint) ProtoMessage()               {}
-func (*Chunk_EntityAtPoint) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{5, 2} }
-
-func (m *Chunk_EntityAtPoint) GetPoint() *Point {
-	if m != nil {
-		return m.Point
-	}
-	return nil
-}
-
-func (m *Chunk_EntityAtPoint) GetEntity() *Entity {
-	if m != nil {
-		return m.Entity
-	}
-	return nil
-}
-
 type Chunk_ItemAtPoint struct {
 	Point *Point `protobuf:"bytes,1,opt,name=point" json:"point,omitempty"`
 	Item  *Item  `protobuf:"bytes,2,opt,name=item" json:"item,omitempty"`
@@ -257,7 +329,7 @@ type Chunk_ItemAtPoint struct {
 func (m *Chunk_ItemAtPoint) Reset()                    { *m = Chunk_ItemAtPoint{} }
 func (m *Chunk_ItemAtPoint) String() string            { return proto.CompactTextString(m) }
 func (*Chunk_ItemAtPoint) ProtoMessage()               {}
-func (*Chunk_ItemAtPoint) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{5, 3} }
+func (*Chunk_ItemAtPoint) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{7, 2} }
 
 func (m *Chunk_ItemAtPoint) GetPoint() *Point {
 	if m != nil {
@@ -280,7 +352,7 @@ type Inventory struct {
 func (m *Inventory) Reset()                    { *m = Inventory{} }
 func (m *Inventory) String() string            { return proto.CompactTextString(m) }
 func (*Inventory) ProtoMessage()               {}
-func (*Inventory) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{6} }
+func (*Inventory) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{8} }
 
 func (m *Inventory) GetItems() []*Item {
 	if m != nil {
@@ -290,15 +362,41 @@ func (m *Inventory) GetItems() []*Item {
 }
 
 type InventorySlot struct {
-	ContainerType     InventorySlot_ContainerType `protobuf:"varint,1,opt,name=containerType,proto3,enum=InventorySlot_ContainerType" json:"containerType,omitempty"`
-	ContainerLocation *AbsolutePoint              `protobuf:"bytes,2,opt,name=containerLocation" json:"containerLocation,omitempty"`
-	Slots             []uint32                    `protobuf:"varint,3,rep,packed,name=slots" json:"slots,omitempty"`
+	ContainerType InventorySlot_ContainerType `protobuf:"varint,1,opt,name=containerType,proto3,enum=InventorySlot_ContainerType" json:"containerType,omitempty"`
+	// Types that are valid to be assigned to ContainerLocation:
+	//	*InventorySlot_Point
+	//	*InventorySlot_EntityId
+	ContainerLocation isInventorySlot_ContainerLocation `protobuf_oneof:"containerLocation"`
+	Slots             []uint32                          `protobuf:"varint,4,rep,packed,name=slots" json:"slots,omitempty"`
 }
 
 func (m *InventorySlot) Reset()                    { *m = InventorySlot{} }
 func (m *InventorySlot) String() string            { return proto.CompactTextString(m) }
 func (*InventorySlot) ProtoMessage()               {}
-func (*InventorySlot) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{7} }
+func (*InventorySlot) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{9} }
+
+type isInventorySlot_ContainerLocation interface {
+	isInventorySlot_ContainerLocation()
+	MarshalTo([]byte) (int, error)
+	Size() int
+}
+
+type InventorySlot_Point struct {
+	Point *AbsolutePoint `protobuf:"bytes,2,opt,name=point,oneof"`
+}
+type InventorySlot_EntityId struct {
+	EntityId int64 `protobuf:"varint,3,opt,name=entityId,proto3,oneof"`
+}
+
+func (*InventorySlot_Point) isInventorySlot_ContainerLocation()    {}
+func (*InventorySlot_EntityId) isInventorySlot_ContainerLocation() {}
+
+func (m *InventorySlot) GetContainerLocation() isInventorySlot_ContainerLocation {
+	if m != nil {
+		return m.ContainerLocation
+	}
+	return nil
+}
 
 func (m *InventorySlot) GetContainerType() InventorySlot_ContainerType {
 	if m != nil {
@@ -307,11 +405,18 @@ func (m *InventorySlot) GetContainerType() InventorySlot_ContainerType {
 	return InventorySlot_VOXEL
 }
 
-func (m *InventorySlot) GetContainerLocation() *AbsolutePoint {
-	if m != nil {
-		return m.ContainerLocation
+func (m *InventorySlot) GetPoint() *AbsolutePoint {
+	if x, ok := m.GetContainerLocation().(*InventorySlot_Point); ok {
+		return x.Point
 	}
 	return nil
+}
+
+func (m *InventorySlot) GetEntityId() int64 {
+	if x, ok := m.GetContainerLocation().(*InventorySlot_EntityId); ok {
+		return x.EntityId
+	}
+	return 0
 }
 
 func (m *InventorySlot) GetSlots() []uint32 {
@@ -321,56 +426,95 @@ func (m *InventorySlot) GetSlots() []uint32 {
 	return nil
 }
 
+// XXX_OneofFuncs is for the internal use of the proto package.
+func (*InventorySlot) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
+	return _InventorySlot_OneofMarshaler, _InventorySlot_OneofUnmarshaler, _InventorySlot_OneofSizer, []interface{}{
+		(*InventorySlot_Point)(nil),
+		(*InventorySlot_EntityId)(nil),
+	}
+}
+
+func _InventorySlot_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
+	m := msg.(*InventorySlot)
+	// containerLocation
+	switch x := m.ContainerLocation.(type) {
+	case *InventorySlot_Point:
+		_ = b.EncodeVarint(2<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.Point); err != nil {
+			return err
+		}
+	case *InventorySlot_EntityId:
+		_ = b.EncodeVarint(3<<3 | proto.WireVarint)
+		_ = b.EncodeVarint(uint64(x.EntityId))
+	case nil:
+	default:
+		return fmt.Errorf("InventorySlot.ContainerLocation has unexpected type %T", x)
+	}
+	return nil
+}
+
+func _InventorySlot_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
+	m := msg.(*InventorySlot)
+	switch tag {
+	case 2: // containerLocation.point
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(AbsolutePoint)
+		err := b.DecodeMessage(msg)
+		m.ContainerLocation = &InventorySlot_Point{msg}
+		return true, err
+	case 3: // containerLocation.entityId
+		if wire != proto.WireVarint {
+			return true, proto.ErrInternalBadWireType
+		}
+		x, err := b.DecodeVarint()
+		m.ContainerLocation = &InventorySlot_EntityId{int64(x)}
+		return true, err
+	default:
+		return false, nil
+	}
+}
+
+func _InventorySlot_OneofSizer(msg proto.Message) (n int) {
+	m := msg.(*InventorySlot)
+	// containerLocation
+	switch x := m.ContainerLocation.(type) {
+	case *InventorySlot_Point:
+		s := proto.Size(x.Point)
+		n += proto.SizeVarint(2<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *InventorySlot_EntityId:
+		n += proto.SizeVarint(3<<3 | proto.WireVarint)
+		n += proto.SizeVarint(uint64(x.EntityId))
+	case nil:
+	default:
+		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
+	}
+	return n
+}
+
 type Entity struct {
-	// Types that are valid to be assigned to Control:
-	//	*Entity_Player_
-	//	*Entity_Npc
-	Control    isEntity_Control `protobuf_oneof:"control"`
-	Type       uint32           `protobuf:"varint,3,opt,name=type,proto3" json:"type,omitempty"`
-	Properties *PrimitiveMap    `protobuf:"bytes,4,opt,name=properties" json:"properties,omitempty"`
-	Inventory  *Inventory       `protobuf:"bytes,5,opt,name=inventory" json:"inventory,omitempty"`
+	Id         int64          `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Type       uint32         `protobuf:"varint,2,opt,name=type,proto3" json:"type,omitempty"`
+	Control    Entity_Control `protobuf:"varint,3,opt,name=control,proto3,enum=Entity_Control" json:"control,omitempty"`
+	Location   *AbsolutePoint `protobuf:"bytes,4,opt,name=location" json:"location,omitempty"`
+	Properties *PrimitiveMap  `protobuf:"bytes,5,opt,name=properties" json:"properties,omitempty"`
+	Inventory  *Inventory     `protobuf:"bytes,6,opt,name=inventory" json:"inventory,omitempty"`
+	PlayerName string         `protobuf:"bytes,7,opt,name=playerName,proto3" json:"playerName,omitempty"`
 }
 
 func (m *Entity) Reset()                    { *m = Entity{} }
 func (m *Entity) String() string            { return proto.CompactTextString(m) }
 func (*Entity) ProtoMessage()               {}
-func (*Entity) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{8} }
+func (*Entity) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{10} }
 
-type isEntity_Control interface {
-	isEntity_Control()
-	MarshalTo([]byte) (int, error)
-	Size() int
-}
-
-type Entity_Player_ struct {
-	Player *Entity_Player `protobuf:"bytes,1,opt,name=player,oneof"`
-}
-type Entity_Npc struct {
-	Npc *Entity_NPC `protobuf:"bytes,2,opt,name=npc,oneof"`
-}
-
-func (*Entity_Player_) isEntity_Control() {}
-func (*Entity_Npc) isEntity_Control()     {}
-
-func (m *Entity) GetControl() isEntity_Control {
+func (m *Entity) GetId() int64 {
 	if m != nil {
-		return m.Control
+		return m.Id
 	}
-	return nil
-}
-
-func (m *Entity) GetPlayer() *Entity_Player {
-	if x, ok := m.GetControl().(*Entity_Player_); ok {
-		return x.Player
-	}
-	return nil
-}
-
-func (m *Entity) GetNpc() *Entity_NPC {
-	if x, ok := m.GetControl().(*Entity_Npc); ok {
-		return x.Npc
-	}
-	return nil
+	return 0
 }
 
 func (m *Entity) GetType() uint32 {
@@ -378,6 +522,20 @@ func (m *Entity) GetType() uint32 {
 		return m.Type
 	}
 	return 0
+}
+
+func (m *Entity) GetControl() Entity_Control {
+	if m != nil {
+		return m.Control
+	}
+	return Entity_PLAYER
+}
+
+func (m *Entity) GetLocation() *AbsolutePoint {
+	if m != nil {
+		return m.Location
+	}
+	return nil
 }
 
 func (m *Entity) GetProperties() *PrimitiveMap {
@@ -394,108 +552,25 @@ func (m *Entity) GetInventory() *Inventory {
 	return nil
 }
 
-// XXX_OneofFuncs is for the internal use of the proto package.
-func (*Entity) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
-	return _Entity_OneofMarshaler, _Entity_OneofUnmarshaler, _Entity_OneofSizer, []interface{}{
-		(*Entity_Player_)(nil),
-		(*Entity_Npc)(nil),
-	}
-}
-
-func _Entity_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
-	m := msg.(*Entity)
-	// control
-	switch x := m.Control.(type) {
-	case *Entity_Player_:
-		_ = b.EncodeVarint(1<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.Player); err != nil {
-			return err
-		}
-	case *Entity_Npc:
-		_ = b.EncodeVarint(2<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.Npc); err != nil {
-			return err
-		}
-	case nil:
-	default:
-		return fmt.Errorf("Entity.Control has unexpected type %T", x)
-	}
-	return nil
-}
-
-func _Entity_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
-	m := msg.(*Entity)
-	switch tag {
-	case 1: // control.player
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(Entity_Player)
-		err := b.DecodeMessage(msg)
-		m.Control = &Entity_Player_{msg}
-		return true, err
-	case 2: // control.npc
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(Entity_NPC)
-		err := b.DecodeMessage(msg)
-		m.Control = &Entity_Npc{msg}
-		return true, err
-	default:
-		return false, nil
-	}
-}
-
-func _Entity_OneofSizer(msg proto.Message) (n int) {
-	m := msg.(*Entity)
-	// control
-	switch x := m.Control.(type) {
-	case *Entity_Player_:
-		s := proto.Size(x.Player)
-		n += proto.SizeVarint(1<<3 | proto.WireBytes)
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case *Entity_Npc:
-		s := proto.Size(x.Npc)
-		n += proto.SizeVarint(2<<3 | proto.WireBytes)
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case nil:
-	default:
-		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
-	}
-	return n
-}
-
-type Entity_Player struct {
-	LoggedIn bool `protobuf:"varint,1,opt,name=loggedIn,proto3" json:"loggedIn,omitempty"`
-}
-
-func (m *Entity_Player) Reset()                    { *m = Entity_Player{} }
-func (m *Entity_Player) String() string            { return proto.CompactTextString(m) }
-func (*Entity_Player) ProtoMessage()               {}
-func (*Entity_Player) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{8, 0} }
-
-func (m *Entity_Player) GetLoggedIn() bool {
+func (m *Entity) GetPlayerName() string {
 	if m != nil {
-		return m.LoggedIn
+		return m.PlayerName
 	}
-	return false
+	return ""
 }
 
-type Entity_NPC struct {
-	Algorithm uint32 `protobuf:"varint,1,opt,name=Algorithm,proto3" json:"Algorithm,omitempty"`
+type EntityId struct {
+	Id int64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 }
 
-func (m *Entity_NPC) Reset()                    { *m = Entity_NPC{} }
-func (m *Entity_NPC) String() string            { return proto.CompactTextString(m) }
-func (*Entity_NPC) ProtoMessage()               {}
-func (*Entity_NPC) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{8, 1} }
+func (m *EntityId) Reset()                    { *m = EntityId{} }
+func (m *EntityId) String() string            { return proto.CompactTextString(m) }
+func (*EntityId) ProtoMessage()               {}
+func (*EntityId) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{11} }
 
-func (m *Entity_NPC) GetAlgorithm() uint32 {
+func (m *EntityId) GetId() int64 {
 	if m != nil {
-		return m.Algorithm
+		return m.Id
 	}
 	return 0
 }
@@ -513,7 +588,7 @@ type Item struct {
 func (m *Item) Reset()                    { *m = Item{} }
 func (m *Item) String() string            { return proto.CompactTextString(m) }
 func (*Item) ProtoMessage()               {}
-func (*Item) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{9} }
+func (*Item) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{12} }
 
 type isItem_Substance interface {
 	isItem_Substance()
@@ -649,7 +724,7 @@ type Item_Components struct {
 func (m *Item_Components) Reset()                    { *m = Item_Components{} }
 func (m *Item_Components) String() string            { return proto.CompactTextString(m) }
 func (*Item_Components) ProtoMessage()               {}
-func (*Item_Components) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{9, 0} }
+func (*Item_Components) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{12, 0} }
 
 func (m *Item_Components) GetComponents() []*Item {
 	if m != nil {
@@ -666,7 +741,7 @@ type AbsolutePoint struct {
 func (m *AbsolutePoint) Reset()                    { *m = AbsolutePoint{} }
 func (m *AbsolutePoint) String() string            { return proto.CompactTextString(m) }
 func (*AbsolutePoint) ProtoMessage()               {}
-func (*AbsolutePoint) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{10} }
+func (*AbsolutePoint) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{13} }
 
 func (m *AbsolutePoint) GetChunk() *Point {
 	if m != nil {
@@ -691,7 +766,7 @@ type Point struct {
 func (m *Point) Reset()                    { *m = Point{} }
 func (m *Point) String() string            { return proto.CompactTextString(m) }
 func (*Point) ProtoMessage()               {}
-func (*Point) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{11} }
+func (*Point) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{14} }
 
 func (m *Point) GetX() int64 {
 	if m != nil {
@@ -721,7 +796,7 @@ type Actions struct {
 func (m *Actions) Reset()                    { *m = Actions{} }
 func (m *Actions) String() string            { return proto.CompactTextString(m) }
 func (*Actions) ProtoMessage()               {}
-func (*Actions) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{12} }
+func (*Actions) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{15} }
 
 func (m *Actions) GetActions() []*Action {
 	if m != nil {
@@ -741,7 +816,7 @@ type Action struct {
 func (m *Action) Reset()                    { *m = Action{} }
 func (m *Action) String() string            { return proto.CompactTextString(m) }
 func (*Action) ProtoMessage()               {}
-func (*Action) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{13} }
+func (*Action) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{16} }
 
 type isAction_Action interface {
 	isAction_Action()
@@ -868,7 +943,7 @@ type Action_MoveAction struct {
 func (m *Action_MoveAction) Reset()                    { *m = Action_MoveAction{} }
 func (m *Action_MoveAction) String() string            { return proto.CompactTextString(m) }
 func (*Action_MoveAction) ProtoMessage()               {}
-func (*Action_MoveAction) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{13, 0} }
+func (*Action_MoveAction) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{16, 0} }
 
 func (m *Action_MoveAction) GetWhereTo() *AbsolutePoint {
 	if m != nil {
@@ -887,7 +962,7 @@ type Action_CraftAction struct {
 func (m *Action_CraftAction) Reset()                    { *m = Action_CraftAction{} }
 func (m *Action_CraftAction) String() string            { return proto.CompactTextString(m) }
 func (*Action_CraftAction) ProtoMessage()               {}
-func (*Action_CraftAction) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{13, 1} }
+func (*Action_CraftAction) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{16, 1} }
 
 func (m *Action_CraftAction) GetVerb() uint32 {
 	if m != nil {
@@ -924,7 +999,7 @@ type PrimitiveMap struct {
 func (m *PrimitiveMap) Reset()                    { *m = PrimitiveMap{} }
 func (m *PrimitiveMap) String() string            { return proto.CompactTextString(m) }
 func (*PrimitiveMap) ProtoMessage()               {}
-func (*PrimitiveMap) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{14} }
+func (*PrimitiveMap) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{17} }
 
 func (m *PrimitiveMap) GetMap() map[string]*Primitive {
 	if m != nil {
@@ -945,7 +1020,7 @@ type Primitive struct {
 func (m *Primitive) Reset()                    { *m = Primitive{} }
 func (m *Primitive) String() string            { return proto.CompactTextString(m) }
 func (*Primitive) ProtoMessage()               {}
-func (*Primitive) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{15} }
+func (*Primitive) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{18} }
 
 type isPrimitive_Value interface {
 	isPrimitive_Value()
@@ -1109,23 +1184,23 @@ type Nothing struct {
 func (m *Nothing) Reset()                    { *m = Nothing{} }
 func (m *Nothing) String() string            { return proto.CompactTextString(m) }
 func (*Nothing) ProtoMessage()               {}
-func (*Nothing) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{16} }
+func (*Nothing) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{19} }
 
 func init() {
 	proto.RegisterType((*Age)(nil), "Age")
 	proto.RegisterType((*Config)(nil), "Config")
+	proto.RegisterType((*Player)(nil), "Player")
 	proto.RegisterType((*Players)(nil), "Players")
 	proto.RegisterType((*PlayerList)(nil), "PlayerList")
 	proto.RegisterType((*PlayerName)(nil), "PlayerName")
+	proto.RegisterType((*PlayerDetails)(nil), "PlayerDetails")
 	proto.RegisterType((*Chunk)(nil), "Chunk")
 	proto.RegisterType((*Chunk_Compound)(nil), "Chunk.Compound")
-	proto.RegisterType((*Chunk_EntityAtPoint)(nil), "Chunk.EntityAtPoint")
 	proto.RegisterType((*Chunk_ItemAtPoint)(nil), "Chunk.ItemAtPoint")
 	proto.RegisterType((*Inventory)(nil), "Inventory")
 	proto.RegisterType((*InventorySlot)(nil), "InventorySlot")
 	proto.RegisterType((*Entity)(nil), "Entity")
-	proto.RegisterType((*Entity_Player)(nil), "Entity.Player")
-	proto.RegisterType((*Entity_NPC)(nil), "Entity.NPC")
+	proto.RegisterType((*EntityId)(nil), "EntityId")
 	proto.RegisterType((*Item)(nil), "Item")
 	proto.RegisterType((*Item_Components)(nil), "Item.Components")
 	proto.RegisterType((*AbsolutePoint)(nil), "AbsolutePoint")
@@ -1138,6 +1213,7 @@ func init() {
 	proto.RegisterType((*Primitive)(nil), "Primitive")
 	proto.RegisterType((*Nothing)(nil), "Nothing")
 	proto.RegisterEnum("InventorySlot_ContainerType", InventorySlot_ContainerType_name, InventorySlot_ContainerType_value)
+	proto.RegisterEnum("Entity_Control", Entity_Control_name, Entity_Control_value)
 }
 func (m *Age) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
@@ -1190,6 +1266,61 @@ func (m *Config) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
+func (m *Player) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *Player) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Id != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintTypes(dAtA, i, uint64(m.Id))
+	}
+	if len(m.Address) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintTypes(dAtA, i, uint64(len(m.Address)))
+		i += copy(dAtA[i:], m.Address)
+	}
+	if len(m.Name) > 0 {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintTypes(dAtA, i, uint64(len(m.Name)))
+		i += copy(dAtA[i:], m.Name)
+	}
+	if m.LoggedIn {
+		dAtA[i] = 0x20
+		i++
+		if m.LoggedIn {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.Spawn != nil {
+		dAtA[i] = 0x2a
+		i++
+		i = encodeVarintTypes(dAtA, i, uint64(m.Spawn.Size()))
+		n2, err := m.Spawn.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n2
+	}
+	return i, nil
+}
+
 func (m *Players) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -1225,11 +1356,11 @@ func (m *Players) MarshalTo(dAtA []byte) (int, error) {
 				dAtA[i] = 0x12
 				i++
 				i = encodeVarintTypes(dAtA, i, uint64(v.Size()))
-				n2, err := v.MarshalTo(dAtA[i:])
+				n3, err := v.MarshalTo(dAtA[i:])
 				if err != nil {
 					return 0, err
 				}
-				i += n2
+				i += n3
 			}
 		}
 	}
@@ -1293,6 +1424,44 @@ func (m *PlayerName) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
+func (m *PlayerDetails) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *PlayerDetails) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Player != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintTypes(dAtA, i, uint64(m.Player.Size()))
+		n4, err := m.Player.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n4
+	}
+	if m.Entity != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintTypes(dAtA, i, uint64(m.Entity.Size()))
+		n5, err := m.Entity.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n5
+	}
+	return i, nil
+}
+
 func (m *Chunk) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -1309,21 +1478,21 @@ func (m *Chunk) MarshalTo(dAtA []byte) (int, error) {
 	var l int
 	_ = l
 	if len(m.Voxels) > 0 {
-		dAtA4 := make([]byte, len(m.Voxels)*10)
-		var j3 int
+		dAtA7 := make([]byte, len(m.Voxels)*10)
+		var j6 int
 		for _, num := range m.Voxels {
 			for num >= 1<<7 {
-				dAtA4[j3] = uint8(uint64(num)&0x7f | 0x80)
+				dAtA7[j6] = uint8(uint64(num)&0x7f | 0x80)
 				num >>= 7
-				j3++
+				j6++
 			}
-			dAtA4[j3] = uint8(num)
-			j3++
+			dAtA7[j6] = uint8(num)
+			j6++
 		}
 		dAtA[i] = 0xa
 		i++
-		i = encodeVarintTypes(dAtA, i, uint64(j3))
-		i += copy(dAtA[i:], dAtA4[:j3])
+		i = encodeVarintTypes(dAtA, i, uint64(j6))
+		i += copy(dAtA[i:], dAtA7[:j6])
 	}
 	if len(m.Compound) > 0 {
 		for k, _ := range m.Compound {
@@ -1344,25 +1513,31 @@ func (m *Chunk) MarshalTo(dAtA []byte) (int, error) {
 				dAtA[i] = 0x12
 				i++
 				i = encodeVarintTypes(dAtA, i, uint64(v.Size()))
-				n5, err := v.MarshalTo(dAtA[i:])
+				n8, err := v.MarshalTo(dAtA[i:])
 				if err != nil {
 					return 0, err
 				}
-				i += n5
+				i += n8
 			}
 		}
 	}
 	if len(m.Entities) > 0 {
-		for _, msg := range m.Entities {
-			dAtA[i] = 0x1a
-			i++
-			i = encodeVarintTypes(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
+		dAtA10 := make([]byte, len(m.Entities)*10)
+		var j9 int
+		for _, num1 := range m.Entities {
+			num := uint64(num1)
+			for num >= 1<<7 {
+				dAtA10[j9] = uint8(uint64(num)&0x7f | 0x80)
+				num >>= 7
+				j9++
 			}
-			i += n
+			dAtA10[j9] = uint8(num)
+			j9++
 		}
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintTypes(dAtA, i, uint64(j9))
+		i += copy(dAtA[i:], dAtA10[:j9])
 	}
 	if len(m.Items) > 0 {
 		for _, msg := range m.Items {
@@ -1398,69 +1573,31 @@ func (m *Chunk_Compound) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintTypes(dAtA, i, uint64(m.Inventory.Size()))
-		n6, err := m.Inventory.MarshalTo(dAtA[i:])
+		n11, err := m.Inventory.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n6
+		i += n11
 	}
 	if m.Properties != nil {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintTypes(dAtA, i, uint64(m.Properties.Size()))
-		n7, err := m.Properties.MarshalTo(dAtA[i:])
+		n12, err := m.Properties.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n7
+		i += n12
 	}
 	if m.MultiblockChunk != nil {
 		dAtA[i] = 0x1a
 		i++
 		i = encodeVarintTypes(dAtA, i, uint64(m.MultiblockChunk.Size()))
-		n8, err := m.MultiblockChunk.MarshalTo(dAtA[i:])
+		n13, err := m.MultiblockChunk.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n8
-	}
-	return i, nil
-}
-
-func (m *Chunk_EntityAtPoint) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *Chunk_EntityAtPoint) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.Point != nil {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintTypes(dAtA, i, uint64(m.Point.Size()))
-		n9, err := m.Point.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n9
-	}
-	if m.Entity != nil {
-		dAtA[i] = 0x12
-		i++
-		i = encodeVarintTypes(dAtA, i, uint64(m.Entity.Size()))
-		n10, err := m.Entity.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n10
+		i += n13
 	}
 	return i, nil
 }
@@ -1484,21 +1621,21 @@ func (m *Chunk_ItemAtPoint) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintTypes(dAtA, i, uint64(m.Point.Size()))
-		n11, err := m.Point.MarshalTo(dAtA[i:])
+		n14, err := m.Point.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n11
+		i += n14
 	}
 	if m.Item != nil {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintTypes(dAtA, i, uint64(m.Item.Size()))
-		n12, err := m.Item.MarshalTo(dAtA[i:])
+		n15, err := m.Item.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n12
+		i += n15
 	}
 	return i, nil
 }
@@ -1554,35 +1691,53 @@ func (m *InventorySlot) MarshalTo(dAtA []byte) (int, error) {
 		i = encodeVarintTypes(dAtA, i, uint64(m.ContainerType))
 	}
 	if m.ContainerLocation != nil {
-		dAtA[i] = 0x12
-		i++
-		i = encodeVarintTypes(dAtA, i, uint64(m.ContainerLocation.Size()))
-		n13, err := m.ContainerLocation.MarshalTo(dAtA[i:])
+		nn16, err := m.ContainerLocation.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n13
+		i += nn16
 	}
 	if len(m.Slots) > 0 {
-		dAtA15 := make([]byte, len(m.Slots)*10)
-		var j14 int
+		dAtA18 := make([]byte, len(m.Slots)*10)
+		var j17 int
 		for _, num := range m.Slots {
 			for num >= 1<<7 {
-				dAtA15[j14] = uint8(uint64(num)&0x7f | 0x80)
+				dAtA18[j17] = uint8(uint64(num)&0x7f | 0x80)
 				num >>= 7
-				j14++
+				j17++
 			}
-			dAtA15[j14] = uint8(num)
-			j14++
+			dAtA18[j17] = uint8(num)
+			j17++
 		}
-		dAtA[i] = 0x1a
+		dAtA[i] = 0x22
 		i++
-		i = encodeVarintTypes(dAtA, i, uint64(j14))
-		i += copy(dAtA[i:], dAtA15[:j14])
+		i = encodeVarintTypes(dAtA, i, uint64(j17))
+		i += copy(dAtA[i:], dAtA18[:j17])
 	}
 	return i, nil
 }
 
+func (m *InventorySlot_Point) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	if m.Point != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintTypes(dAtA, i, uint64(m.Point.Size()))
+		n19, err := m.Point.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n19
+	}
+	return i, nil
+}
+func (m *InventorySlot_EntityId) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	dAtA[i] = 0x18
+	i++
+	i = encodeVarintTypes(dAtA, i, uint64(m.EntityId))
+	return i, nil
+}
 func (m *Entity) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -1598,98 +1753,61 @@ func (m *Entity) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Control != nil {
-		nn16, err := m.Control.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += nn16
+	if m.Id != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintTypes(dAtA, i, uint64(m.Id))
 	}
 	if m.Type != 0 {
-		dAtA[i] = 0x18
+		dAtA[i] = 0x10
 		i++
 		i = encodeVarintTypes(dAtA, i, uint64(m.Type))
 	}
-	if m.Properties != nil {
+	if m.Control != 0 {
+		dAtA[i] = 0x18
+		i++
+		i = encodeVarintTypes(dAtA, i, uint64(m.Control))
+	}
+	if m.Location != nil {
 		dAtA[i] = 0x22
 		i++
-		i = encodeVarintTypes(dAtA, i, uint64(m.Properties.Size()))
-		n17, err := m.Properties.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n17
-	}
-	if m.Inventory != nil {
-		dAtA[i] = 0x2a
-		i++
-		i = encodeVarintTypes(dAtA, i, uint64(m.Inventory.Size()))
-		n18, err := m.Inventory.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n18
-	}
-	return i, nil
-}
-
-func (m *Entity_Player_) MarshalTo(dAtA []byte) (int, error) {
-	i := 0
-	if m.Player != nil {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintTypes(dAtA, i, uint64(m.Player.Size()))
-		n19, err := m.Player.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n19
-	}
-	return i, nil
-}
-func (m *Entity_Npc) MarshalTo(dAtA []byte) (int, error) {
-	i := 0
-	if m.Npc != nil {
-		dAtA[i] = 0x12
-		i++
-		i = encodeVarintTypes(dAtA, i, uint64(m.Npc.Size()))
-		n20, err := m.Npc.MarshalTo(dAtA[i:])
+		i = encodeVarintTypes(dAtA, i, uint64(m.Location.Size()))
+		n20, err := m.Location.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
 		i += n20
 	}
-	return i, nil
-}
-func (m *Entity_Player) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *Entity_Player) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.LoggedIn {
-		dAtA[i] = 0x8
+	if m.Properties != nil {
+		dAtA[i] = 0x2a
 		i++
-		if m.LoggedIn {
-			dAtA[i] = 1
-		} else {
-			dAtA[i] = 0
+		i = encodeVarintTypes(dAtA, i, uint64(m.Properties.Size()))
+		n21, err := m.Properties.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
 		}
+		i += n21
+	}
+	if m.Inventory != nil {
+		dAtA[i] = 0x32
 		i++
+		i = encodeVarintTypes(dAtA, i, uint64(m.Inventory.Size()))
+		n22, err := m.Inventory.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n22
+	}
+	if len(m.PlayerName) > 0 {
+		dAtA[i] = 0x3a
+		i++
+		i = encodeVarintTypes(dAtA, i, uint64(len(m.PlayerName)))
+		i += copy(dAtA[i:], m.PlayerName)
 	}
 	return i, nil
 }
 
-func (m *Entity_NPC) Marshal() (dAtA []byte, err error) {
+func (m *EntityId) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -1699,15 +1817,15 @@ func (m *Entity_NPC) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *Entity_NPC) MarshalTo(dAtA []byte) (int, error) {
+func (m *EntityId) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
 	_ = l
-	if m.Algorithm != 0 {
+	if m.Id != 0 {
 		dAtA[i] = 0x8
 		i++
-		i = encodeVarintTypes(dAtA, i, uint64(m.Algorithm))
+		i = encodeVarintTypes(dAtA, i, uint64(m.Id))
 	}
 	return i, nil
 }
@@ -1733,31 +1851,31 @@ func (m *Item) MarshalTo(dAtA []byte) (int, error) {
 		i = encodeVarintTypes(dAtA, i, uint64(m.Form))
 	}
 	if m.Substance != nil {
-		nn21, err := m.Substance.MarshalTo(dAtA[i:])
+		nn23, err := m.Substance.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += nn21
+		i += nn23
 	}
 	if m.Properties != nil {
 		dAtA[i] = 0x22
 		i++
 		i = encodeVarintTypes(dAtA, i, uint64(m.Properties.Size()))
-		n22, err := m.Properties.MarshalTo(dAtA[i:])
+		n24, err := m.Properties.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n22
+		i += n24
 	}
 	if m.Inventory != nil {
 		dAtA[i] = 0x2a
 		i++
 		i = encodeVarintTypes(dAtA, i, uint64(m.Inventory.Size()))
-		n23, err := m.Inventory.MarshalTo(dAtA[i:])
+		n25, err := m.Inventory.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n23
+		i += n25
 	}
 	return i, nil
 }
@@ -1775,11 +1893,11 @@ func (m *Item_Components_) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x1a
 		i++
 		i = encodeVarintTypes(dAtA, i, uint64(m.Components.Size()))
-		n24, err := m.Components.MarshalTo(dAtA[i:])
+		n26, err := m.Components.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n24
+		i += n26
 	}
 	return i, nil
 }
@@ -1832,21 +1950,21 @@ func (m *AbsolutePoint) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintTypes(dAtA, i, uint64(m.Chunk.Size()))
-		n25, err := m.Chunk.MarshalTo(dAtA[i:])
+		n27, err := m.Chunk.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n25
+		i += n27
 	}
 	if m.Voxel != nil {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintTypes(dAtA, i, uint64(m.Voxel.Size()))
-		n26, err := m.Voxel.MarshalTo(dAtA[i:])
+		n28, err := m.Voxel.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n26
+		i += n28
 	}
 	return i, nil
 }
@@ -1936,11 +2054,11 @@ func (m *Action) MarshalTo(dAtA []byte) (int, error) {
 		i += copy(dAtA[i:], m.PlayerName)
 	}
 	if m.Action != nil {
-		nn27, err := m.Action.MarshalTo(dAtA[i:])
+		nn29, err := m.Action.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += nn27
+		i += nn29
 	}
 	return i, nil
 }
@@ -1951,11 +2069,11 @@ func (m *Action_Move) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintTypes(dAtA, i, uint64(m.Move.Size()))
-		n28, err := m.Move.MarshalTo(dAtA[i:])
+		n30, err := m.Move.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n28
+		i += n30
 	}
 	return i, nil
 }
@@ -1965,11 +2083,11 @@ func (m *Action_Craft) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x1a
 		i++
 		i = encodeVarintTypes(dAtA, i, uint64(m.Craft.Size()))
-		n29, err := m.Craft.MarshalTo(dAtA[i:])
+		n31, err := m.Craft.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n29
+		i += n31
 	}
 	return i, nil
 }
@@ -1992,11 +2110,11 @@ func (m *Action_MoveAction) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintTypes(dAtA, i, uint64(m.WhereTo.Size()))
-		n30, err := m.WhereTo.MarshalTo(dAtA[i:])
+		n32, err := m.WhereTo.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n30
+		i += n32
 	}
 	return i, nil
 }
@@ -2025,11 +2143,11 @@ func (m *Action_CraftAction) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintTypes(dAtA, i, uint64(m.ObjectLocation.Size()))
-		n31, err := m.ObjectLocation.MarshalTo(dAtA[i:])
+		n33, err := m.ObjectLocation.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n31
+		i += n33
 	}
 	if len(m.Inputs) > 0 {
 		for _, msg := range m.Inputs {
@@ -2044,21 +2162,21 @@ func (m *Action_CraftAction) MarshalTo(dAtA []byte) (int, error) {
 		}
 	}
 	if len(m.OutputForms) > 0 {
-		dAtA33 := make([]byte, len(m.OutputForms)*10)
-		var j32 int
+		dAtA35 := make([]byte, len(m.OutputForms)*10)
+		var j34 int
 		for _, num := range m.OutputForms {
 			for num >= 1<<7 {
-				dAtA33[j32] = uint8(uint64(num)&0x7f | 0x80)
+				dAtA35[j34] = uint8(uint64(num)&0x7f | 0x80)
 				num >>= 7
-				j32++
+				j34++
 			}
-			dAtA33[j32] = uint8(num)
-			j32++
+			dAtA35[j34] = uint8(num)
+			j34++
 		}
 		dAtA[i] = 0x22
 		i++
-		i = encodeVarintTypes(dAtA, i, uint64(j32))
-		i += copy(dAtA[i:], dAtA33[:j32])
+		i = encodeVarintTypes(dAtA, i, uint64(j34))
+		i += copy(dAtA[i:], dAtA35[:j34])
 	}
 	return i, nil
 }
@@ -2098,11 +2216,11 @@ func (m *PrimitiveMap) MarshalTo(dAtA []byte) (int, error) {
 				dAtA[i] = 0x12
 				i++
 				i = encodeVarintTypes(dAtA, i, uint64(v.Size()))
-				n34, err := v.MarshalTo(dAtA[i:])
+				n36, err := v.MarshalTo(dAtA[i:])
 				if err != nil {
 					return 0, err
 				}
-				i += n34
+				i += n36
 			}
 		}
 	}
@@ -2125,11 +2243,11 @@ func (m *Primitive) MarshalTo(dAtA []byte) (int, error) {
 	var l int
 	_ = l
 	if m.Value != nil {
-		nn35, err := m.Value.MarshalTo(dAtA[i:])
+		nn37, err := m.Value.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += nn35
+		i += nn37
 	}
 	return i, nil
 }
@@ -2215,6 +2333,30 @@ func (m *Config) Size() (n int) {
 	return n
 }
 
+func (m *Player) Size() (n int) {
+	var l int
+	_ = l
+	if m.Id != 0 {
+		n += 1 + sovTypes(uint64(m.Id))
+	}
+	l = len(m.Address)
+	if l > 0 {
+		n += 1 + l + sovTypes(uint64(l))
+	}
+	l = len(m.Name)
+	if l > 0 {
+		n += 1 + l + sovTypes(uint64(l))
+	}
+	if m.LoggedIn {
+		n += 2
+	}
+	if m.Spawn != nil {
+		l = m.Spawn.Size()
+		n += 1 + l + sovTypes(uint64(l))
+	}
+	return n
+}
+
 func (m *Players) Size() (n int) {
 	var l int
 	_ = l
@@ -2256,6 +2398,20 @@ func (m *PlayerName) Size() (n int) {
 	return n
 }
 
+func (m *PlayerDetails) Size() (n int) {
+	var l int
+	_ = l
+	if m.Player != nil {
+		l = m.Player.Size()
+		n += 1 + l + sovTypes(uint64(l))
+	}
+	if m.Entity != nil {
+		l = m.Entity.Size()
+		n += 1 + l + sovTypes(uint64(l))
+	}
+	return n
+}
+
 func (m *Chunk) Size() (n int) {
 	var l int
 	_ = l
@@ -2280,10 +2436,11 @@ func (m *Chunk) Size() (n int) {
 		}
 	}
 	if len(m.Entities) > 0 {
+		l = 0
 		for _, e := range m.Entities {
-			l = e.Size()
-			n += 1 + l + sovTypes(uint64(l))
+			l += sovTypes(uint64(e))
 		}
+		n += 1 + sovTypes(uint64(l)) + l
 	}
 	if len(m.Items) > 0 {
 		for _, e := range m.Items {
@@ -2307,20 +2464,6 @@ func (m *Chunk_Compound) Size() (n int) {
 	}
 	if m.MultiblockChunk != nil {
 		l = m.MultiblockChunk.Size()
-		n += 1 + l + sovTypes(uint64(l))
-	}
-	return n
-}
-
-func (m *Chunk_EntityAtPoint) Size() (n int) {
-	var l int
-	_ = l
-	if m.Point != nil {
-		l = m.Point.Size()
-		n += 1 + l + sovTypes(uint64(l))
-	}
-	if m.Entity != nil {
-		l = m.Entity.Size()
 		n += 1 + l + sovTypes(uint64(l))
 	}
 	return n
@@ -2359,8 +2502,7 @@ func (m *InventorySlot) Size() (n int) {
 		n += 1 + sovTypes(uint64(m.ContainerType))
 	}
 	if m.ContainerLocation != nil {
-		l = m.ContainerLocation.Size()
-		n += 1 + l + sovTypes(uint64(l))
+		n += m.ContainerLocation.Size()
 	}
 	if len(m.Slots) > 0 {
 		l = 0
@@ -2372,14 +2514,36 @@ func (m *InventorySlot) Size() (n int) {
 	return n
 }
 
+func (m *InventorySlot_Point) Size() (n int) {
+	var l int
+	_ = l
+	if m.Point != nil {
+		l = m.Point.Size()
+		n += 1 + l + sovTypes(uint64(l))
+	}
+	return n
+}
+func (m *InventorySlot_EntityId) Size() (n int) {
+	var l int
+	_ = l
+	n += 1 + sovTypes(uint64(m.EntityId))
+	return n
+}
 func (m *Entity) Size() (n int) {
 	var l int
 	_ = l
-	if m.Control != nil {
-		n += m.Control.Size()
+	if m.Id != 0 {
+		n += 1 + sovTypes(uint64(m.Id))
 	}
 	if m.Type != 0 {
 		n += 1 + sovTypes(uint64(m.Type))
+	}
+	if m.Control != 0 {
+		n += 1 + sovTypes(uint64(m.Control))
+	}
+	if m.Location != nil {
+		l = m.Location.Size()
+		n += 1 + l + sovTypes(uint64(l))
 	}
 	if m.Properties != nil {
 		l = m.Properties.Size()
@@ -2389,41 +2553,18 @@ func (m *Entity) Size() (n int) {
 		l = m.Inventory.Size()
 		n += 1 + l + sovTypes(uint64(l))
 	}
-	return n
-}
-
-func (m *Entity_Player_) Size() (n int) {
-	var l int
-	_ = l
-	if m.Player != nil {
-		l = m.Player.Size()
+	l = len(m.PlayerName)
+	if l > 0 {
 		n += 1 + l + sovTypes(uint64(l))
 	}
 	return n
 }
-func (m *Entity_Npc) Size() (n int) {
-	var l int
-	_ = l
-	if m.Npc != nil {
-		l = m.Npc.Size()
-		n += 1 + l + sovTypes(uint64(l))
-	}
-	return n
-}
-func (m *Entity_Player) Size() (n int) {
-	var l int
-	_ = l
-	if m.LoggedIn {
-		n += 2
-	}
-	return n
-}
 
-func (m *Entity_NPC) Size() (n int) {
+func (m *EntityId) Size() (n int) {
 	var l int
 	_ = l
-	if m.Algorithm != 0 {
-		n += 1 + sovTypes(uint64(m.Algorithm))
+	if m.Id != 0 {
+		n += 1 + sovTypes(uint64(m.Id))
 	}
 	return n
 }
@@ -2807,6 +2948,188 @@ func (m *Config) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *Player) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTypes
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Player: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Player: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
+			}
+			m.Id = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Id |= (int64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Address = append(m.Address[:0], dAtA[iNdEx:postIndex]...)
+			if m.Address == nil {
+				m.Address = []byte{}
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Name", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Name = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LoggedIn", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.LoggedIn = bool(v != 0)
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Spawn", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Spawn == nil {
+				m.Spawn = &AbsolutePoint{}
+			}
+			if err := m.Spawn.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTypes(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *Players) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -2863,10 +3186,10 @@ func (m *Players) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Players == nil {
-				m.Players = make(map[string]*AbsolutePoint)
+				m.Players = make(map[string]*Player)
 			}
 			var mapkey string
-			var mapvalue *AbsolutePoint
+			var mapvalue *Player
 			for iNdEx < postIndex {
 				entryPreIndex := iNdEx
 				var wire uint64
@@ -2937,7 +3260,7 @@ func (m *Players) Unmarshal(dAtA []byte) error {
 					if postmsgIndex > l {
 						return io.ErrUnexpectedEOF
 					}
-					mapvalue = &AbsolutePoint{}
+					mapvalue = &Player{}
 					if err := mapvalue.Unmarshal(dAtA[iNdEx:postmsgIndex]); err != nil {
 						return err
 					}
@@ -3116,6 +3439,122 @@ func (m *PlayerName) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.Name = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTypes(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *PlayerDetails) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTypes
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: PlayerDetails: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: PlayerDetails: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Player", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Player == nil {
+				m.Player = &Player{}
+			}
+			if err := m.Player.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Entity", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Entity == nil {
+				m.Entity = &Entity{}
+			}
+			if err := m.Entity.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -3342,36 +3781,67 @@ func (m *Chunk) Unmarshal(dAtA []byte) error {
 			m.Compound[mapkey] = mapvalue
 			iNdEx = postIndex
 		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Entities", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTypes
+			if wireType == 0 {
+				var v int64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowTypes
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= (int64(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
 				}
-				if iNdEx >= l {
+				m.Entities = append(m.Entities, v)
+			} else if wireType == 2 {
+				var packedLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowTypes
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					packedLen |= (int(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if packedLen < 0 {
+					return ErrInvalidLengthTypes
+				}
+				postIndex := iNdEx + packedLen
+				if postIndex > l {
 					return io.ErrUnexpectedEOF
 				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
+				for iNdEx < postIndex {
+					var v int64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowTypes
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= (int64(b) & 0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					m.Entities = append(m.Entities, v)
 				}
+			} else {
+				return fmt.Errorf("proto: wrong wireType = %d for field Entities", wireType)
 			}
-			if msglen < 0 {
-				return ErrInvalidLengthTypes
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Entities = append(m.Entities, &Chunk_EntityAtPoint{})
-			if err := m.Entities[len(m.Entities)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Items", wireType)
@@ -3549,122 +4019,6 @@ func (m *Chunk_Compound) Unmarshal(dAtA []byte) error {
 				m.MultiblockChunk = &Point{}
 			}
 			if err := m.MultiblockChunk.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTypes(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthTypes
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *Chunk_EntityAtPoint) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTypes
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: EntityAtPoint: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: EntityAtPoint: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Point", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTypes
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthTypes
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Point == nil {
-				m.Point = &Point{}
-			}
-			if err := m.Point.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Entity", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTypes
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthTypes
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Entity == nil {
-				m.Entity = &Entity{}
-			}
-			if err := m.Entity.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -3936,7 +4290,7 @@ func (m *InventorySlot) Unmarshal(dAtA []byte) error {
 			}
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ContainerLocation", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Point", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -3960,14 +4314,33 @@ func (m *InventorySlot) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.ContainerLocation == nil {
-				m.ContainerLocation = &AbsolutePoint{}
-			}
-			if err := m.ContainerLocation.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			v := &AbsolutePoint{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			m.ContainerLocation = &InventorySlot_Point{v}
 			iNdEx = postIndex
 		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EntityId", wireType)
+			}
+			var v int64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.ContainerLocation = &InventorySlot_EntityId{v}
+		case 4:
 			if wireType == 0 {
 				var v uint32
 				for shift := uint(0); ; shift += 7 {
@@ -4080,10 +4453,10 @@ func (m *Entity) Unmarshal(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Player", wireType)
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
 			}
-			var msglen int
+			m.Id = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTypes
@@ -4093,57 +4466,12 @@ func (m *Entity) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				m.Id |= (int64(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if msglen < 0 {
-				return ErrInvalidLengthTypes
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			v := &Entity_Player{}
-			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			m.Control = &Entity_Player_{v}
-			iNdEx = postIndex
 		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Npc", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTypes
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthTypes
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			v := &Entity_NPC{}
-			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			m.Control = &Entity_Npc{v}
-			iNdEx = postIndex
-		case 3:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
 			}
@@ -4162,7 +4490,59 @@ func (m *Entity) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Control", wireType)
+			}
+			m.Control = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Control |= (Entity_Control(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Location", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Location == nil {
+				m.Location = &AbsolutePoint{}
+			}
+			if err := m.Location.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 5:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Properties", wireType)
 			}
@@ -4195,7 +4575,7 @@ func (m *Entity) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 5:
+		case 6:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Inventory", wireType)
 			}
@@ -4228,61 +4608,11 @@ func (m *Entity) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTypes(dAtA[iNdEx:])
-			if err != nil {
-				return err
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PlayerName", wireType)
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthTypes
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *Entity_Player) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTypes
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: Player: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: Player: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field LoggedIn", wireType)
-			}
-			var v int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTypes
@@ -4292,12 +4622,21 @@ func (m *Entity_Player) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= (int(b) & 0x7F) << shift
+				stringLen |= (uint64(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			m.LoggedIn = bool(v != 0)
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.PlayerName = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTypes(dAtA[iNdEx:])
@@ -4319,7 +4658,7 @@ func (m *Entity_Player) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *Entity_NPC) Unmarshal(dAtA []byte) error {
+func (m *EntityId) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -4342,17 +4681,17 @@ func (m *Entity_NPC) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: NPC: wiretype end group for non-group")
+			return fmt.Errorf("proto: EntityId: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: NPC: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: EntityId: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Algorithm", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
 			}
-			m.Algorithm = 0
+			m.Id = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTypes
@@ -4362,7 +4701,7 @@ func (m *Entity_NPC) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Algorithm |= (uint32(b) & 0x7F) << shift
+				m.Id |= (int64(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -5843,75 +6182,81 @@ var (
 func init() { proto.RegisterFile("types/types.proto", fileDescriptorTypes) }
 
 var fileDescriptorTypes = []byte{
-	// 1111 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x56, 0xcf, 0x6f, 0xe3, 0xc4,
-	0x17, 0x8f, 0xe3, 0xc4, 0x49, 0x5e, 0xea, 0x6e, 0xf6, 0x7d, 0xfb, 0xad, 0x82, 0xb7, 0xea, 0x16,
-	0xb3, 0x0b, 0x91, 0x00, 0x6f, 0xb7, 0x2b, 0xad, 0x10, 0xe2, 0xd2, 0x44, 0x5d, 0xb5, 0xd0, 0x86,
-	0x6a, 0xa8, 0x10, 0x1c, 0x1d, 0xef, 0x34, 0x35, 0xb5, 0x3d, 0x96, 0x3d, 0x09, 0xcd, 0x8a, 0x33,
-	0xfc, 0x05, 0x20, 0xee, 0x1c, 0xf9, 0x47, 0x38, 0x72, 0xe5, 0x86, 0xca, 0x81, 0x7f, 0x03, 0xcd,
-	0x0f, 0xbb, 0x76, 0x59, 0xe8, 0x89, 0x4b, 0x32, 0xef, 0xf3, 0x3e, 0xf3, 0xe6, 0xcd, 0xfb, 0x35,
-	0x86, 0xfb, 0x7c, 0x95, 0xd2, 0xfc, 0x89, 0xfc, 0xf5, 0xd2, 0x8c, 0x71, 0xe6, 0x3e, 0x00, 0x73,
-	0x7f, 0x4e, 0x71, 0x03, 0xda, 0x3c, 0x0c, 0x2e, 0xf3, 0xa1, 0xb1, 0x63, 0x8c, 0x5a, 0x44, 0x09,
-	0xee, 0x53, 0xb0, 0x26, 0x2c, 0x39, 0x0f, 0xe7, 0xf8, 0x0e, 0x74, 0x58, 0xca, 0x43, 0x96, 0x28,
-	0x46, 0x7f, 0xcf, 0xf6, 0x4e, 0xb3, 0x30, 0x0e, 0x79, 0xb8, 0xa4, 0x27, 0x7e, 0x4a, 0x0a, 0xad,
-	0xfb, 0xad, 0x01, 0x9d, 0xd3, 0xc8, 0x5f, 0xd1, 0x2c, 0xc7, 0x27, 0xd0, 0x49, 0xd5, 0x72, 0x68,
-	0xec, 0x98, 0xa3, 0xfe, 0xde, 0xff, 0x3d, 0xad, 0x2a, 0xfe, 0x0f, 0x12, 0x9e, 0xad, 0x48, 0xc1,
-	0x72, 0x3e, 0x86, 0xb5, 0xaa, 0x02, 0x07, 0x60, 0x5e, 0xd2, 0x95, 0x3c, 0xb1, 0x47, 0xc4, 0x12,
-	0x1f, 0x41, 0x7b, 0xe9, 0x47, 0x0b, 0x3a, 0x6c, 0x4a, 0x2f, 0xd6, 0xbd, 0xfd, 0x59, 0xce, 0xa2,
-	0x05, 0xa7, 0xa7, 0x2c, 0x4c, 0x38, 0x51, 0xca, 0x0f, 0x9b, 0x1f, 0x18, 0xae, 0x0b, 0xa0, 0x6c,
-	0x1d, 0x87, 0x39, 0x17, 0xf7, 0x4b, 0xfc, 0x98, 0x2a, 0x47, 0x7a, 0x44, 0x09, 0xee, 0x4e, 0xc1,
-	0x99, 0xfa, 0x31, 0x45, 0x84, 0x96, 0x80, 0xf5, 0x71, 0x72, 0xed, 0xfe, 0xdc, 0x82, 0xf6, 0xe4,
-	0x62, 0x91, 0x5c, 0xe2, 0x26, 0x58, 0x4b, 0x76, 0x45, 0x23, 0x65, 0xa2, 0x45, 0xb4, 0x84, 0xbb,
-	0xd0, 0x0d, 0x58, 0x9c, 0xb2, 0x45, 0xf2, 0x72, 0xd8, 0x94, 0xb7, 0xdc, 0xf0, 0xe4, 0x0e, 0x6f,
-	0xa2, 0x61, 0x75, 0xc9, 0x92, 0x25, 0x76, 0xd0, 0x84, 0x87, 0x3c, 0xa4, 0xf9, 0xd0, 0xac, 0xed,
-	0x38, 0x10, 0xf0, 0x6a, 0x9f, 0xab, 0xcb, 0x94, 0x2c, 0x1c, 0x41, 0x3b, 0xe4, 0x34, 0xce, 0x87,
-	0x2d, 0x49, 0x47, 0x4d, 0x3f, 0xe2, 0x34, 0x2e, 0xc8, 0x8a, 0xe0, 0x7c, 0x6f, 0x40, 0xb7, 0x38,
-	0x17, 0x47, 0xd0, 0x0b, 0x93, 0x25, 0x4d, 0x38, 0xcb, 0x56, 0x3a, 0x6d, 0xe0, 0x1d, 0x15, 0x08,
-	0xb9, 0x51, 0xe2, 0xfb, 0x00, 0x69, 0xc6, 0x52, 0x9a, 0x49, 0xa7, 0x9a, 0xaf, 0xcb, 0x70, 0x85,
-	0x80, 0xbb, 0x70, 0x2f, 0x5e, 0x44, 0x3c, 0x9c, 0x45, 0x2c, 0xb8, 0x94, 0xbe, 0x0c, 0x4d, 0xb9,
-	0xc7, 0xf2, 0x94, 0x37, 0xb7, 0xd5, 0xce, 0x31, 0xd8, 0xb5, 0x70, 0x54, 0x53, 0x6b, 0xab, 0xd4,
-	0x3e, 0xae, 0xa7, 0xf6, 0xde, 0xad, 0x28, 0x56, 0x72, 0xeb, 0x4c, 0xc1, 0xae, 0x85, 0x0a, 0xb7,
-	0xa0, 0x9d, 0x8a, 0x85, 0xbe, 0x65, 0xe1, 0x86, 0x02, 0xf1, 0x21, 0x58, 0x32, 0x94, 0x2b, 0x6d,
-	0xba, 0xa3, 0x03, 0x4d, 0x34, 0xec, 0xbc, 0x80, 0x7e, 0x25, 0x96, 0x77, 0x58, 0x7b, 0x03, 0x5a,
-	0x22, 0xd6, 0xda, 0x56, 0x5b, 0x66, 0x81, 0x48, 0xc8, 0x1d, 0x41, 0xaf, 0x0c, 0x2f, 0x3e, 0x28,
-	0x92, 0xa6, 0x6a, 0x5f, 0x13, 0x15, 0xe6, 0xfe, 0x66, 0x80, 0x5d, 0x52, 0x3f, 0x8b, 0x18, 0xc7,
-	0x31, 0xd8, 0x01, 0x4b, 0xb8, 0x1f, 0x26, 0x34, 0x3b, 0x5b, 0xa5, 0xaa, 0x0c, 0xd7, 0xf7, 0xb6,
-	0xbc, 0x1a, 0xcd, 0x9b, 0x54, 0x39, 0xa4, 0xbe, 0x05, 0x3f, 0x82, 0xfb, 0x25, 0x70, 0xcc, 0x02,
-	0x5f, 0xb4, 0xe4, 0x3f, 0x74, 0xca, 0xdf, 0x89, 0xa2, 0x47, 0xf2, 0x88, 0x71, 0x55, 0x94, 0x36,
-	0x51, 0x82, 0xbb, 0x2b, 0x32, 0x57, 0x3d, 0xa4, 0x07, 0xed, 0xcf, 0x3f, 0xfd, 0xe2, 0xe0, 0x78,
-	0xd0, 0x40, 0x00, 0xeb, 0x60, 0x7a, 0x76, 0x74, 0xf6, 0xe5, 0xc0, 0xc0, 0x2e, 0xb4, 0x8e, 0xce,
-	0x0e, 0x4e, 0x06, 0x4d, 0xf7, 0x87, 0x26, 0x58, 0x2a, 0xc0, 0x38, 0x02, 0x4b, 0xf5, 0xb6, 0x0e,
-	0xe5, 0xba, 0x8e, 0xbc, 0xee, 0xff, 0xc3, 0x06, 0xd1, 0x7a, 0x7c, 0x08, 0x66, 0x92, 0x06, 0xda,
-	0xd9, 0x7e, 0x41, 0x9b, 0x9e, 0x4e, 0x0e, 0x1b, 0x44, 0x68, 0x44, 0x77, 0x8a, 0xb9, 0x25, 0x0b,
-	0xcd, 0x26, 0x72, 0x7d, 0xab, 0x6c, 0x5b, 0x77, 0x95, 0x6d, 0xad, 0x1f, 0xda, 0xff, 0xd2, 0x0f,
-	0xce, 0x23, 0xb0, 0x94, 0x87, 0xe8, 0x40, 0x37, 0x62, 0xf3, 0x39, 0x7d, 0x79, 0x94, 0xc8, 0x3b,
-	0x74, 0x49, 0x29, 0x3b, 0x6f, 0x81, 0x39, 0x3d, 0x9d, 0xe0, 0x16, 0xf4, 0xf6, 0xa3, 0x39, 0xcb,
-	0x42, 0x7e, 0x11, 0xeb, 0x82, 0xbe, 0x01, 0xc6, 0x3d, 0xe8, 0x88, 0x50, 0x67, 0x2c, 0x72, 0xbf,
-	0x6b, 0x42, 0x4b, 0x14, 0x81, 0xb8, 0xcb, 0x39, 0xcb, 0x0a, 0xb2, 0x5c, 0xe3, 0x16, 0x74, 0x63,
-	0x9f, 0xd3, 0x2c, 0xf4, 0x23, 0x19, 0x05, 0xfb, 0xb0, 0x41, 0x4a, 0x04, 0xf7, 0x00, 0xe4, 0xfc,
-	0x48, 0x68, 0x22, 0x13, 0x24, 0x7c, 0x1f, 0xc8, 0x8a, 0x52, 0x0d, 0x22, 0xf1, 0xc3, 0x06, 0xa9,
-	0xb0, 0xfe, 0xbb, 0xe8, 0x3c, 0x03, 0xb8, 0x39, 0x14, 0x1f, 0xd7, 0x5c, 0xab, 0x15, 0x7b, 0x45,
-	0x31, 0xee, 0x43, 0x2f, 0x5f, 0xcc, 0x72, 0xee, 0x27, 0x01, 0x75, 0x3f, 0x01, 0xbb, 0x56, 0x8e,
-	0xa2, 0xe5, 0x02, 0x39, 0x47, 0x6e, 0xb5, 0x9c, 0x04, 0x85, 0x56, 0x4e, 0x5b, 0x5d, 0x1e, 0xa5,
-	0x56, 0x82, 0xee, 0x53, 0x68, 0x2b, 0x23, 0x6b, 0x60, 0x5c, 0x49, 0x03, 0x26, 0x31, 0xae, 0x84,
-	0xa4, 0x1a, 0xde, 0x24, 0xc6, 0x4a, 0x48, 0xaf, 0x64, 0xdc, 0x4c, 0x62, 0xbc, 0x72, 0xdf, 0x83,
-	0xce, 0x7e, 0x20, 0x1f, 0x2c, 0x7c, 0x13, 0x3a, 0x7e, 0x50, 0xbc, 0x6c, 0xa6, 0x9c, 0x0e, 0x4a,
-	0x45, 0x0a, 0xdc, 0xfd, 0xb3, 0x09, 0x96, 0xc2, 0x70, 0x1b, 0x20, 0x2d, 0x5f, 0x0c, 0xfd, 0x52,
-	0x54, 0x10, 0x1c, 0x41, 0x2b, 0x66, 0xcb, 0x62, 0x86, 0xa1, 0x36, 0xe5, 0x9d, 0xb0, 0x25, 0x55,
-	0xcb, 0xc3, 0x06, 0x91, 0x0c, 0x7c, 0x17, 0xda, 0x41, 0xe6, 0x9f, 0x73, 0x9d, 0xcc, 0xff, 0x15,
-	0xd4, 0x89, 0x00, 0x4b, 0xae, 0xe2, 0x38, 0xcf, 0x01, 0x6e, 0x4c, 0xe0, 0x08, 0x3a, 0x5f, 0x5f,
-	0xd0, 0x8c, 0x9e, 0xb1, 0xb2, 0xad, 0xea, 0xcd, 0x5d, 0xa8, 0x9d, 0x9f, 0x0c, 0xe8, 0x57, 0x0c,
-	0x8a, 0xc2, 0x5b, 0xd2, 0x6c, 0x56, 0x14, 0x9e, 0x58, 0xe3, 0x73, 0x58, 0x67, 0xb3, 0xaf, 0x68,
-	0xc0, 0xef, 0x98, 0x18, 0xb7, 0x58, 0xf8, 0x36, 0x58, 0x61, 0x92, 0x2e, 0x78, 0xf1, 0x88, 0xad,
-	0xd7, 0x27, 0x15, 0xd1, 0x5a, 0xdc, 0x81, 0x3e, 0x5b, 0xf0, 0x74, 0xc1, 0x5f, 0xb0, 0x4c, 0x3f,
-	0x61, 0x36, 0xa9, 0x42, 0xe3, 0x2e, 0x58, 0x2a, 0xd4, 0xee, 0x37, 0xb0, 0x56, 0xad, 0x4f, 0x1c,
-	0x81, 0x19, 0xfb, 0xa9, 0x4e, 0xcc, 0x66, 0xad, 0x76, 0xbd, 0x13, 0x3f, 0x55, 0x2f, 0xab, 0xa0,
-	0x38, 0x63, 0xe8, 0x16, 0xc0, 0x6b, 0x3e, 0x1b, 0x76, 0xea, 0x6f, 0x0b, 0xdc, 0x58, 0xaa, 0x7e,
-	0x32, 0xa4, 0xd0, 0x2b, 0x71, 0x1c, 0x82, 0x95, 0xf3, 0x2c, 0x4c, 0xe6, 0xca, 0x8e, 0x18, 0x55,
-	0x4a, 0x46, 0x04, 0x53, 0x3c, 0x0e, 0xb2, 0xb4, 0xc4, 0x74, 0x12, 0xa5, 0xb7, 0x01, 0xad, 0x19,
-	0x63, 0x91, 0x4c, 0x66, 0x57, 0xe4, 0x58, 0x48, 0xb8, 0x09, 0xed, 0xf3, 0x88, 0xf9, 0x5c, 0x36,
-	0x5f, 0x53, 0xa4, 0x53, 0x8a, 0xe3, 0x8e, 0x76, 0xc7, 0xed, 0x41, 0x67, 0xca, 0xf8, 0x45, 0x98,
-	0xcc, 0xc7, 0x83, 0x5f, 0xae, 0xb7, 0x8d, 0x5f, 0xaf, 0xb7, 0x8d, 0xdf, 0xaf, 0xb7, 0x8d, 0x1f,
-	0xff, 0xd8, 0x6e, 0xcc, 0x2c, 0xf9, 0x85, 0xf6, 0xec, 0xaf, 0x00, 0x00, 0x00, 0xff, 0xff, 0xa2,
-	0x12, 0x27, 0x72, 0xb6, 0x09, 0x00, 0x00,
+	// 1208 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x56, 0xcd, 0x6e, 0x1b, 0x55,
+	0x14, 0xf6, 0xfc, 0xdb, 0xc7, 0x71, 0xea, 0xde, 0x96, 0x6a, 0x70, 0x4b, 0x30, 0x23, 0x5a, 0x86,
+	0xbf, 0x69, 0xeb, 0x4a, 0x15, 0x62, 0x17, 0x1b, 0x57, 0x89, 0x48, 0x42, 0xb8, 0x44, 0x88, 0x2e,
+	0xc7, 0xf6, 0x4d, 0x3a, 0x64, 0x3c, 0x77, 0x34, 0x73, 0xed, 0xd6, 0x15, 0x12, 0x4b, 0x78, 0x01,
+	0x24, 0x16, 0xec, 0x78, 0x16, 0x24, 0x96, 0x3c, 0x02, 0x0a, 0x0b, 0xde, 0x80, 0x35, 0xba, 0x7f,
+	0x93, 0xb1, 0x1b, 0x15, 0xb1, 0x49, 0xee, 0x39, 0xe7, 0xf3, 0x99, 0x73, 0xbf, 0xf3, 0x9d, 0x33,
+	0x03, 0xd7, 0xd9, 0x2a, 0x27, 0xe5, 0x7d, 0xf1, 0x37, 0xca, 0x0b, 0xca, 0x68, 0x70, 0x1b, 0xac,
+	0xdd, 0x33, 0x82, 0x6e, 0x82, 0xc3, 0x92, 0xe9, 0x79, 0xe9, 0x1b, 0x7d, 0x23, 0xb4, 0xb1, 0x34,
+	0x82, 0x87, 0xe0, 0x8e, 0x68, 0x76, 0x9a, 0x9c, 0xa1, 0xf7, 0xc0, 0xa3, 0x39, 0x4b, 0x68, 0x26,
+	0x11, 0xed, 0x41, 0x27, 0x3a, 0x2e, 0x92, 0x79, 0xc2, 0x92, 0x25, 0x39, 0x8c, 0x73, 0xac, 0xa3,
+	0xc1, 0x8f, 0x06, 0xb8, 0xc7, 0x69, 0xbc, 0x22, 0x05, 0xda, 0x06, 0x33, 0x99, 0x09, 0xb8, 0x85,
+	0xcd, 0x64, 0x86, 0x7c, 0xf0, 0xe2, 0xd9, 0xac, 0x20, 0x65, 0xe9, 0x9b, 0x7d, 0x23, 0xdc, 0xc2,
+	0xda, 0x44, 0x08, 0xec, 0x2c, 0x9e, 0x13, 0xdf, 0xea, 0x1b, 0x61, 0x0b, 0x8b, 0x33, 0xea, 0x41,
+	0x33, 0xa5, 0x67, 0x67, 0x64, 0xb6, 0x9f, 0xf9, 0x76, 0xdf, 0x08, 0x9b, 0xb8, 0xb2, 0xd1, 0xbb,
+	0xe0, 0x94, 0x79, 0xfc, 0x3c, 0xf3, 0x1d, 0x51, 0xcb, 0x76, 0xb4, 0x3b, 0x29, 0x69, 0xba, 0x60,
+	0xe4, 0x98, 0x26, 0x19, 0xc3, 0x32, 0x18, 0x7c, 0x0f, 0x9e, 0xac, 0xa4, 0x44, 0xf7, 0xc1, 0xcb,
+	0xe5, 0xd1, 0x37, 0xfa, 0x56, 0xd8, 0x1e, 0xbc, 0x11, 0xa9, 0x90, 0xfe, 0x3f, 0xce, 0x58, 0xb1,
+	0xc2, 0x1a, 0xd5, 0x1b, 0xc1, 0x56, 0x3d, 0x80, 0xba, 0x60, 0x9d, 0x93, 0x95, 0xb8, 0x4c, 0x0b,
+	0xf3, 0x23, 0x7a, 0x0b, 0x9c, 0x65, 0x9c, 0x2e, 0x88, 0xb8, 0x4b, 0x7b, 0xe0, 0xa9, 0x44, 0x58,
+	0x7a, 0x3f, 0x35, 0x3f, 0x31, 0x82, 0x00, 0x40, 0x3a, 0x0f, 0x92, 0x92, 0x71, 0x8a, 0xf9, 0xc5,
+	0x64, 0x05, 0x2d, 0x2c, 0x8d, 0xa0, 0xaf, 0x31, 0x47, 0xfc, 0xd2, 0x9a, 0x08, 0xe3, 0x92, 0x88,
+	0xe0, 0x4b, 0xe8, 0x48, 0xc4, 0x67, 0x84, 0xc5, 0x49, 0x5a, 0xa2, 0xb7, 0xc1, 0x95, 0x65, 0xaa,
+	0x56, 0x54, 0x8f, 0x56, 0x6e, 0x0e, 0x20, 0x19, 0x4b, 0xd8, 0xaa, 0xaa, 0x6d, 0x2c, 0x4c, 0xac,
+	0xdc, 0xc1, 0x6f, 0x16, 0x38, 0xa3, 0x67, 0x8b, 0xec, 0x1c, 0xdd, 0x02, 0x77, 0x49, 0x5f, 0x90,
+	0x54, 0x56, 0x65, 0x63, 0x65, 0xa1, 0x07, 0xd0, 0x9c, 0xd2, 0x79, 0x4e, 0x17, 0xd9, 0xcc, 0x37,
+	0x05, 0x63, 0x37, 0x23, 0xf1, 0x8b, 0x68, 0xa4, 0xdc, 0x92, 0xb0, 0x0a, 0xc5, 0xfb, 0x25, 0xb2,
+	0x27, 0xa4, 0xf4, 0xad, 0xbe, 0x15, 0x5a, 0xb8, 0xb2, 0x51, 0x08, 0x4e, 0xc2, 0xc8, 0xbc, 0xf4,
+	0x6d, 0x91, 0x0a, 0xa9, 0x54, 0xfb, 0x8c, 0xcc, 0x77, 0x99, 0xea, 0x99, 0x00, 0xf4, 0x7e, 0x32,
+	0xa0, 0xa9, 0x9f, 0x80, 0x42, 0x68, 0x25, 0xd9, 0x92, 0x64, 0x8c, 0x16, 0x2b, 0x75, 0x57, 0x88,
+	0xf6, 0xb5, 0x07, 0x5f, 0x06, 0xd1, 0xc7, 0x00, 0x79, 0x41, 0x73, 0x52, 0x88, 0xc7, 0x9b, 0x57,
+	0x29, 0xb4, 0x06, 0x40, 0x0f, 0xe0, 0xda, 0x7c, 0x91, 0xb2, 0x64, 0x92, 0xd2, 0xe9, 0xb9, 0xa8,
+	0x45, 0x48, 0xaf, 0x3d, 0x70, 0x23, 0x59, 0xcd, 0x66, 0xb8, 0x77, 0x00, 0x9d, 0xb5, 0x8b, 0xd7,
+	0x05, 0xd1, 0x91, 0x82, 0xb8, 0xbb, 0x2e, 0x88, 0x6b, 0x1b, 0x7c, 0xd5, 0x84, 0xd1, 0x7b, 0x02,
+	0xed, 0xda, 0xdd, 0xd1, 0x1d, 0x70, 0x72, 0x7e, 0x50, 0x77, 0xd4, 0x45, 0x48, 0x27, 0x7a, 0x13,
+	0x6c, 0xce, 0x8d, 0x4a, 0xeb, 0x08, 0xd6, 0xb0, 0x70, 0x05, 0x21, 0xb4, 0x2a, 0x3a, 0xd0, 0x6d,
+	0x4d, 0xb2, 0x54, 0xb8, 0x02, 0x4a, 0x5f, 0xf0, 0x8f, 0x01, 0x9d, 0x0a, 0xfa, 0x55, 0x4a, 0x19,
+	0x1a, 0x42, 0x67, 0x4a, 0x33, 0x16, 0x27, 0x19, 0x29, 0x4e, 0x56, 0xb9, 0xd4, 0xdc, 0xf6, 0xe0,
+	0x4e, 0xb4, 0x06, 0x8b, 0x46, 0x75, 0x0c, 0x5e, 0xff, 0x09, 0xba, 0xa7, 0x0b, 0x37, 0xaf, 0x9a,
+	0xc3, 0xbd, 0x86, 0xbe, 0xc2, 0x1d, 0xa5, 0x8d, 0xd5, 0xfe, 0x4c, 0x10, 0x6d, 0xed, 0x35, 0x70,
+	0xe5, 0xe1, 0x83, 0x51, 0xa6, 0x94, 0x49, 0x75, 0x74, 0xb0, 0x34, 0x82, 0x07, 0x9c, 0xf1, 0xfa,
+	0xc3, 0x5a, 0xe0, 0x7c, 0xfd, 0xc5, 0x37, 0xe3, 0x83, 0x6e, 0x03, 0x01, 0xb8, 0xe3, 0xa3, 0x93,
+	0xfd, 0x93, 0xa7, 0x5d, 0x03, 0x35, 0xc1, 0xde, 0x3f, 0x19, 0x1f, 0x76, 0xcd, 0xe1, 0x0d, 0xb8,
+	0x5e, 0x95, 0x77, 0x40, 0xa7, 0x31, 0x5f, 0x48, 0xc1, 0x2f, 0x26, 0xb8, 0x52, 0xfd, 0xaf, 0xec,
+	0x23, 0x04, 0x36, 0xdf, 0x84, 0xa2, 0xf8, 0x0e, 0x16, 0x67, 0xf4, 0x3e, 0x78, 0x3c, 0x47, 0x41,
+	0x53, 0x51, 0xe8, 0xf6, 0xe0, 0x9a, 0x9a, 0x1d, 0x41, 0x44, 0x41, 0x53, 0xac, 0xe3, 0xe8, 0x03,
+	0xbe, 0xa0, 0xe4, 0x53, 0xc4, 0x82, 0x7a, 0x75, 0x0f, 0x55, 0xf1, 0x0d, 0x7d, 0x3a, 0xff, 0xa5,
+	0xcf, 0x35, 0xe1, 0xbb, 0xaf, 0x13, 0xfe, 0x0e, 0x40, 0x5e, 0xad, 0x0f, 0xdf, 0x13, 0x6b, 0xa3,
+	0xe6, 0x09, 0x76, 0xc0, 0x53, 0x85, 0x73, 0xd2, 0x8e, 0x0f, 0x76, 0x9f, 0x8e, 0x71, 0xb7, 0x81,
+	0x3c, 0xb0, 0x8e, 0x8e, 0x47, 0x5d, 0x23, 0xe8, 0x41, 0x73, 0xac, 0xfb, 0xb0, 0xc1, 0x4f, 0xf0,
+	0x83, 0x09, 0x36, 0xd7, 0x10, 0x27, 0xea, 0x94, 0x16, 0x73, 0x25, 0x76, 0x71, 0xe6, 0x2d, 0x9d,
+	0xc7, 0x8c, 0x14, 0x49, 0x9c, 0x4a, 0x02, 0x79, 0x4b, 0xb5, 0x07, 0x0d, 0x00, 0xc4, 0x62, 0xc8,
+	0x48, 0xc6, 0x4a, 0x35, 0x5b, 0x5d, 0x21, 0x48, 0x39, 0x0f, 0xc2, 0xbf, 0xd7, 0xc0, 0x35, 0xd4,
+	0x06, 0x47, 0xf6, 0xff, 0xe2, 0xc8, 0x79, 0x0d, 0x47, 0xbd, 0x47, 0x00, 0x97, 0x0f, 0x45, 0x77,
+	0xd7, 0x4a, 0x5b, 0x9b, 0x95, 0x5a, 0x60, 0xd8, 0x86, 0x56, 0xb9, 0x98, 0x94, 0x2c, 0xce, 0xa6,
+	0x24, 0xf8, 0x1c, 0x3a, 0x6b, 0x9d, 0xe5, 0x13, 0x3b, 0x15, 0x6b, 0x63, 0x63, 0x62, 0x85, 0x93,
+	0x47, 0xc5, 0x1a, 0x55, 0x63, 0x51, 0x45, 0x85, 0x33, 0x78, 0x08, 0x8e, 0x4c, 0xb2, 0x05, 0xc6,
+	0x0b, 0x45, 0xb7, 0xf1, 0x82, 0x5b, 0x72, 0x5f, 0x5b, 0xd8, 0x58, 0x71, 0xeb, 0xa5, 0x1c, 0x15,
+	0x6c, 0xbc, 0x0c, 0x3e, 0x02, 0x6f, 0x77, 0x2a, 0xde, 0xaf, 0xe8, 0x1d, 0xf0, 0xe2, 0xa9, 0x7e,
+	0x11, 0x5b, 0x62, 0xb9, 0xcb, 0x10, 0xd6, 0xfe, 0xe0, 0x6f, 0x13, 0x5c, 0xe9, 0xdb, 0x90, 0x87,
+	0xb1, 0x29, 0x0f, 0x14, 0x82, 0x3d, 0xa7, 0x4b, 0xbd, 0xb2, 0x90, 0x4a, 0x15, 0x1d, 0xd2, 0x25,
+	0x91, 0xc7, 0xbd, 0x06, 0x16, 0x08, 0xf4, 0x21, 0x38, 0xd3, 0x22, 0x3e, 0x65, 0xaa, 0x99, 0x37,
+	0x34, 0x74, 0xc4, 0x9d, 0x15, 0x56, 0x62, 0x7a, 0x8f, 0x01, 0x2e, 0x53, 0xa0, 0x10, 0xbc, 0xe7,
+	0xcf, 0x48, 0x41, 0x4e, 0xa8, 0xa2, 0x6b, 0x73, 0x4e, 0x74, 0xb8, 0xf7, 0xab, 0x01, 0xed, 0x5a,
+	0x42, 0x2e, 0xbc, 0x25, 0x29, 0x26, 0x5a, 0x78, 0xfc, 0x8c, 0x1e, 0xc3, 0x36, 0x9d, 0x7c, 0x4b,
+	0xa6, 0x4c, 0x8f, 0xf8, 0xd5, 0xcb, 0x07, 0x6f, 0xa0, 0xd0, 0x3d, 0x70, 0x93, 0x2c, 0x5f, 0x30,
+	0xf9, 0x76, 0xe2, 0xf8, 0xb5, 0x45, 0x87, 0x55, 0x14, 0xf5, 0xa1, 0x4d, 0x17, 0x2c, 0x5f, 0xb0,
+	0x27, 0xb4, 0x98, 0xeb, 0x9d, 0x54, 0x77, 0x0d, 0x9b, 0xe0, 0x4a, 0xaa, 0x83, 0xef, 0x60, 0xab,
+	0xae, 0x4f, 0x14, 0x82, 0x35, 0x8f, 0x73, 0xd5, 0x98, 0x5b, 0x6b, 0xda, 0x8d, 0x0e, 0xe3, 0x5c,
+	0xbe, 0x32, 0x39, 0xa4, 0x37, 0x84, 0xa6, 0x76, 0x5c, 0xf1, 0x6d, 0xd1, 0x5f, 0x7f, 0x95, 0xc0,
+	0x65, 0xa6, 0xfa, 0xe7, 0x45, 0x0e, 0xad, 0xca, 0x8f, 0x7c, 0x70, 0x4b, 0x56, 0x24, 0xd9, 0x99,
+	0xcc, 0xb3, 0xd7, 0xc0, 0xca, 0x46, 0x08, 0x2c, 0xbd, 0xa2, 0xf9, 0xde, 0xe5, 0x06, 0xba, 0x09,
+	0xf6, 0x84, 0xaa, 0x1d, 0xd7, 0xe4, 0x3d, 0xe6, 0x16, 0xba, 0x05, 0xce, 0x69, 0x4a, 0x63, 0x26,
+	0x86, 0xcf, 0xe4, 0xed, 0x14, 0xe6, 0xd0, 0x53, 0xe5, 0x04, 0x2d, 0xf0, 0x8e, 0x28, 0x7b, 0x96,
+	0x64, 0x67, 0xc3, 0xee, 0xef, 0x17, 0x3b, 0xc6, 0x1f, 0x17, 0x3b, 0xc6, 0x9f, 0x17, 0x3b, 0xc6,
+	0xcf, 0x7f, 0xed, 0x34, 0x26, 0xae, 0xf8, 0xa0, 0x7c, 0xf4, 0x6f, 0x00, 0x00, 0x00, 0xff, 0xff,
+	0x75, 0x8b, 0xd2, 0xc8, 0x65, 0x0a, 0x00, 0x00,
 }

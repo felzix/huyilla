@@ -8,8 +8,16 @@ message Config {
     PrimitiveMap options = 1;
 }
 
+message Player {
+    int64 id = 1;
+    bytes address = 2;
+    string name = 3;
+    bool loggedIn = 4;
+    AbsolutePoint spawn = 5;
+}
+
 message Players {
-    map<string, AbsolutePoint> players = 1;
+    map<string, Player> players = 1;
 }
 
 message PlayerList {
@@ -18,6 +26,11 @@ message PlayerList {
 
 message PlayerName {
     string name = 1;
+}
+
+message PlayerDetails {
+    Player player = 1;
+    Entity entity = 2;
 }
 
 message Chunk {
@@ -30,11 +43,7 @@ message Chunk {
     }
     map<uint32, Compound> compound = 2;
 
-    message EntityAtPoint {
-        Point point = 1;
-        Entity entity = 2;
-    }
-    repeated EntityAtPoint entities = 3;
+    repeated int64 entities = 3;
 
     message ItemAtPoint {
         Point point = 1;
@@ -54,25 +63,30 @@ message InventorySlot {
         ITEM = 2;  // ex: pouch
     }
     ContainerType containerType = 1;
-    AbsolutePoint containerLocation = 2;
-    repeated uint32 slots = 3;  // if 2+ slots then the inventory is nested (bags in bags in bags in...)
+    oneof containerLocation {
+        AbsolutePoint point = 2;
+        int64 entityId = 3;
+    }
+    repeated uint32 slots = 4;  // if 2+ slots then the inventory is nested (bags in bags in bags in...)
 }
 
 message Entity {
-    message Player {
-        bool loggedIn = 1;
-    }
-    message NPC {
-        uint32 Algorithm = 1;
+    enum Control {
+        PLAYER = 0;
+        NPC = 1;
     }
 
-    oneof control {
-        Player player = 1;
-        NPC npc = 2;
-    }
-    uint32 type = 3;
-    PrimitiveMap properties = 4;
-    Inventory inventory = 5;
+    int64 id = 1;
+    uint32 type = 2;
+    Control control = 3;
+    AbsolutePoint location = 4;
+    PrimitiveMap properties = 5;
+    Inventory inventory = 6;
+    string playerName = 7;  // only set if control == PLAYER
+}
+
+message EntityId {
+    int64 id = 1;
 }
 
 message Item {

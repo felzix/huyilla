@@ -38,11 +38,19 @@ func (c *Huyilla) Init (ctx contract.Context, req *plugin.Request) error {
     err = ctx.Set(CONFIG, config)
     if err != nil { return err }
 
-    err = ctx.Set(PLAYERS, &types.Players{
-        Players: map[string]*types.AbsolutePoint{
-            "admin": {Chunk: &types.Point{0, 0, 0}, Voxel: &types.Point{0, 0, 0}},
-        }})
+    adminEntity, err := c.newEntity(1, "admin")
     if err != nil { return err }
+    c.setEntity(ctx, adminEntity)
+
+    err = ctx.Set(PLAYERS, &types.Players{
+        Players: map[string]*types.Player{
+            "admin": {Id: adminEntity.Id,
+                      Name: "admin",
+                      LoggedIn: false}},
+        })
+    if err != nil { return err }
+
+
 
     return c.genChunk(ctx, &types.Point{0, 0, 0})
 }

@@ -29,7 +29,10 @@ func TestHuyilla_Players (t *testing.T) {
 
     player, err := h.GetPlayer(ctx, &types.PlayerName{Name: "admin"})
 
-    if err.Error() != `No such player "admin"` {
-        t.Errorf(`Expected 'No such player "admin'" but actually got "%v", "%v"`, player, err)
+    if player.Player.Name != "admin" {
+        t.Errorf(`Player name was "%v" instead of "admin"`, player.Player.Name)
+    }
+    if player.Entity.Control != types.Entity_PLAYER {
+        t.Error(`Player's entity is an NPC`)
     }
 }
