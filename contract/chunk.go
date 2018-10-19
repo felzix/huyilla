@@ -2,9 +2,10 @@ package main
 
 import (
     "fmt"
-    "github.com/felzix/huyilla/engine"
     "github.com/felzix/huyilla/types"
     contract "github.com/loomnetwork/go-loom/plugin/contractpb"
+    "github.com/mitchellh/hashstructure"
+    "math/rand"
 )
 
 
@@ -12,8 +13,8 @@ func (c *Huyilla) GetChunk (ctx contract.StaticContext, req *types.Point) (*type
     return c.getChunk(ctx, req)
 }
 
-func (c *Huyilla) GenChunk (ctx contract.Context, req *types.Point) error {
-    return c.genChunk(ctx, req)
+func (c *Huyilla) GenChunk (ctx contract.Context, p *types.Point) error {
+    return c.genChunk(ctx, SEED, p)
 }
 
 func (c *Huyilla) chunkKey (point *types.Point) []byte {
@@ -31,20 +32,6 @@ func (c *Huyilla) setChunk (ctx contract.Context, point *types.Point, chunk *typ
     key := c.chunkKey(point)
     if err := ctx.Set(key, chunk); err != nil { return err }
     return nil
-}
-
-func (c *Huyilla) genChunk (ctx contract.Context, point *types.Point) error {
-    // iterates over 3D array of voxels.
-    // TODO efficient
-    chunk := types.Chunk{}
-    for y := 0; y < engine.CHUNK_SIZE; y++ {
-        for x := 0; x < engine.CHUNK_SIZE; x++ {
-            for z := 0; z < engine.CHUNK_SIZE; z++ {
-                chunk.Voxels = append(chunk.Voxels, VOXEL["air"])  // TODO generate an actual world
-            }
-        }
-    }
-    return c.setChunk(ctx, point, &chunk)
 }
 
 func (c *Huyilla) addEntityToChunk (ctx contract.Context, entity *types.Entity) error {
@@ -75,4 +62,51 @@ func (c *Huyilla) removeEntityFromChunk (ctx contract.Context, entity *types.Ent
 
     chunk.Entities = append(chunk.Entities, entity.Id)
     return c.setChunk(ctx, entity.Location.Chunk, chunk)
+}
+
+
+func (c *Huyilla) genChunk (ctx contract.Context, worldSeed uint64, p *types.Point) error {
+    chunkSeed, _ := hashstructure.Hash(p, nil)
+    seed := int64(worldSeed * chunkSeed)
+
+    chunk := types.Chunk{Voxels: make([]uint64, CHUNK_LENGTH)}
+    var x, y, z int64
+    for x = 0; x < CHUNK_SIZE; x++ {
+        for y = 0; y < CHUNK_SIZE; y++ {
+            for z = 0; z < CHUNK_SIZE; z++ {
+                rand.Seed(seed)  // so voxels can use randomness
+                index := (x * CHUNK_SIZE * CHUNK_SIZE) + (y * CHUNK_SIZE) + z
+                location := &types.AbsolutePoint{
+                    Chunk: p,
+                    Voxel: &types.Point{x, y, z},
+                }
+                chunk.Voxels[index] = genVoxel(location)
+            }
+        }
+    }
+    return c.setChunk(ctx, p, &chunk)
+}
+
+func genVoxel (p *types.AbsolutePoint) uint64 {
+    v := VOXEL
+
+    if p.Chunk.Z < 0 {
+        return v["dirt"]
+    }
+
+    if p.Chunk.Z > 0 {
+        return v["air"]
+    }
+
+    center := randomPoint()
+    center.Z = 0
+
+    d := distance(p.Voxel, center)
+    if p.Voxel.Z == center.Z && d <= float64(3) {
+        return v["water"]
+    }
+    if p.Voxel.Z == 0 {
+        return v["barren_earth"]
+    }
+    return v["air"]
 }

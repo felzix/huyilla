@@ -53,7 +53,7 @@ func (c *Huyilla) Init (ctx contract.Context, req *plugin.Request) error {
         })
     if err != nil { return err }
 
-    return c.genChunk(ctx, &types.Point{0, 0, 0})
+    return c.genChunk(ctx, SEED, &types.Point{0, 0, 0})
 }
 
 
