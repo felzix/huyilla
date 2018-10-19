@@ -8,7 +8,12 @@ import (
 )
 
 
+var ENTITY = content.ENTITY
+var VOXEL = content.VOXEL
+var FORM = content.FORM
+var MATERIAL = content.MATERIAL
+
 
 func (c *Huyilla) GetContent (ctx contract.StaticContext, req *plugin.Request) (*types.Content, error) {
-    return &content.Content, nil
+    return &content.ContentDefinitions, nil
 }

@@ -4,10 +4,11 @@ import (
     "bytes"
     "encoding/json"
     "fmt"
-    "github.com/pkg/errors"
+    "github.com/felzix/huyilla/content"
     "github.com/felzix/huyilla/types"
     "github.com/loomnetwork/go-loom/plugin"
     contract "github.com/loomnetwork/go-loom/plugin/contractpb"
+    "github.com/pkg/errors"
 )
 
 
@@ -16,7 +17,6 @@ func main() {
 }
 
 type Huyilla struct {}
-
 
 var Contract = contract.MakePluginContract(&Huyilla{})
 
@@ -29,6 +29,9 @@ func (c *Huyilla) Meta () (plugin.Meta, error) {
 }
 
 func (c *Huyilla) Init (ctx contract.Context, req *plugin.Request) error {
+    // So that recipes and terrain generator can reference content by name.
+    content.PopulateContentNameMaps()
+
     err := ctx.Set(AGE, &types.Age{Ticks: 1})  // starts at 1 because 0 counts as non-existent
     if err != nil { return err }
 

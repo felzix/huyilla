@@ -2,7 +2,7 @@ package content
 
 import "github.com/felzix/huyilla/types"
 
-var FormDefinitions = map[uint32]*types.FormDefinition{
+var FormDefinitions = map[uint64]*types.FormDefinition{
     0: {Name: "voxel"},
 
     1: {Name: "pile"},

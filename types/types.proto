@@ -138,12 +138,12 @@ message Action {
 
 }
 
-// Though stored as uint32, all IDs are uint16.
 message Content {
-    map<uint32, EntityDefinition> e = 1;
-    map<uint32, VoxelDefinition> v = 2;
-    map<uint32, FormDefinition> f = 3;
-    map<uint32, MaterialDefinition> m = 4;
+    map<uint64, EntityDefinition> e = 1;
+    // only 2^16 voxel types are supported
+    map<uint64, VoxelDefinition> v = 2;
+    map<uint64, FormDefinition> f = 3;
+    map<uint64, MaterialDefinition> m = 4;
 }
 
 message EntityDefinition {

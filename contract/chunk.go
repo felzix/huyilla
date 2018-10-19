@@ -40,7 +40,7 @@ func (c *Huyilla) genChunk (ctx contract.Context, point *types.Point) error {
     for y := 0; y < engine.CHUNK_SIZE; y++ {
         for x := 0; x < engine.CHUNK_SIZE; x++ {
             for z := 0; z < engine.CHUNK_SIZE; z++ {
-                chunk.Voxels = append(chunk.Voxels, 0x0)  // TODO generate an actual world
+                chunk.Voxels = append(chunk.Voxels, VOXEL["air"])  // TODO generate an actual world
             }
         }
     }

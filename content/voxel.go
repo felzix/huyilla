@@ -2,7 +2,7 @@ package content
 
 import "github.com/felzix/huyilla/types"
 
-var VoxelDefinitions = map[uint32]*types.VoxelDefinition{
+var VoxelDefinitions = map[uint64]*types.VoxelDefinition{
     0: {Name: "air",
         State: types.VoxelDefinition_Gas},
     1: {Name: "barren_earth",

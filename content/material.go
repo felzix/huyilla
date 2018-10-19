@@ -2,7 +2,7 @@ package content
 
 import "github.com/felzix/huyilla/types"
 
-var MaterialDefinitions = map[uint32]*types.MaterialDefinition{
+var MaterialDefinitions = map[uint64]*types.MaterialDefinition{
     0: {Name: "adminium"},
 
     1: {Name: "dirt"},
