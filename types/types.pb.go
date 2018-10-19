@@ -26,7 +26,10 @@
 		Actions
 		Action
 		Content
-		AllContent
+		EntityDefinition
+		VoxelDefinition
+		FormDefinition
+		MaterialDefinition
 		PrimitiveMap
 		Primitive
 		Nothing
@@ -98,6 +101,79 @@ func (x Entity_Control) String() string {
 	return proto.EnumName(Entity_Control_name, int32(x))
 }
 func (Entity_Control) EnumDescriptor() ([]byte, []int) { return fileDescriptorTypes, []int{10, 0} }
+
+type VoxelDefinition_State int32
+
+const (
+	VoxelDefinition_RigidSolid VoxelDefinition_State = 0
+	VoxelDefinition_LooseSolid VoxelDefinition_State = 1
+	VoxelDefinition_Liquid     VoxelDefinition_State = 2
+	VoxelDefinition_Gas        VoxelDefinition_State = 3
+)
+
+var VoxelDefinition_State_name = map[int32]string{
+	0: "RigidSolid",
+	1: "LooseSolid",
+	2: "Liquid",
+	3: "Gas",
+}
+var VoxelDefinition_State_value = map[string]int32{
+	"RigidSolid": 0,
+	"LooseSolid": 1,
+	"Liquid":     2,
+	"Gas":        3,
+}
+
+func (x VoxelDefinition_State) String() string {
+	return proto.EnumName(VoxelDefinition_State_name, int32(x))
+}
+func (VoxelDefinition_State) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptorTypes, []int{19, 0}
+}
+
+type FormDefinition_WearableSlot int32
+
+const (
+	FormDefinition_WearableHead   FormDefinition_WearableSlot = 0
+	FormDefinition_WearableChest  FormDefinition_WearableSlot = 1
+	FormDefinition_WearableHands  FormDefinition_WearableSlot = 2
+	FormDefinition_WearableLegs   FormDefinition_WearableSlot = 3
+	FormDefinition_WearableFeet   FormDefinition_WearableSlot = 4
+	FormDefinition_WearableFinger FormDefinition_WearableSlot = 5
+	FormDefinition_WearableNeck   FormDefinition_WearableSlot = 6
+	FormDefinition_WearableEyes   FormDefinition_WearableSlot = 7
+	FormDefinition_WearableWaist  FormDefinition_WearableSlot = 8
+)
+
+var FormDefinition_WearableSlot_name = map[int32]string{
+	0: "WearableHead",
+	1: "WearableChest",
+	2: "WearableHands",
+	3: "WearableLegs",
+	4: "WearableFeet",
+	5: "WearableFinger",
+	6: "WearableNeck",
+	7: "WearableEyes",
+	8: "WearableWaist",
+}
+var FormDefinition_WearableSlot_value = map[string]int32{
+	"WearableHead":   0,
+	"WearableChest":  1,
+	"WearableHands":  2,
+	"WearableLegs":   3,
+	"WearableFeet":   4,
+	"WearableFinger": 5,
+	"WearableNeck":   6,
+	"WearableEyes":   7,
+	"WearableWaist":  8,
+}
+
+func (x FormDefinition_WearableSlot) String() string {
+	return proto.EnumName(FormDefinition_WearableSlot_name, int32(x))
+}
+func (FormDefinition_WearableSlot) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptorTypes, []int{20, 0}
+}
 
 type Age struct {
 	Ticks uint64 `protobuf:"varint,1,opt,name=ticks,proto3" json:"ticks,omitempty"`
@@ -994,8 +1070,12 @@ func (m *Action_CraftAction) GetOutputForms() []uint32 {
 	return nil
 }
 
+// Though stored as uint32, all IDs are uint16.
 type Content struct {
-	Definitions map[uint32]*PrimitiveMap `protobuf:"bytes,1,rep,name=definitions" json:"definitions,omitempty" protobuf_key:"varint,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value"`
+	E map[uint32]*EntityDefinition   `protobuf:"bytes,1,rep,name=e" json:"e,omitempty" protobuf_key:"varint,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value"`
+	V map[uint32]*VoxelDefinition    `protobuf:"bytes,2,rep,name=v" json:"v,omitempty" protobuf_key:"varint,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value"`
+	F map[uint32]*FormDefinition     `protobuf:"bytes,3,rep,name=f" json:"f,omitempty" protobuf_key:"varint,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value"`
+	M map[uint32]*MaterialDefinition `protobuf:"bytes,4,rep,name=m" json:"m,omitempty" protobuf_key:"varint,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value"`
 }
 
 func (m *Content) Reset()                    { *m = Content{} }
@@ -1003,51 +1083,299 @@ func (m *Content) String() string            { return proto.CompactTextString(m)
 func (*Content) ProtoMessage()               {}
 func (*Content) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{17} }
 
-func (m *Content) GetDefinitions() map[uint32]*PrimitiveMap {
+func (m *Content) GetE() map[uint32]*EntityDefinition {
 	if m != nil {
-		return m.Definitions
+		return m.E
 	}
 	return nil
 }
 
-type AllContent struct {
-	Entity   *Content `protobuf:"bytes,1,opt,name=entity" json:"entity,omitempty"`
-	Voxel    *Content `protobuf:"bytes,2,opt,name=voxel" json:"voxel,omitempty"`
-	Form     *Content `protobuf:"bytes,3,opt,name=form" json:"form,omitempty"`
-	Material *Content `protobuf:"bytes,4,opt,name=material" json:"material,omitempty"`
-}
-
-func (m *AllContent) Reset()                    { *m = AllContent{} }
-func (m *AllContent) String() string            { return proto.CompactTextString(m) }
-func (*AllContent) ProtoMessage()               {}
-func (*AllContent) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{18} }
-
-func (m *AllContent) GetEntity() *Content {
+func (m *Content) GetV() map[uint32]*VoxelDefinition {
 	if m != nil {
-		return m.Entity
+		return m.V
 	}
 	return nil
 }
 
-func (m *AllContent) GetVoxel() *Content {
+func (m *Content) GetF() map[uint32]*FormDefinition {
 	if m != nil {
-		return m.Voxel
+		return m.F
 	}
 	return nil
 }
 
-func (m *AllContent) GetForm() *Content {
+func (m *Content) GetM() map[uint32]*MaterialDefinition {
 	if m != nil {
-		return m.Form
+		return m.M
 	}
 	return nil
 }
 
-func (m *AllContent) GetMaterial() *Content {
+type EntityDefinition struct {
+	Name              string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Falls             bool   `protobuf:"varint,2,opt,name=falls,proto3" json:"falls,omitempty"`
+	InventoryCapacity uint64 `protobuf:"varint,3,opt,name=inventoryCapacity,proto3" json:"inventoryCapacity,omitempty"`
+}
+
+func (m *EntityDefinition) Reset()                    { *m = EntityDefinition{} }
+func (m *EntityDefinition) String() string            { return proto.CompactTextString(m) }
+func (*EntityDefinition) ProtoMessage()               {}
+func (*EntityDefinition) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{18} }
+
+func (m *EntityDefinition) GetName() string {
 	if m != nil {
-		return m.Material
+		return m.Name
 	}
-	return nil
+	return ""
+}
+
+func (m *EntityDefinition) GetFalls() bool {
+	if m != nil {
+		return m.Falls
+	}
+	return false
+}
+
+func (m *EntityDefinition) GetInventoryCapacity() uint64 {
+	if m != nil {
+		return m.InventoryCapacity
+	}
+	return 0
+}
+
+type VoxelDefinition struct {
+	Name  string                `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	State VoxelDefinition_State `protobuf:"varint,2,opt,name=state,proto3,enum=VoxelDefinition_State" json:"state,omitempty"`
+}
+
+func (m *VoxelDefinition) Reset()                    { *m = VoxelDefinition{} }
+func (m *VoxelDefinition) String() string            { return proto.CompactTextString(m) }
+func (*VoxelDefinition) ProtoMessage()               {}
+func (*VoxelDefinition) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{19} }
+
+func (m *VoxelDefinition) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+
+func (m *VoxelDefinition) GetState() VoxelDefinition_State {
+	if m != nil {
+		return m.State
+	}
+	return VoxelDefinition_RigidSolid
+}
+
+type FormDefinition struct {
+	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	// How it's used
+	Wieldable1Handed bool                        `protobuf:"varint,100,opt,name=Wieldable1Handed,proto3" json:"Wieldable1Handed,omitempty"`
+	Wieldable2Handed bool                        `protobuf:"varint,101,opt,name=Wieldable2Handed,proto3" json:"Wieldable2Handed,omitempty"`
+	WearableSlot     FormDefinition_WearableSlot `protobuf:"varint,200,opt,name=wearableSlot,proto3,enum=FormDefinition_WearableSlot" json:"wearableSlot,omitempty"`
+	// Tool or Weapon
+	//   values are percentages
+	Sharpness uint32 `protobuf:"varint,300,opt,name=Sharpness,proto3" json:"Sharpness,omitempty"`
+	Heft      uint32 `protobuf:"varint,301,opt,name=Heft,proto3" json:"Heft,omitempty"`
+	Digging   uint32 `protobuf:"varint,302,opt,name=Digging,proto3" json:"Digging,omitempty"`
+	Mining    uint32 `protobuf:"varint,303,opt,name=Mining,proto3" json:"Mining,omitempty"`
+	// Clothing or Armor
+	//   values are percentages
+	PiercingProtection uint32 `protobuf:"varint,400,opt,name=PiercingProtection,proto3" json:"PiercingProtection,omitempty"`
+	BluntProtection    uint32 `protobuf:"varint,401,opt,name=BluntProtection,proto3" json:"BluntProtection,omitempty"`
+	Insulation         uint32 `protobuf:"varint,402,opt,name=Insulation,proto3" json:"Insulation,omitempty"`
+	// Both
+	//   values are percentages
+	Strength uint32 `protobuf:"varint,500,opt,name=Strength,proto3" json:"Strength,omitempty"`
+}
+
+func (m *FormDefinition) Reset()                    { *m = FormDefinition{} }
+func (m *FormDefinition) String() string            { return proto.CompactTextString(m) }
+func (*FormDefinition) ProtoMessage()               {}
+func (*FormDefinition) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{20} }
+
+func (m *FormDefinition) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+
+func (m *FormDefinition) GetWieldable1Handed() bool {
+	if m != nil {
+		return m.Wieldable1Handed
+	}
+	return false
+}
+
+func (m *FormDefinition) GetWieldable2Handed() bool {
+	if m != nil {
+		return m.Wieldable2Handed
+	}
+	return false
+}
+
+func (m *FormDefinition) GetWearableSlot() FormDefinition_WearableSlot {
+	if m != nil {
+		return m.WearableSlot
+	}
+	return FormDefinition_WearableHead
+}
+
+func (m *FormDefinition) GetSharpness() uint32 {
+	if m != nil {
+		return m.Sharpness
+	}
+	return 0
+}
+
+func (m *FormDefinition) GetHeft() uint32 {
+	if m != nil {
+		return m.Heft
+	}
+	return 0
+}
+
+func (m *FormDefinition) GetDigging() uint32 {
+	if m != nil {
+		return m.Digging
+	}
+	return 0
+}
+
+func (m *FormDefinition) GetMining() uint32 {
+	if m != nil {
+		return m.Mining
+	}
+	return 0
+}
+
+func (m *FormDefinition) GetPiercingProtection() uint32 {
+	if m != nil {
+		return m.PiercingProtection
+	}
+	return 0
+}
+
+func (m *FormDefinition) GetBluntProtection() uint32 {
+	if m != nil {
+		return m.BluntProtection
+	}
+	return 0
+}
+
+func (m *FormDefinition) GetInsulation() uint32 {
+	if m != nil {
+		return m.Insulation
+	}
+	return 0
+}
+
+func (m *FormDefinition) GetStrength() uint32 {
+	if m != nil {
+		return m.Strength
+	}
+	return 0
+}
+
+type MaterialDefinition struct {
+	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	// Classifications
+	Metallic bool `protobuf:"varint,2,opt,name=Metallic,proto3" json:"Metallic,omitempty"`
+	Wooden   bool `protobuf:"varint,3,opt,name=Wooden,proto3" json:"Wooden,omitempty"`
+	Fleshy   bool `protobuf:"varint,4,opt,name=Fleshy,proto3" json:"Fleshy,omitempty"`
+	Salty    bool `protobuf:"varint,5,opt,name=Salty,proto3" json:"Salty,omitempty"`
+	// Physical Properties
+	PH      uint32 `protobuf:"varint,100,opt,name=PH,proto3" json:"PH,omitempty"`
+	SolidAt uint32 `protobuf:"varint,101,opt,name=SolidAt,proto3" json:"SolidAt,omitempty"`
+	GasAt   uint32 `protobuf:"varint,102,opt,name=GasAt,proto3" json:"GasAt,omitempty"`
+	// Item Properties
+	//   values are percentages
+	Sharpness uint32 `protobuf:"varint,200,opt,name=Sharpness,proto3" json:"Sharpness,omitempty"`
+	Heft      uint32 `protobuf:"varint,201,opt,name=Heft,proto3" json:"Heft,omitempty"`
+	Strength  uint32 `protobuf:"varint,202,opt,name=Strength,proto3" json:"Strength,omitempty"`
+}
+
+func (m *MaterialDefinition) Reset()                    { *m = MaterialDefinition{} }
+func (m *MaterialDefinition) String() string            { return proto.CompactTextString(m) }
+func (*MaterialDefinition) ProtoMessage()               {}
+func (*MaterialDefinition) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{21} }
+
+func (m *MaterialDefinition) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+
+func (m *MaterialDefinition) GetMetallic() bool {
+	if m != nil {
+		return m.Metallic
+	}
+	return false
+}
+
+func (m *MaterialDefinition) GetWooden() bool {
+	if m != nil {
+		return m.Wooden
+	}
+	return false
+}
+
+func (m *MaterialDefinition) GetFleshy() bool {
+	if m != nil {
+		return m.Fleshy
+	}
+	return false
+}
+
+func (m *MaterialDefinition) GetSalty() bool {
+	if m != nil {
+		return m.Salty
+	}
+	return false
+}
+
+func (m *MaterialDefinition) GetPH() uint32 {
+	if m != nil {
+		return m.PH
+	}
+	return 0
+}
+
+func (m *MaterialDefinition) GetSolidAt() uint32 {
+	if m != nil {
+		return m.SolidAt
+	}
+	return 0
+}
+
+func (m *MaterialDefinition) GetGasAt() uint32 {
+	if m != nil {
+		return m.GasAt
+	}
+	return 0
+}
+
+func (m *MaterialDefinition) GetSharpness() uint32 {
+	if m != nil {
+		return m.Sharpness
+	}
+	return 0
+}
+
+func (m *MaterialDefinition) GetHeft() uint32 {
+	if m != nil {
+		return m.Heft
+	}
+	return 0
+}
+
+func (m *MaterialDefinition) GetStrength() uint32 {
+	if m != nil {
+		return m.Strength
+	}
+	return 0
 }
 
 type PrimitiveMap struct {
@@ -1057,7 +1385,7 @@ type PrimitiveMap struct {
 func (m *PrimitiveMap) Reset()                    { *m = PrimitiveMap{} }
 func (m *PrimitiveMap) String() string            { return proto.CompactTextString(m) }
 func (*PrimitiveMap) ProtoMessage()               {}
-func (*PrimitiveMap) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{19} }
+func (*PrimitiveMap) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{22} }
 
 func (m *PrimitiveMap) GetMap() map[string]*Primitive {
 	if m != nil {
@@ -1078,7 +1406,7 @@ type Primitive struct {
 func (m *Primitive) Reset()                    { *m = Primitive{} }
 func (m *Primitive) String() string            { return proto.CompactTextString(m) }
 func (*Primitive) ProtoMessage()               {}
-func (*Primitive) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{20} }
+func (*Primitive) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{23} }
 
 type isPrimitive_Value interface {
 	isPrimitive_Value()
@@ -1242,7 +1570,7 @@ type Nothing struct {
 func (m *Nothing) Reset()                    { *m = Nothing{} }
 func (m *Nothing) String() string            { return proto.CompactTextString(m) }
 func (*Nothing) ProtoMessage()               {}
-func (*Nothing) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{21} }
+func (*Nothing) Descriptor() ([]byte, []int) { return fileDescriptorTypes, []int{24} }
 
 func init() {
 	proto.RegisterType((*Age)(nil), "Age")
@@ -1268,12 +1596,17 @@ func init() {
 	proto.RegisterType((*Action_MoveAction)(nil), "Action.MoveAction")
 	proto.RegisterType((*Action_CraftAction)(nil), "Action.CraftAction")
 	proto.RegisterType((*Content)(nil), "Content")
-	proto.RegisterType((*AllContent)(nil), "AllContent")
+	proto.RegisterType((*EntityDefinition)(nil), "EntityDefinition")
+	proto.RegisterType((*VoxelDefinition)(nil), "VoxelDefinition")
+	proto.RegisterType((*FormDefinition)(nil), "FormDefinition")
+	proto.RegisterType((*MaterialDefinition)(nil), "MaterialDefinition")
 	proto.RegisterType((*PrimitiveMap)(nil), "PrimitiveMap")
 	proto.RegisterType((*Primitive)(nil), "Primitive")
 	proto.RegisterType((*Nothing)(nil), "Nothing")
 	proto.RegisterEnum("InventorySlot_ContainerType", InventorySlot_ContainerType_name, InventorySlot_ContainerType_value)
 	proto.RegisterEnum("Entity_Control", Entity_Control_name, Entity_Control_value)
+	proto.RegisterEnum("VoxelDefinition_State", VoxelDefinition_State_name, VoxelDefinition_State_value)
+	proto.RegisterEnum("FormDefinition_WearableSlot", FormDefinition_WearableSlot_name, FormDefinition_WearableSlot_value)
 }
 func (m *Age) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
@@ -2256,11 +2589,11 @@ func (m *Content) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.Definitions) > 0 {
-		for k, _ := range m.Definitions {
+	if len(m.E) > 0 {
+		for k, _ := range m.E {
 			dAtA[i] = 0xa
 			i++
-			v := m.Definitions[k]
+			v := m.E[k]
 			msgSize := 0
 			if v != nil {
 				msgSize = v.Size()
@@ -2283,10 +2616,91 @@ func (m *Content) MarshalTo(dAtA []byte) (int, error) {
 			}
 		}
 	}
+	if len(m.V) > 0 {
+		for k, _ := range m.V {
+			dAtA[i] = 0x12
+			i++
+			v := m.V[k]
+			msgSize := 0
+			if v != nil {
+				msgSize = v.Size()
+				msgSize += 1 + sovTypes(uint64(msgSize))
+			}
+			mapSize := 1 + sovTypes(uint64(k)) + msgSize
+			i = encodeVarintTypes(dAtA, i, uint64(mapSize))
+			dAtA[i] = 0x8
+			i++
+			i = encodeVarintTypes(dAtA, i, uint64(k))
+			if v != nil {
+				dAtA[i] = 0x12
+				i++
+				i = encodeVarintTypes(dAtA, i, uint64(v.Size()))
+				n37, err := v.MarshalTo(dAtA[i:])
+				if err != nil {
+					return 0, err
+				}
+				i += n37
+			}
+		}
+	}
+	if len(m.F) > 0 {
+		for k, _ := range m.F {
+			dAtA[i] = 0x1a
+			i++
+			v := m.F[k]
+			msgSize := 0
+			if v != nil {
+				msgSize = v.Size()
+				msgSize += 1 + sovTypes(uint64(msgSize))
+			}
+			mapSize := 1 + sovTypes(uint64(k)) + msgSize
+			i = encodeVarintTypes(dAtA, i, uint64(mapSize))
+			dAtA[i] = 0x8
+			i++
+			i = encodeVarintTypes(dAtA, i, uint64(k))
+			if v != nil {
+				dAtA[i] = 0x12
+				i++
+				i = encodeVarintTypes(dAtA, i, uint64(v.Size()))
+				n38, err := v.MarshalTo(dAtA[i:])
+				if err != nil {
+					return 0, err
+				}
+				i += n38
+			}
+		}
+	}
+	if len(m.M) > 0 {
+		for k, _ := range m.M {
+			dAtA[i] = 0x22
+			i++
+			v := m.M[k]
+			msgSize := 0
+			if v != nil {
+				msgSize = v.Size()
+				msgSize += 1 + sovTypes(uint64(msgSize))
+			}
+			mapSize := 1 + sovTypes(uint64(k)) + msgSize
+			i = encodeVarintTypes(dAtA, i, uint64(mapSize))
+			dAtA[i] = 0x8
+			i++
+			i = encodeVarintTypes(dAtA, i, uint64(k))
+			if v != nil {
+				dAtA[i] = 0x12
+				i++
+				i = encodeVarintTypes(dAtA, i, uint64(v.Size()))
+				n39, err := v.MarshalTo(dAtA[i:])
+				if err != nil {
+					return 0, err
+				}
+				i += n39
+			}
+		}
+	}
 	return i, nil
 }
 
-func (m *AllContent) Marshal() (dAtA []byte, err error) {
+func (m *EntityDefinition) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -2296,50 +2710,277 @@ func (m *AllContent) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *AllContent) MarshalTo(dAtA []byte) (int, error) {
+func (m *EntityDefinition) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
 	_ = l
-	if m.Entity != nil {
+	if len(m.Name) > 0 {
 		dAtA[i] = 0xa
 		i++
-		i = encodeVarintTypes(dAtA, i, uint64(m.Entity.Size()))
-		n37, err := m.Entity.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n37
+		i = encodeVarintTypes(dAtA, i, uint64(len(m.Name)))
+		i += copy(dAtA[i:], m.Name)
 	}
-	if m.Voxel != nil {
+	if m.Falls {
+		dAtA[i] = 0x10
+		i++
+		if m.Falls {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.InventoryCapacity != 0 {
+		dAtA[i] = 0x18
+		i++
+		i = encodeVarintTypes(dAtA, i, uint64(m.InventoryCapacity))
+	}
+	return i, nil
+}
+
+func (m *VoxelDefinition) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *VoxelDefinition) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Name) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintTypes(dAtA, i, uint64(len(m.Name)))
+		i += copy(dAtA[i:], m.Name)
+	}
+	if m.State != 0 {
+		dAtA[i] = 0x10
+		i++
+		i = encodeVarintTypes(dAtA, i, uint64(m.State))
+	}
+	return i, nil
+}
+
+func (m *FormDefinition) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *FormDefinition) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Name) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintTypes(dAtA, i, uint64(len(m.Name)))
+		i += copy(dAtA[i:], m.Name)
+	}
+	if m.Wieldable1Handed {
+		dAtA[i] = 0xa0
+		i++
+		dAtA[i] = 0x6
+		i++
+		if m.Wieldable1Handed {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.Wieldable2Handed {
+		dAtA[i] = 0xa8
+		i++
+		dAtA[i] = 0x6
+		i++
+		if m.Wieldable2Handed {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.WearableSlot != 0 {
+		dAtA[i] = 0xc0
+		i++
+		dAtA[i] = 0xc
+		i++
+		i = encodeVarintTypes(dAtA, i, uint64(m.WearableSlot))
+	}
+	if m.Sharpness != 0 {
+		dAtA[i] = 0xe0
+		i++
 		dAtA[i] = 0x12
 		i++
-		i = encodeVarintTypes(dAtA, i, uint64(m.Voxel.Size()))
-		n38, err := m.Voxel.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n38
+		i = encodeVarintTypes(dAtA, i, uint64(m.Sharpness))
 	}
-	if m.Form != nil {
-		dAtA[i] = 0x1a
+	if m.Heft != 0 {
+		dAtA[i] = 0xe8
 		i++
-		i = encodeVarintTypes(dAtA, i, uint64(m.Form.Size()))
-		n39, err := m.Form.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n39
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintTypes(dAtA, i, uint64(m.Heft))
 	}
-	if m.Material != nil {
-		dAtA[i] = 0x22
+	if m.Digging != 0 {
+		dAtA[i] = 0xf0
 		i++
-		i = encodeVarintTypes(dAtA, i, uint64(m.Material.Size()))
-		n40, err := m.Material.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintTypes(dAtA, i, uint64(m.Digging))
+	}
+	if m.Mining != 0 {
+		dAtA[i] = 0xf8
+		i++
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintTypes(dAtA, i, uint64(m.Mining))
+	}
+	if m.PiercingProtection != 0 {
+		dAtA[i] = 0x80
+		i++
+		dAtA[i] = 0x19
+		i++
+		i = encodeVarintTypes(dAtA, i, uint64(m.PiercingProtection))
+	}
+	if m.BluntProtection != 0 {
+		dAtA[i] = 0x88
+		i++
+		dAtA[i] = 0x19
+		i++
+		i = encodeVarintTypes(dAtA, i, uint64(m.BluntProtection))
+	}
+	if m.Insulation != 0 {
+		dAtA[i] = 0x90
+		i++
+		dAtA[i] = 0x19
+		i++
+		i = encodeVarintTypes(dAtA, i, uint64(m.Insulation))
+	}
+	if m.Strength != 0 {
+		dAtA[i] = 0xa0
+		i++
+		dAtA[i] = 0x1f
+		i++
+		i = encodeVarintTypes(dAtA, i, uint64(m.Strength))
+	}
+	return i, nil
+}
+
+func (m *MaterialDefinition) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MaterialDefinition) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Name) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintTypes(dAtA, i, uint64(len(m.Name)))
+		i += copy(dAtA[i:], m.Name)
+	}
+	if m.Metallic {
+		dAtA[i] = 0x10
+		i++
+		if m.Metallic {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
 		}
-		i += n40
+		i++
+	}
+	if m.Wooden {
+		dAtA[i] = 0x18
+		i++
+		if m.Wooden {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.Fleshy {
+		dAtA[i] = 0x20
+		i++
+		if m.Fleshy {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.Salty {
+		dAtA[i] = 0x28
+		i++
+		if m.Salty {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.PH != 0 {
+		dAtA[i] = 0xa0
+		i++
+		dAtA[i] = 0x6
+		i++
+		i = encodeVarintTypes(dAtA, i, uint64(m.PH))
+	}
+	if m.SolidAt != 0 {
+		dAtA[i] = 0xa8
+		i++
+		dAtA[i] = 0x6
+		i++
+		i = encodeVarintTypes(dAtA, i, uint64(m.SolidAt))
+	}
+	if m.GasAt != 0 {
+		dAtA[i] = 0xb0
+		i++
+		dAtA[i] = 0x6
+		i++
+		i = encodeVarintTypes(dAtA, i, uint64(m.GasAt))
+	}
+	if m.Sharpness != 0 {
+		dAtA[i] = 0xc0
+		i++
+		dAtA[i] = 0xc
+		i++
+		i = encodeVarintTypes(dAtA, i, uint64(m.Sharpness))
+	}
+	if m.Heft != 0 {
+		dAtA[i] = 0xc8
+		i++
+		dAtA[i] = 0xc
+		i++
+		i = encodeVarintTypes(dAtA, i, uint64(m.Heft))
+	}
+	if m.Strength != 0 {
+		dAtA[i] = 0xd0
+		i++
+		dAtA[i] = 0xc
+		i++
+		i = encodeVarintTypes(dAtA, i, uint64(m.Strength))
 	}
 	return i, nil
 }
@@ -2379,11 +3020,11 @@ func (m *PrimitiveMap) MarshalTo(dAtA []byte) (int, error) {
 				dAtA[i] = 0x12
 				i++
 				i = encodeVarintTypes(dAtA, i, uint64(v.Size()))
-				n41, err := v.MarshalTo(dAtA[i:])
+				n40, err := v.MarshalTo(dAtA[i:])
 				if err != nil {
 					return 0, err
 				}
-				i += n41
+				i += n40
 			}
 		}
 	}
@@ -2406,11 +3047,11 @@ func (m *Primitive) MarshalTo(dAtA []byte) (int, error) {
 	var l int
 	_ = l
 	if m.Value != nil {
-		nn42, err := m.Value.MarshalTo(dAtA[i:])
+		nn41, err := m.Value.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += nn42
+		i += nn41
 	}
 	return i, nil
 }
@@ -2890,8 +3531,47 @@ func (m *Action_CraftAction) Size() (n int) {
 func (m *Content) Size() (n int) {
 	var l int
 	_ = l
-	if len(m.Definitions) > 0 {
-		for k, v := range m.Definitions {
+	if len(m.E) > 0 {
+		for k, v := range m.E {
+			_ = k
+			_ = v
+			l = 0
+			if v != nil {
+				l = v.Size()
+				l += 1 + sovTypes(uint64(l))
+			}
+			mapEntrySize := 1 + sovTypes(uint64(k)) + l
+			n += mapEntrySize + 1 + sovTypes(uint64(mapEntrySize))
+		}
+	}
+	if len(m.V) > 0 {
+		for k, v := range m.V {
+			_ = k
+			_ = v
+			l = 0
+			if v != nil {
+				l = v.Size()
+				l += 1 + sovTypes(uint64(l))
+			}
+			mapEntrySize := 1 + sovTypes(uint64(k)) + l
+			n += mapEntrySize + 1 + sovTypes(uint64(mapEntrySize))
+		}
+	}
+	if len(m.F) > 0 {
+		for k, v := range m.F {
+			_ = k
+			_ = v
+			l = 0
+			if v != nil {
+				l = v.Size()
+				l += 1 + sovTypes(uint64(l))
+			}
+			mapEntrySize := 1 + sovTypes(uint64(k)) + l
+			n += mapEntrySize + 1 + sovTypes(uint64(mapEntrySize))
+		}
+	}
+	if len(m.M) > 0 {
+		for k, v := range m.M {
 			_ = k
 			_ = v
 			l = 0
@@ -2906,24 +3586,114 @@ func (m *Content) Size() (n int) {
 	return n
 }
 
-func (m *AllContent) Size() (n int) {
+func (m *EntityDefinition) Size() (n int) {
 	var l int
 	_ = l
-	if m.Entity != nil {
-		l = m.Entity.Size()
+	l = len(m.Name)
+	if l > 0 {
 		n += 1 + l + sovTypes(uint64(l))
 	}
-	if m.Voxel != nil {
-		l = m.Voxel.Size()
+	if m.Falls {
+		n += 2
+	}
+	if m.InventoryCapacity != 0 {
+		n += 1 + sovTypes(uint64(m.InventoryCapacity))
+	}
+	return n
+}
+
+func (m *VoxelDefinition) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Name)
+	if l > 0 {
 		n += 1 + l + sovTypes(uint64(l))
 	}
-	if m.Form != nil {
-		l = m.Form.Size()
+	if m.State != 0 {
+		n += 1 + sovTypes(uint64(m.State))
+	}
+	return n
+}
+
+func (m *FormDefinition) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Name)
+	if l > 0 {
 		n += 1 + l + sovTypes(uint64(l))
 	}
-	if m.Material != nil {
-		l = m.Material.Size()
+	if m.Wieldable1Handed {
+		n += 3
+	}
+	if m.Wieldable2Handed {
+		n += 3
+	}
+	if m.WearableSlot != 0 {
+		n += 2 + sovTypes(uint64(m.WearableSlot))
+	}
+	if m.Sharpness != 0 {
+		n += 2 + sovTypes(uint64(m.Sharpness))
+	}
+	if m.Heft != 0 {
+		n += 2 + sovTypes(uint64(m.Heft))
+	}
+	if m.Digging != 0 {
+		n += 2 + sovTypes(uint64(m.Digging))
+	}
+	if m.Mining != 0 {
+		n += 2 + sovTypes(uint64(m.Mining))
+	}
+	if m.PiercingProtection != 0 {
+		n += 2 + sovTypes(uint64(m.PiercingProtection))
+	}
+	if m.BluntProtection != 0 {
+		n += 2 + sovTypes(uint64(m.BluntProtection))
+	}
+	if m.Insulation != 0 {
+		n += 2 + sovTypes(uint64(m.Insulation))
+	}
+	if m.Strength != 0 {
+		n += 2 + sovTypes(uint64(m.Strength))
+	}
+	return n
+}
+
+func (m *MaterialDefinition) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Name)
+	if l > 0 {
 		n += 1 + l + sovTypes(uint64(l))
+	}
+	if m.Metallic {
+		n += 2
+	}
+	if m.Wooden {
+		n += 2
+	}
+	if m.Fleshy {
+		n += 2
+	}
+	if m.Salty {
+		n += 2
+	}
+	if m.PH != 0 {
+		n += 2 + sovTypes(uint64(m.PH))
+	}
+	if m.SolidAt != 0 {
+		n += 2 + sovTypes(uint64(m.SolidAt))
+	}
+	if m.GasAt != 0 {
+		n += 2 + sovTypes(uint64(m.GasAt))
+	}
+	if m.Sharpness != 0 {
+		n += 2 + sovTypes(uint64(m.Sharpness))
+	}
+	if m.Heft != 0 {
+		n += 2 + sovTypes(uint64(m.Heft))
+	}
+	if m.Strength != 0 {
+		n += 2 + sovTypes(uint64(m.Strength))
 	}
 	return n
 }
@@ -5955,7 +6725,7 @@ func (m *Content) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Definitions", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field E", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -5979,11 +6749,11 @@ func (m *Content) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.Definitions == nil {
-				m.Definitions = make(map[uint32]*PrimitiveMap)
+			if m.E == nil {
+				m.E = make(map[uint32]*EntityDefinition)
 			}
 			var mapkey uint32
-			var mapvalue *PrimitiveMap
+			var mapvalue *EntityDefinition
 			for iNdEx < postIndex {
 				entryPreIndex := iNdEx
 				var wire uint64
@@ -6043,7 +6813,7 @@ func (m *Content) Unmarshal(dAtA []byte) error {
 					if postmsgIndex > l {
 						return io.ErrUnexpectedEOF
 					}
-					mapvalue = &PrimitiveMap{}
+					mapvalue = &EntityDefinition{}
 					if err := mapvalue.Unmarshal(dAtA[iNdEx:postmsgIndex]); err != nil {
 						return err
 					}
@@ -6063,7 +6833,343 @@ func (m *Content) Unmarshal(dAtA []byte) error {
 					iNdEx += skippy
 				}
 			}
-			m.Definitions[mapkey] = mapvalue
+			m.E[mapkey] = mapvalue
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field V", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.V == nil {
+				m.V = make(map[uint32]*VoxelDefinition)
+			}
+			var mapkey uint32
+			var mapvalue *VoxelDefinition
+			for iNdEx < postIndex {
+				entryPreIndex := iNdEx
+				var wire uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowTypes
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					wire |= (uint64(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				fieldNum := int32(wire >> 3)
+				if fieldNum == 1 {
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowTypes
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						mapkey |= (uint32(b) & 0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+				} else if fieldNum == 2 {
+					var mapmsglen int
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowTypes
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						mapmsglen |= (int(b) & 0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					if mapmsglen < 0 {
+						return ErrInvalidLengthTypes
+					}
+					postmsgIndex := iNdEx + mapmsglen
+					if mapmsglen < 0 {
+						return ErrInvalidLengthTypes
+					}
+					if postmsgIndex > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapvalue = &VoxelDefinition{}
+					if err := mapvalue.Unmarshal(dAtA[iNdEx:postmsgIndex]); err != nil {
+						return err
+					}
+					iNdEx = postmsgIndex
+				} else {
+					iNdEx = entryPreIndex
+					skippy, err := skipTypes(dAtA[iNdEx:])
+					if err != nil {
+						return err
+					}
+					if skippy < 0 {
+						return ErrInvalidLengthTypes
+					}
+					if (iNdEx + skippy) > postIndex {
+						return io.ErrUnexpectedEOF
+					}
+					iNdEx += skippy
+				}
+			}
+			m.V[mapkey] = mapvalue
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field F", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.F == nil {
+				m.F = make(map[uint32]*FormDefinition)
+			}
+			var mapkey uint32
+			var mapvalue *FormDefinition
+			for iNdEx < postIndex {
+				entryPreIndex := iNdEx
+				var wire uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowTypes
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					wire |= (uint64(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				fieldNum := int32(wire >> 3)
+				if fieldNum == 1 {
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowTypes
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						mapkey |= (uint32(b) & 0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+				} else if fieldNum == 2 {
+					var mapmsglen int
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowTypes
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						mapmsglen |= (int(b) & 0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					if mapmsglen < 0 {
+						return ErrInvalidLengthTypes
+					}
+					postmsgIndex := iNdEx + mapmsglen
+					if mapmsglen < 0 {
+						return ErrInvalidLengthTypes
+					}
+					if postmsgIndex > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapvalue = &FormDefinition{}
+					if err := mapvalue.Unmarshal(dAtA[iNdEx:postmsgIndex]); err != nil {
+						return err
+					}
+					iNdEx = postmsgIndex
+				} else {
+					iNdEx = entryPreIndex
+					skippy, err := skipTypes(dAtA[iNdEx:])
+					if err != nil {
+						return err
+					}
+					if skippy < 0 {
+						return ErrInvalidLengthTypes
+					}
+					if (iNdEx + skippy) > postIndex {
+						return io.ErrUnexpectedEOF
+					}
+					iNdEx += skippy
+				}
+			}
+			m.F[mapkey] = mapvalue
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field M", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.M == nil {
+				m.M = make(map[uint32]*MaterialDefinition)
+			}
+			var mapkey uint32
+			var mapvalue *MaterialDefinition
+			for iNdEx < postIndex {
+				entryPreIndex := iNdEx
+				var wire uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowTypes
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					wire |= (uint64(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				fieldNum := int32(wire >> 3)
+				if fieldNum == 1 {
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowTypes
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						mapkey |= (uint32(b) & 0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+				} else if fieldNum == 2 {
+					var mapmsglen int
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowTypes
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						mapmsglen |= (int(b) & 0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					if mapmsglen < 0 {
+						return ErrInvalidLengthTypes
+					}
+					postmsgIndex := iNdEx + mapmsglen
+					if mapmsglen < 0 {
+						return ErrInvalidLengthTypes
+					}
+					if postmsgIndex > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapvalue = &MaterialDefinition{}
+					if err := mapvalue.Unmarshal(dAtA[iNdEx:postmsgIndex]); err != nil {
+						return err
+					}
+					iNdEx = postmsgIndex
+				} else {
+					iNdEx = entryPreIndex
+					skippy, err := skipTypes(dAtA[iNdEx:])
+					if err != nil {
+						return err
+					}
+					if skippy < 0 {
+						return ErrInvalidLengthTypes
+					}
+					if (iNdEx + skippy) > postIndex {
+						return io.ErrUnexpectedEOF
+					}
+					iNdEx += skippy
+				}
+			}
+			m.M[mapkey] = mapvalue
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -6086,7 +7192,7 @@ func (m *Content) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *AllContent) Unmarshal(dAtA []byte) error {
+func (m *EntityDefinition) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -6109,17 +7215,17 @@ func (m *AllContent) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: AllContent: wiretype end group for non-group")
+			return fmt.Errorf("proto: EntityDefinition: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: AllContent: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: EntityDefinition: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Entity", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Name", wireType)
 			}
-			var msglen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTypes
@@ -6129,30 +7235,26 @@ func (m *AllContent) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				stringLen |= (uint64(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if msglen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthTypes
 			}
-			postIndex := iNdEx + msglen
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.Entity == nil {
-				m.Entity = &Content{}
-			}
-			if err := m.Entity.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.Name = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Voxel", wireType)
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Falls", wireType)
 			}
-			var msglen int
+			var v int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTypes
@@ -6162,30 +7264,17 @@ func (m *AllContent) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				v |= (int(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if msglen < 0 {
-				return ErrInvalidLengthTypes
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Voxel == nil {
-				m.Voxel = &Content{}
-			}
-			if err := m.Voxel.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
+			m.Falls = bool(v != 0)
 		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Form", wireType)
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field InventoryCapacity", wireType)
 			}
-			var msglen int
+			m.InventoryCapacity = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTypes
@@ -6195,30 +7284,523 @@ func (m *AllContent) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				m.InventoryCapacity |= (uint64(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if msglen < 0 {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTypes(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
 				return ErrInvalidLengthTypes
 			}
-			postIndex := iNdEx + msglen
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *VoxelDefinition) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTypes
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: VoxelDefinition: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: VoxelDefinition: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Name", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.Form == nil {
-				m.Form = &Content{}
+			m.Name = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field State", wireType)
 			}
-			if err := m.Form.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.State = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.State |= (VoxelDefinition_State(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTypes(dAtA[iNdEx:])
+			if err != nil {
 				return err
 			}
+			if skippy < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *FormDefinition) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTypes
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: FormDefinition: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: FormDefinition: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Name", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Name = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
+		case 100:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Wieldable1Handed", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Wieldable1Handed = bool(v != 0)
+		case 101:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Wieldable2Handed", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Wieldable2Handed = bool(v != 0)
+		case 200:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field WearableSlot", wireType)
+			}
+			m.WearableSlot = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.WearableSlot |= (FormDefinition_WearableSlot(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 300:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Sharpness", wireType)
+			}
+			m.Sharpness = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Sharpness |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 301:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Heft", wireType)
+			}
+			m.Heft = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Heft |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 302:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Digging", wireType)
+			}
+			m.Digging = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Digging |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 303:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Mining", wireType)
+			}
+			m.Mining = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Mining |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 400:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PiercingProtection", wireType)
+			}
+			m.PiercingProtection = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PiercingProtection |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 401:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BluntProtection", wireType)
+			}
+			m.BluntProtection = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.BluntProtection |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 402:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Insulation", wireType)
+			}
+			m.Insulation = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Insulation |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 500:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Strength", wireType)
+			}
+			m.Strength = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Strength |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTypes(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MaterialDefinition) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTypes
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MaterialDefinition: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MaterialDefinition: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Name", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Name = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Metallic", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Metallic = bool(v != 0)
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Wooden", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Wooden = bool(v != 0)
 		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Material", wireType)
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Fleshy", wireType)
 			}
-			var msglen int
+			var v int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTypes
@@ -6228,25 +7810,146 @@ func (m *AllContent) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				v |= (int(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if msglen < 0 {
-				return ErrInvalidLengthTypes
+			m.Fleshy = bool(v != 0)
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Salty", wireType)
 			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
 			}
-			if m.Material == nil {
-				m.Material = &Content{}
+			m.Salty = bool(v != 0)
+		case 100:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PH", wireType)
 			}
-			if err := m.Material.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
+			m.PH = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PH |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
 			}
-			iNdEx = postIndex
+		case 101:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SolidAt", wireType)
+			}
+			m.SolidAt = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SolidAt |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 102:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field GasAt", wireType)
+			}
+			m.GasAt = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.GasAt |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 200:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Sharpness", wireType)
+			}
+			m.Sharpness = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Sharpness |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 201:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Heft", wireType)
+			}
+			m.Heft = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Heft |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 202:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Strength", wireType)
+			}
+			m.Strength = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Strength |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTypes(dAtA[iNdEx:])
@@ -6730,87 +8433,119 @@ var (
 func init() { proto.RegisterFile("types/types.proto", fileDescriptorTypes) }
 
 var fileDescriptorTypes = []byte{
-	// 1298 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x56, 0x4d, 0x6f, 0xdb, 0x46,
-	0x13, 0x16, 0x45, 0x91, 0x94, 0x46, 0x96, 0xa3, 0x6c, 0xf2, 0x06, 0x8a, 0xe2, 0x57, 0x55, 0xd9,
-	0x24, 0x55, 0xbf, 0x98, 0x44, 0x01, 0x82, 0xa2, 0x3d, 0x59, 0x8a, 0x02, 0x1b, 0xb5, 0x5d, 0x77,
-	0x6b, 0x14, 0xcd, 0x91, 0x92, 0xd6, 0x0e, 0x6b, 0x8a, 0x4b, 0x90, 0x2b, 0x25, 0x0a, 0x0a, 0xf4,
-	0xd8, 0x9e, 0x0b, 0x04, 0xe8, 0xa1, 0xb7, 0xfe, 0x96, 0x02, 0x3d, 0xf6, 0x27, 0x14, 0xee, 0xa1,
-	0xff, 0xa0, 0xe7, 0x62, 0xbf, 0x28, 0x92, 0x31, 0x52, 0xf4, 0x62, 0xef, 0xcc, 0x3c, 0x9a, 0x9d,
-	0x7d, 0xf6, 0x99, 0x59, 0xc2, 0x55, 0xb6, 0x8e, 0x49, 0x7a, 0x4f, 0xfc, 0xf5, 0xe2, 0x84, 0x32,
-	0xea, 0xde, 0x02, 0x73, 0xf7, 0x8c, 0xa0, 0xeb, 0x60, 0xb1, 0x60, 0x76, 0x9e, 0x76, 0x8c, 0xbe,
-	0x31, 0xa8, 0x61, 0x69, 0xb8, 0x0f, 0xc0, 0x1e, 0xd3, 0xe8, 0x34, 0x38, 0x43, 0xef, 0x82, 0x43,
-	0x63, 0x16, 0xd0, 0x48, 0x22, 0x9a, 0xc3, 0x96, 0x77, 0x9c, 0x04, 0x8b, 0x80, 0x05, 0x2b, 0x72,
-	0xe8, 0xc7, 0x58, 0x47, 0xdd, 0x1f, 0x0c, 0xb0, 0x8f, 0x43, 0x7f, 0x4d, 0x12, 0xb4, 0x0d, 0xd5,
-	0x60, 0x2e, 0xe0, 0x26, 0xae, 0x06, 0x73, 0xd4, 0x01, 0xc7, 0x9f, 0xcf, 0x13, 0x92, 0xa6, 0x9d,
-	0x6a, 0xdf, 0x18, 0x6c, 0x61, 0x6d, 0x22, 0x04, 0xb5, 0xc8, 0x5f, 0x90, 0x8e, 0xd9, 0x37, 0x06,
-	0x0d, 0x2c, 0xd6, 0xa8, 0x0b, 0xf5, 0x90, 0x9e, 0x9d, 0x91, 0xf9, 0x7e, 0xd4, 0xa9, 0xf5, 0x8d,
-	0x41, 0x1d, 0x67, 0x36, 0xba, 0x0d, 0x56, 0x1a, 0xfb, 0xcf, 0xa3, 0x8e, 0x25, 0x6a, 0xd9, 0xf6,
-	0x76, 0xa7, 0x29, 0x0d, 0x97, 0x8c, 0x1c, 0xd3, 0x20, 0x62, 0x58, 0x06, 0xdd, 0xef, 0xc0, 0x91,
-	0x95, 0xa4, 0xe8, 0x1e, 0x38, 0xb1, 0x5c, 0x76, 0x8c, 0xbe, 0x39, 0x68, 0x0e, 0xff, 0xe7, 0xa9,
-	0x90, 0xfe, 0x3f, 0x89, 0x58, 0xb2, 0xc6, 0x1a, 0xd5, 0x1d, 0xc3, 0x56, 0x3e, 0x80, 0xda, 0x60,
-	0x9e, 0x93, 0xb5, 0x38, 0x4c, 0x03, 0xf3, 0x25, 0xfa, 0x3f, 0x58, 0x2b, 0x3f, 0x5c, 0x12, 0x71,
-	0x96, 0xe6, 0xd0, 0x51, 0x89, 0xb0, 0xf4, 0x7e, 0x52, 0xfd, 0xd8, 0x70, 0x5d, 0x00, 0xe9, 0x3c,
-	0x08, 0x52, 0xc6, 0x29, 0xe6, 0x07, 0x93, 0x15, 0x34, 0xb0, 0x34, 0xdc, 0xbe, 0xc6, 0x1c, 0xf1,
-	0x43, 0x6b, 0x22, 0x8c, 0x0d, 0x11, 0xee, 0x17, 0xd0, 0x92, 0x88, 0xc7, 0x84, 0xf9, 0x41, 0x98,
-	0xa2, 0xb7, 0xc0, 0x96, 0x65, 0xaa, 0xab, 0xc8, 0xb6, 0x56, 0x6e, 0x0e, 0x20, 0x11, 0x0b, 0xd8,
-	0x3a, 0xab, 0x6d, 0x22, 0x4c, 0xac, 0xdc, 0xee, 0xaf, 0x26, 0x58, 0xe3, 0x67, 0xcb, 0xe8, 0x1c,
-	0xdd, 0x00, 0x7b, 0x45, 0x5f, 0x90, 0x50, 0x56, 0x55, 0xc3, 0xca, 0x42, 0xf7, 0xa1, 0x3e, 0xa3,
-	0x8b, 0x98, 0x2e, 0xa3, 0x79, 0xa7, 0x2a, 0x18, 0xbb, 0xee, 0x89, 0x5f, 0x78, 0x63, 0xe5, 0x96,
-	0x84, 0x65, 0x28, 0x7e, 0x5f, 0x22, 0x7b, 0x40, 0xd2, 0x8e, 0xd9, 0x37, 0x07, 0x26, 0xce, 0x6c,
-	0x34, 0x00, 0x2b, 0x60, 0x64, 0x91, 0x76, 0x6a, 0x22, 0x15, 0x52, 0xa9, 0xf6, 0x19, 0x59, 0xec,
-	0x32, 0x75, 0x67, 0x02, 0xd0, 0x7d, 0x65, 0x40, 0x5d, 0xef, 0x80, 0x06, 0xd0, 0x08, 0xa2, 0x15,
-	0x89, 0x18, 0x4d, 0xd6, 0xea, 0xac, 0xe0, 0xed, 0x6b, 0x0f, 0xde, 0x04, 0xd1, 0x47, 0x00, 0x71,
-	0x42, 0x63, 0x92, 0x88, 0xed, 0xab, 0x97, 0x29, 0x34, 0x07, 0x40, 0xf7, 0xe1, 0xca, 0x62, 0x19,
-	0xb2, 0x60, 0x1a, 0xd2, 0xd9, 0xb9, 0xa8, 0x45, 0x48, 0xaf, 0x39, 0xb4, 0x3d, 0x59, 0x4d, 0x39,
-	0xdc, 0x3d, 0x80, 0x56, 0xe1, 0xe0, 0x79, 0x41, 0xb4, 0xa4, 0x20, 0xee, 0x14, 0x05, 0x71, 0xa5,
-	0xc4, 0x57, 0x4e, 0x18, 0xdd, 0x27, 0xd0, 0xcc, 0x9d, 0x1d, 0xed, 0x80, 0x15, 0xf3, 0x85, 0x3a,
-	0xa3, 0x2e, 0x42, 0x3a, 0xd1, 0x4d, 0xa8, 0x71, 0x6e, 0x54, 0x5a, 0x4b, 0xb0, 0x86, 0x85, 0xcb,
-	0x1d, 0x40, 0x23, 0xa3, 0x03, 0xdd, 0xd2, 0x24, 0x4b, 0x85, 0x2b, 0xa0, 0xf4, 0xb9, 0x7f, 0x1b,
-	0xd0, 0xca, 0xa0, 0x5f, 0x86, 0x94, 0xa1, 0x11, 0xb4, 0x66, 0x34, 0x62, 0x7e, 0x10, 0x91, 0xe4,
-	0x64, 0x1d, 0x4b, 0xcd, 0x6d, 0x0f, 0x77, 0xbc, 0x02, 0xcc, 0x1b, 0xe7, 0x31, 0xb8, 0xf8, 0x13,
-	0x74, 0x57, 0x17, 0x5e, 0xbd, 0xac, 0x0f, 0xf7, 0x2a, 0xfa, 0x08, 0x3b, 0x4a, 0x1b, 0xeb, 0xfd,
-	0xb9, 0x20, 0xda, 0xdc, 0xab, 0xe0, 0xcc, 0xc3, 0x1b, 0x23, 0x0d, 0x29, 0x93, 0xea, 0x68, 0x61,
-	0x69, 0xb8, 0xf7, 0x39, 0xe3, 0xf9, 0xcd, 0x1a, 0x60, 0x7d, 0xf5, 0xf9, 0xd7, 0x93, 0x83, 0x76,
-	0x05, 0x01, 0xd8, 0x93, 0xa3, 0x93, 0xfd, 0x93, 0xa7, 0x6d, 0x03, 0xd5, 0xa1, 0xb6, 0x7f, 0x32,
-	0x39, 0x6c, 0x57, 0x47, 0xd7, 0xe0, 0x6a, 0x56, 0xde, 0x01, 0x9d, 0xf9, 0x7c, 0x20, 0xb9, 0x3f,
-	0x57, 0xc1, 0x96, 0xea, 0x7f, 0x6d, 0x1e, 0x21, 0xa8, 0xf1, 0x49, 0x28, 0x8a, 0x6f, 0x61, 0xb1,
-	0x46, 0xef, 0x81, 0xc3, 0x73, 0x24, 0x34, 0x14, 0x85, 0x6e, 0x0f, 0xaf, 0xa8, 0xde, 0x11, 0x44,
-	0x24, 0x34, 0xc4, 0x3a, 0x8e, 0xde, 0xe7, 0x03, 0x4a, 0xee, 0x22, 0x06, 0xd4, 0xeb, 0x73, 0x28,
-	0x8b, 0x97, 0xf4, 0x69, 0xfd, 0x9b, 0x3e, 0x0b, 0xc2, 0xb7, 0xdf, 0x24, 0xfc, 0x1e, 0x40, 0x9c,
-	0x8d, 0x8f, 0x8e, 0x23, 0xc6, 0x46, 0xce, 0xe3, 0xf6, 0xc0, 0x51, 0x85, 0x73, 0xd2, 0x8e, 0x0f,
-	0x76, 0x9f, 0x4e, 0x70, 0xbb, 0x82, 0x1c, 0x30, 0x8f, 0x8e, 0xc7, 0x6d, 0xc3, 0xed, 0x42, 0x7d,
-	0xa2, 0xef, 0xa1, 0xc4, 0x8f, 0xfb, 0x7d, 0x15, 0x6a, 0x5c, 0x43, 0x9c, 0xa8, 0x53, 0x9a, 0x2c,
-	0x94, 0xd8, 0xc5, 0x9a, 0x5f, 0xe9, 0xc2, 0x67, 0x24, 0x09, 0xfc, 0x50, 0x12, 0xc8, 0xaf, 0x54,
-	0x7b, 0xd0, 0x10, 0x40, 0x0c, 0x86, 0x88, 0x44, 0x2c, 0x55, 0xbd, 0xd5, 0x16, 0x82, 0x94, 0xfd,
-	0x20, 0xfc, 0x7b, 0x15, 0x9c, 0x43, 0x95, 0x38, 0xaa, 0xfd, 0x27, 0x8e, 0xac, 0x37, 0x70, 0xd4,
-	0x7d, 0x08, 0xb0, 0xd9, 0x14, 0xdd, 0x29, 0x94, 0x56, 0xe8, 0x95, 0x5c, 0x60, 0xd4, 0x84, 0x46,
-	0xba, 0x9c, 0xa6, 0xcc, 0x8f, 0x66, 0xc4, 0xfd, 0x0c, 0x5a, 0x85, 0x9b, 0xe5, 0x1d, 0x3b, 0x13,
-	0x63, 0xa3, 0xd4, 0xb1, 0xc2, 0xc9, 0xa3, 0x62, 0x8c, 0xaa, 0xb6, 0xc8, 0xa2, 0xc2, 0xe9, 0x3e,
-	0x00, 0x4b, 0x26, 0xd9, 0x02, 0xe3, 0x85, 0xa2, 0xdb, 0x78, 0xc1, 0x2d, 0x39, 0xaf, 0x4d, 0x6c,
-	0xac, 0xb9, 0xf5, 0x52, 0xb6, 0x0a, 0x36, 0x5e, 0xba, 0x1f, 0x82, 0xb3, 0x3b, 0x13, 0xef, 0x2b,
-	0x7a, 0x1b, 0x1c, 0x7f, 0xa6, 0x1f, 0x62, 0x53, 0x0c, 0x77, 0x19, 0xc2, 0xda, 0xef, 0xfe, 0x55,
-	0x05, 0x5b, 0xfa, 0x4a, 0xf2, 0x30, 0xca, 0xf2, 0x40, 0x03, 0xa8, 0x2d, 0xe8, 0x4a, 0x8f, 0x2c,
-	0xa4, 0x52, 0x79, 0x87, 0x74, 0x45, 0xe4, 0x72, 0xaf, 0x82, 0x05, 0x02, 0x7d, 0x00, 0xd6, 0x2c,
-	0xf1, 0x4f, 0x99, 0xba, 0xcc, 0x6b, 0x1a, 0x3a, 0xe6, 0xce, 0x0c, 0x2b, 0x31, 0xdd, 0x47, 0x00,
-	0x9b, 0x14, 0x68, 0x00, 0xce, 0xf3, 0x67, 0x24, 0x21, 0x27, 0x54, 0xd1, 0x55, 0xee, 0x13, 0x1d,
-	0xee, 0xfe, 0x62, 0x40, 0x33, 0x97, 0x90, 0x0b, 0x6f, 0x45, 0x92, 0xa9, 0x16, 0x1e, 0x5f, 0xa3,
-	0x47, 0xb0, 0x4d, 0xa7, 0xdf, 0x90, 0x19, 0xd3, 0x2d, 0x7e, 0xf9, 0xf0, 0xc1, 0x25, 0x14, 0xba,
-	0x0b, 0x76, 0x10, 0xc5, 0x4b, 0x26, 0x5f, 0x27, 0x8e, 0x2f, 0x0c, 0x3a, 0xac, 0xa2, 0xa8, 0x0f,
-	0x4d, 0xba, 0x64, 0xf1, 0x92, 0x3d, 0xa1, 0xc9, 0x42, 0xcf, 0xa4, 0xbc, 0x6b, 0x54, 0x07, 0x5b,
-	0x52, 0xed, 0xbe, 0x32, 0x64, 0x7b, 0x91, 0x88, 0xa1, 0x4f, 0xa1, 0x39, 0x27, 0xa7, 0x41, 0x14,
-	0xe4, 0x2f, 0xe7, 0xa6, 0xa7, 0xc2, 0xde, 0xe3, 0x4d, 0x4c, 0xbe, 0x9c, 0x79, 0x74, 0xf7, 0x10,
-	0xda, 0x65, 0xc0, 0x25, 0x2f, 0xcc, 0x3b, 0xc5, 0x17, 0xa6, 0xd4, 0x1c, 0xb9, 0x0f, 0x8f, 0x1f,
-	0x0d, 0x80, 0xdd, 0x30, 0xd4, 0xa5, 0xf5, 0xb3, 0xef, 0x01, 0xc9, 0x7f, 0x5d, 0x57, 0xa5, 0x3f,
-	0x08, 0x50, 0xaf, 0xa8, 0xd8, 0x0d, 0x40, 0xba, 0xd1, 0x8e, 0x9a, 0x00, 0x66, 0x29, 0x2c, 0x67,
-	0xc1, 0xed, 0xdc, 0x2c, 0xa8, 0x95, 0x10, 0x59, 0xc4, 0xfd, 0x16, 0xb6, 0xf2, 0xf5, 0xa2, 0x01,
-	0x98, 0x0b, 0x3f, 0x56, 0x44, 0xdd, 0x28, 0x9c, 0xc5, 0x3b, 0xf4, 0x63, 0xc9, 0x12, 0x87, 0x74,
-	0x47, 0x50, 0xd7, 0x8e, 0x4b, 0x3e, 0xc4, 0xfa, 0x45, 0x56, 0x60, 0x93, 0x29, 0x4f, 0x49, 0x0c,
-	0x8d, 0xcc, 0x8f, 0x3a, 0x60, 0xa7, 0x2c, 0x09, 0xa2, 0x33, 0x99, 0x67, 0xaf, 0x82, 0x95, 0x8d,
-	0x10, 0x98, 0xfa, 0x3d, 0xe3, 0x8f, 0x14, 0x37, 0xd0, 0x75, 0xa8, 0x4d, 0xa9, 0x7a, 0x10, 0xea,
-	0xbc, 0x21, 0xb8, 0x85, 0x6e, 0x80, 0x75, 0x1a, 0x52, 0x9f, 0x89, 0x13, 0x57, 0xb9, 0xf6, 0x85,
-	0x39, 0x72, 0x54, 0x39, 0x6e, 0x03, 0x9c, 0x23, 0xca, 0x9e, 0x05, 0xd1, 0xd9, 0xa8, 0xfd, 0xdb,
-	0x45, 0xcf, 0xf8, 0xfd, 0xa2, 0x67, 0xfc, 0x71, 0xd1, 0x33, 0x7e, 0xfa, 0xb3, 0x57, 0x99, 0xda,
-	0xe2, 0xeb, 0xfb, 0xe1, 0x3f, 0x01, 0x00, 0x00, 0xff, 0xff, 0x95, 0x1b, 0x8a, 0x69, 0x92, 0x0b,
-	0x00, 0x00,
+	// 1812 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x58, 0xcf, 0x8f, 0x1b, 0x49,
+	0xf5, 0x9f, 0x76, 0xdb, 0x6d, 0xfb, 0xcd, 0x78, 0xa6, 0xa7, 0x92, 0x6f, 0xbe, 0xbd, 0x4e, 0x32,
+	0x6b, 0x5a, 0x6c, 0xd6, 0x59, 0x42, 0x27, 0xf1, 0x4a, 0x2b, 0x84, 0xb8, 0xcc, 0x38, 0x9e, 0x78,
+	0xc4, 0x78, 0x30, 0x35, 0xa3, 0x84, 0x3d, 0xf6, 0xd8, 0x65, 0x4f, 0xed, 0xb4, 0xbb, 0x9a, 0xee,
+	0xb2, 0x13, 0xaf, 0x90, 0x38, 0xc2, 0x91, 0x45, 0x42, 0x42, 0x82, 0x1b, 0x17, 0x0e, 0xfc, 0x38,
+	0xf1, 0x27, 0x20, 0x05, 0x4e, 0xfc, 0x09, 0x28, 0x1c, 0xf8, 0x07, 0x10, 0x12, 0x37, 0x54, 0x3f,
+	0xba, 0xdd, 0xed, 0x71, 0x16, 0xb8, 0x24, 0xfd, 0x3e, 0xef, 0xe3, 0xd7, 0xaf, 0x5e, 0x7d, 0xde,
+	0xab, 0xea, 0x81, 0x7d, 0xbe, 0x8c, 0x48, 0xf2, 0x58, 0xfe, 0xeb, 0x45, 0x31, 0xe3, 0xcc, 0xbd,
+	0x0b, 0xe6, 0xe1, 0x94, 0xa0, 0xdb, 0x50, 0xe1, 0x74, 0x74, 0x9d, 0x38, 0x46, 0xcb, 0x68, 0x97,
+	0xb1, 0x32, 0xdc, 0xa7, 0x60, 0x75, 0x59, 0x38, 0xa1, 0x53, 0xf4, 0x21, 0x54, 0x59, 0xc4, 0x29,
+	0x0b, 0x15, 0x63, 0xbb, 0xd3, 0xf0, 0x86, 0x31, 0x9d, 0x51, 0x4e, 0x17, 0x64, 0xe0, 0x47, 0x38,
+	0xf5, 0xba, 0x3f, 0x36, 0xc0, 0x1a, 0x06, 0xfe, 0x92, 0xc4, 0x68, 0x17, 0x4a, 0x74, 0x2c, 0xe9,
+	0x26, 0x2e, 0xd1, 0x31, 0x72, 0xa0, 0xea, 0x8f, 0xc7, 0x31, 0x49, 0x12, 0xa7, 0xd4, 0x32, 0xda,
+	0x3b, 0x38, 0x35, 0x11, 0x82, 0x72, 0xe8, 0xcf, 0x88, 0x63, 0xb6, 0x8c, 0x76, 0x1d, 0xcb, 0x67,
+	0xd4, 0x84, 0x5a, 0xc0, 0xa6, 0x53, 0x32, 0x3e, 0x09, 0x9d, 0x72, 0xcb, 0x68, 0xd7, 0x70, 0x66,
+	0xa3, 0xaf, 0x42, 0x25, 0x89, 0xfc, 0x57, 0xa1, 0x53, 0x91, 0xb9, 0xec, 0x7a, 0x87, 0x97, 0x09,
+	0x0b, 0xe6, 0x9c, 0x0c, 0x19, 0x0d, 0x39, 0x56, 0x4e, 0xf7, 0x87, 0x50, 0x55, 0x99, 0x24, 0xe8,
+	0x31, 0x54, 0x23, 0xf5, 0xe8, 0x18, 0x2d, 0xb3, 0xbd, 0xdd, 0xf9, 0x3f, 0x4f, 0xbb, 0xd2, 0xff,
+	0x7b, 0x21, 0x8f, 0x97, 0x38, 0x65, 0x35, 0xbb, 0xb0, 0x93, 0x77, 0x20, 0x1b, 0xcc, 0x6b, 0xb2,
+	0x94, 0x8b, 0xa9, 0x63, 0xf1, 0x88, 0xee, 0x43, 0x65, 0xe1, 0x07, 0x73, 0x22, 0xd7, 0xb2, 0xdd,
+	0xa9, 0xea, 0x40, 0x58, 0xa1, 0xdf, 0x2c, 0x7d, 0xc3, 0x70, 0x5d, 0x00, 0x05, 0x9e, 0xd2, 0x84,
+	0x8b, 0x12, 0x8b, 0x85, 0xa9, 0x0c, 0xea, 0x58, 0x19, 0x6e, 0x2b, 0xe5, 0x9c, 0x89, 0x45, 0xa7,
+	0x85, 0x30, 0x56, 0x85, 0x70, 0xbf, 0x0b, 0x0d, 0xc5, 0x78, 0x46, 0xb8, 0x4f, 0x83, 0x04, 0xbd,
+	0x0f, 0x96, 0x4a, 0x53, 0x6f, 0x45, 0xf6, 0x6a, 0x0d, 0x0b, 0x02, 0x09, 0x39, 0xe5, 0xcb, 0x2c,
+	0xb7, 0x9e, 0x34, 0xb1, 0x86, 0xdd, 0x3f, 0x9a, 0x50, 0xe9, 0x5e, 0xcd, 0xc3, 0x6b, 0x74, 0x07,
+	0xac, 0x05, 0x7b, 0x4d, 0x02, 0x95, 0x55, 0x19, 0x6b, 0x0b, 0x3d, 0x81, 0xda, 0x88, 0xcd, 0x22,
+	0x36, 0x0f, 0xc7, 0x4e, 0x49, 0x56, 0xec, 0xb6, 0x27, 0x7f, 0xe1, 0x75, 0x35, 0xac, 0x0a, 0x96,
+	0xb1, 0xc4, 0x7e, 0xc9, 0xe8, 0x94, 0x24, 0x8e, 0xd9, 0x32, 0xdb, 0x26, 0xce, 0x6c, 0xd4, 0x86,
+	0x0a, 0xe5, 0x64, 0x96, 0x38, 0x65, 0x19, 0x0a, 0xe9, 0x50, 0x27, 0x9c, 0xcc, 0x0e, 0xb9, 0xde,
+	0x33, 0x49, 0x68, 0xfe, 0xcc, 0x80, 0x5a, 0xfa, 0x06, 0xd4, 0x86, 0x3a, 0x0d, 0x17, 0x24, 0xe4,
+	0x2c, 0x5e, 0xea, 0xb5, 0x82, 0x77, 0x92, 0x22, 0x78, 0xe5, 0x44, 0x5f, 0x07, 0x88, 0x62, 0x16,
+	0x91, 0x58, 0xbe, 0xbe, 0xb4, 0x49, 0xa1, 0x39, 0x02, 0x7a, 0x02, 0x7b, 0xb3, 0x79, 0xc0, 0xe9,
+	0x65, 0xc0, 0x46, 0xd7, 0x32, 0x17, 0x29, 0xbd, 0xed, 0x8e, 0xe5, 0xa9, 0x6c, 0xd6, 0xdd, 0xcd,
+	0x53, 0x68, 0x14, 0x16, 0x9e, 0x17, 0x44, 0x43, 0x09, 0xe2, 0x83, 0xa2, 0x20, 0xf6, 0xd6, 0xea,
+	0x95, 0x13, 0x46, 0xf3, 0x18, 0xb6, 0x73, 0x6b, 0x47, 0xf7, 0xa0, 0x12, 0x89, 0x07, 0xbd, 0xc6,
+	0x34, 0x09, 0x05, 0xa2, 0xf7, 0xa0, 0x2c, 0x6a, 0xa3, 0xc3, 0x56, 0x64, 0xd5, 0xb0, 0x84, 0xdc,
+	0x36, 0xd4, 0xb3, 0x72, 0xa0, 0xbb, 0x69, 0x91, 0x95, 0xc2, 0x35, 0x51, 0x61, 0xee, 0x3f, 0x0d,
+	0x68, 0x64, 0xd4, 0xf3, 0x80, 0x71, 0x74, 0x04, 0x8d, 0x11, 0x0b, 0xb9, 0x4f, 0x43, 0x12, 0x5f,
+	0x2c, 0x23, 0xa5, 0xb9, 0xdd, 0xce, 0x3d, 0xaf, 0x40, 0xf3, 0xba, 0x79, 0x0e, 0x2e, 0xfe, 0x04,
+	0x3d, 0x48, 0x13, 0x2f, 0x6d, 0xea, 0xc3, 0xfe, 0x56, 0xba, 0x84, 0x7b, 0x5a, 0x1b, 0xcb, 0x93,
+	0xb1, 0x2c, 0xb4, 0xd9, 0xdf, 0xc2, 0x19, 0x22, 0x1a, 0x23, 0x09, 0x18, 0x57, 0xea, 0x68, 0x60,
+	0x65, 0xb8, 0x4f, 0x44, 0xc5, 0xf3, 0x2f, 0xab, 0x43, 0xe5, 0xc5, 0x77, 0xbe, 0xd7, 0x3b, 0xb5,
+	0xb7, 0x10, 0x80, 0xd5, 0x3b, 0xbb, 0x38, 0xb9, 0xf8, 0xd4, 0x36, 0x50, 0x0d, 0xca, 0x27, 0x17,
+	0xbd, 0x81, 0x5d, 0x3a, 0xba, 0x05, 0xfb, 0x59, 0x7a, 0xa7, 0x6c, 0xe4, 0x8b, 0x81, 0xe4, 0xfe,
+	0xb2, 0x04, 0x96, 0x52, 0xff, 0x8d, 0x79, 0x84, 0xa0, 0x2c, 0x26, 0xa1, 0x4c, 0xbe, 0x81, 0xe5,
+	0x33, 0x7a, 0x08, 0x55, 0x11, 0x23, 0x66, 0x81, 0x4c, 0x74, 0xb7, 0xb3, 0xa7, 0x7b, 0x47, 0x16,
+	0x22, 0x66, 0x01, 0x4e, 0xfd, 0xe8, 0x23, 0x31, 0xa0, 0xd4, 0x5b, 0xe4, 0x80, 0xba, 0x39, 0x87,
+	0x32, 0xff, 0x9a, 0x3e, 0x2b, 0xff, 0x49, 0x9f, 0x05, 0xe1, 0x5b, 0x5f, 0x26, 0xfc, 0x03, 0x80,
+	0x28, 0x1b, 0x1f, 0x4e, 0x55, 0x8e, 0x8d, 0x1c, 0xe2, 0x1e, 0x40, 0x55, 0x27, 0x2e, 0x8a, 0x36,
+	0x3c, 0x3d, 0xfc, 0xb4, 0x87, 0xed, 0x2d, 0x54, 0x05, 0xf3, 0x6c, 0xd8, 0xb5, 0x0d, 0xb7, 0x09,
+	0xb5, 0x5e, 0xba, 0x0f, 0x6b, 0xf5, 0x71, 0x7f, 0x54, 0x82, 0xb2, 0xd0, 0x90, 0x28, 0xd4, 0x84,
+	0xc5, 0x33, 0x2d, 0x76, 0xf9, 0x2c, 0xb6, 0x74, 0xe6, 0x73, 0x12, 0x53, 0x3f, 0x50, 0x05, 0x14,
+	0x5b, 0x9a, 0x22, 0xa8, 0x03, 0x20, 0x07, 0x43, 0x48, 0x42, 0x9e, 0xe8, 0xde, 0xb2, 0xa5, 0x20,
+	0x55, 0x3f, 0x48, 0xbc, 0xbf, 0x85, 0x73, 0xac, 0xb5, 0x1a, 0x95, 0xff, 0xa7, 0x1a, 0x55, 0xbe,
+	0xa4, 0x46, 0xcd, 0x8f, 0x01, 0x56, 0x2f, 0x45, 0x1f, 0x14, 0x52, 0x2b, 0xf4, 0x4a, 0xce, 0x71,
+	0xb4, 0x0d, 0xf5, 0x64, 0x7e, 0x99, 0x70, 0x3f, 0x1c, 0x11, 0xf7, 0xdb, 0xd0, 0x28, 0xec, 0xac,
+	0xe8, 0xd8, 0x91, 0x1c, 0x1b, 0x6b, 0x1d, 0x2b, 0x41, 0xe1, 0x95, 0x63, 0x54, 0xb7, 0x45, 0xe6,
+	0x95, 0xa0, 0xfb, 0x14, 0x2a, 0x2a, 0xc8, 0x0e, 0x18, 0xaf, 0x75, 0xb9, 0x8d, 0xd7, 0xc2, 0x52,
+	0xf3, 0xda, 0xc4, 0xc6, 0x52, 0x58, 0x9f, 0xab, 0x56, 0xc1, 0xc6, 0xe7, 0xee, 0x23, 0xa8, 0x1e,
+	0x8e, 0xe4, 0xf9, 0x8a, 0xbe, 0x02, 0x55, 0x7f, 0x94, 0x1e, 0xc4, 0xa6, 0x1c, 0xee, 0xca, 0x85,
+	0x53, 0xdc, 0xfd, 0x7b, 0x09, 0x2c, 0x85, 0xad, 0xc9, 0xc3, 0x58, 0x97, 0x07, 0x6a, 0x43, 0x79,
+	0xc6, 0x16, 0xe9, 0xc8, 0x42, 0x3a, 0x94, 0x37, 0x60, 0x0b, 0xa2, 0x1e, 0xfb, 0x5b, 0x58, 0x32,
+	0xd0, 0xd7, 0xa0, 0x32, 0x8a, 0xfd, 0x09, 0xd7, 0x9b, 0x79, 0x2b, 0xa5, 0x76, 0x05, 0x98, 0x71,
+	0x15, 0xa7, 0xf9, 0x09, 0xc0, 0x2a, 0x04, 0x6a, 0x43, 0xf5, 0xd5, 0x15, 0x89, 0xc9, 0x05, 0xd3,
+	0xe5, 0x5a, 0xef, 0x93, 0xd4, 0xdd, 0xfc, 0x95, 0x01, 0xdb, 0xb9, 0x80, 0x42, 0x78, 0x0b, 0x12,
+	0x5f, 0xa6, 0xc2, 0x13, 0xcf, 0xe8, 0x13, 0xd8, 0x65, 0x97, 0x9f, 0x91, 0x11, 0x4f, 0x5b, 0x7c,
+	0xf3, 0xf0, 0xc1, 0x6b, 0x2c, 0xf4, 0x00, 0x2c, 0x1a, 0x46, 0x73, 0xae, 0x4e, 0x27, 0xc1, 0x2f,
+	0x0c, 0x3a, 0xac, 0xbd, 0xa8, 0x05, 0xdb, 0x6c, 0xce, 0xa3, 0x39, 0x3f, 0x66, 0xf1, 0x2c, 0x9d,
+	0x49, 0x79, 0xe8, 0xa8, 0x06, 0x96, 0x2a, 0xb5, 0xfb, 0x6b, 0x53, 0xb5, 0x17, 0x09, 0x39, 0xba,
+	0x0f, 0x06, 0xd1, 0x5b, 0xb2, 0xe7, 0x69, 0xd0, 0xeb, 0xa9, 0x53, 0xd2, 0x20, 0xc2, 0xbd, 0xd0,
+	0x27, 0xe9, 0xca, 0xfd, 0x42, 0xbb, 0x17, 0xc2, 0x3d, 0xd1, 0x89, 0xad, 0xdc, 0xc7, 0xda, 0x3d,
+	0x11, 0xee, 0x99, 0x3e, 0x3c, 0x57, 0xee, 0x81, 0x76, 0xcf, 0x9a, 0xcf, 0xc1, 0xea, 0xbd, 0xeb,
+	0x58, 0xfa, 0xb0, 0x78, 0x2c, 0xed, 0xeb, 0x79, 0xf6, 0x8c, 0x4c, 0x68, 0x48, 0xa5, 0x70, 0x0a,
+	0x07, 0x93, 0xf5, 0xe2, 0x5d, 0x81, 0x1e, 0x14, 0x03, 0xd9, 0xde, 0x0b, 0x21, 0xe7, 0xcd, 0x71,
+	0x7a, 0x60, 0x1d, 0xff, 0xd7, 0xe7, 0xa4, 0xa8, 0xea, 0xe6, 0x30, 0x27, 0x60, 0x0d, 0xde, 0x15,
+	0xe6, 0x61, 0x31, 0xcc, 0x2d, 0x6f, 0xa0, 0x87, 0xcf, 0xc6, 0x50, 0xee, 0x67, 0x60, 0xaf, 0x2f,
+	0x7c, 0xd3, 0x6d, 0x4b, 0x1c, 0x46, 0x13, 0x3f, 0x08, 0xd4, 0x25, 0xa2, 0x86, 0x95, 0x81, 0x1e,
+	0xc1, 0x7e, 0x36, 0x4f, 0xba, 0x7e, 0xe4, 0x8f, 0xc4, 0xe5, 0xca, 0x94, 0x57, 0xe5, 0x9b, 0x0e,
+	0xf7, 0x0b, 0x03, 0xf6, 0xd6, 0x8a, 0xb3, 0xf1, 0x5d, 0x8f, 0xa0, 0x92, 0x70, 0x9f, 0xab, 0x25,
+	0xec, 0x76, 0xee, 0xac, 0x57, 0xd4, 0x3b, 0x17, 0x5e, 0xac, 0x48, 0xee, 0xb7, 0xa0, 0x22, 0x6d,
+	0xb4, 0x0b, 0x80, 0xe9, 0x94, 0x8e, 0xcf, 0x59, 0x40, 0xc7, 0xf6, 0x96, 0xb0, 0x4f, 0x19, 0x4b,
+	0x88, 0xb2, 0x0d, 0x31, 0xe8, 0x4f, 0xe9, 0xf7, 0xe7, 0x74, 0x6c, 0x97, 0xc4, 0xa0, 0x7f, 0xee,
+	0x27, 0xb6, 0xe9, 0xfe, 0xab, 0x0c, 0xbb, 0xc5, 0x42, 0x6f, 0x4c, 0xe9, 0x23, 0xb0, 0x5f, 0x52,
+	0x12, 0x8c, 0xfd, 0xcb, 0x80, 0x3c, 0xed, 0xfb, 0xe1, 0x98, 0x8c, 0x9d, 0xb1, 0xac, 0xc4, 0x0d,
+	0xbc, 0xc0, 0xed, 0x68, 0x2e, 0x59, 0xe3, 0x6a, 0x1c, 0x1d, 0xc2, 0xce, 0x2b, 0xe2, 0xc7, 0x02,
+	0x12, 0xdd, 0xe6, 0xbc, 0x49, 0x6f, 0x1b, 0xc5, 0x9c, 0xbc, 0x97, 0x39, 0x12, 0x2e, 0xfc, 0x04,
+	0xdd, 0x87, 0xfa, 0xf9, 0x95, 0x1f, 0x47, 0xa1, 0xf8, 0x80, 0xf8, 0x8d, 0x3a, 0xb4, 0x57, 0x08,
+	0xba, 0x05, 0xe5, 0x3e, 0x99, 0x70, 0xe7, 0xb7, 0xfa, 0x38, 0x17, 0x06, 0x7a, 0x0f, 0xaa, 0xcf,
+	0xe8, 0x74, 0x4a, 0xc3, 0xa9, 0xf3, 0x3b, 0x85, 0xa7, 0x36, 0xfa, 0x7f, 0xb0, 0x06, 0x34, 0x14,
+	0x9e, 0xdf, 0x2b, 0x8f, 0x36, 0xd1, 0x63, 0x40, 0x43, 0x4a, 0xe2, 0x11, 0x0d, 0xa7, 0xc3, 0x98,
+	0x71, 0x22, 0x5b, 0xdd, 0xf9, 0x89, 0x29, 0x49, 0x1b, 0x5c, 0xe8, 0x21, 0xec, 0x1d, 0x05, 0xf3,
+	0x90, 0xe7, 0xd8, 0x5f, 0x28, 0xf6, 0x3a, 0x8e, 0xde, 0x07, 0x38, 0x09, 0x93, 0x79, 0xa0, 0x06,
+	0xd7, 0x4f, 0x15, 0x2b, 0x07, 0xa1, 0xbb, 0x50, 0x3b, 0xe7, 0x31, 0x09, 0xa7, 0xfc, 0xca, 0xf9,
+	0x87, 0x72, 0x67, 0x80, 0xfb, 0x07, 0x03, 0x76, 0xf2, 0x05, 0x42, 0xf6, 0xca, 0xee, 0x13, 0x5f,
+	0x68, 0x61, 0x1f, 0x1a, 0x29, 0xd2, 0xbd, 0x22, 0x09, 0xb7, 0x8d, 0x3c, 0x24, 0x36, 0x23, 0xb1,
+	0x4b, 0xf9, 0xdf, 0x9d, 0x92, 0x69, 0x62, 0x9b, 0x79, 0xe4, 0x98, 0x10, 0x6e, 0x97, 0x11, 0x82,
+	0xdd, 0x0c, 0xa1, 0xe1, 0x94, 0xc4, 0x76, 0x25, 0xcf, 0x3a, 0x23, 0xa3, 0x6b, 0xdb, 0xca, 0x23,
+	0xbd, 0x25, 0x49, 0xec, 0x6a, 0xfe, 0x75, 0x2f, 0x7d, 0x9a, 0x70, 0xbb, 0xe6, 0xfe, 0xa2, 0x04,
+	0xe8, 0x66, 0x77, 0x6e, 0xd4, 0x5f, 0x13, 0x6a, 0x03, 0xc2, 0xfd, 0x20, 0xa0, 0x23, 0xdd, 0x81,
+	0x99, 0x2d, 0xbe, 0x55, 0x5e, 0x32, 0x36, 0x26, 0xa1, 0xec, 0xbc, 0x1a, 0xd6, 0x96, 0xc0, 0x8f,
+	0x03, 0x92, 0x5c, 0x2d, 0xf5, 0x77, 0xa2, 0xb6, 0x44, 0x2b, 0x9f, 0xfb, 0x01, 0x57, 0xb7, 0x83,
+	0x1a, 0x56, 0x86, 0xb8, 0xe5, 0x0c, 0xfb, 0x52, 0xd3, 0x0d, 0x5c, 0x1a, 0xf6, 0xc5, 0x57, 0xa9,
+	0x6c, 0x9c, 0x43, 0x2e, 0xc5, 0xdb, 0xc0, 0xa9, 0x29, 0x7e, 0xff, 0xdc, 0x4f, 0x0e, 0xb9, 0x33,
+	0x91, 0xb8, 0x32, 0x8a, 0x32, 0x7c, 0x63, 0xbc, 0x4b, 0x86, 0x7f, 0x32, 0x72, 0x32, 0xcc, 0xef,
+	0xea, 0x9f, 0x8d, 0xb5, 0x5d, 0xfd, 0x01, 0xec, 0xe4, 0x2f, 0x39, 0xa8, 0x0d, 0xe6, 0xcc, 0x8f,
+	0xf4, 0x51, 0x72, 0xa7, 0x70, 0x01, 0xf2, 0x06, 0x7e, 0xa4, 0x86, 0xbe, 0xa0, 0x34, 0x8f, 0xa0,
+	0x96, 0x02, 0x1b, 0x3e, 0x50, 0x5b, 0xc5, 0x01, 0x09, 0xab, 0x48, 0xf9, 0xb9, 0x18, 0x41, 0x3d,
+	0xc3, 0x91, 0x03, 0x56, 0xc2, 0x63, 0xd1, 0x13, 0x32, 0x4e, 0x7f, 0x0b, 0x6b, 0x1b, 0x21, 0x30,
+	0xd3, 0x7b, 0xbe, 0xb8, 0xbc, 0x0b, 0x03, 0xdd, 0x86, 0xf2, 0x25, 0xd3, 0x17, 0xe5, 0x9a, 0xb8,
+	0x28, 0x08, 0x0b, 0xdd, 0x81, 0xca, 0x24, 0x60, 0x3e, 0x97, 0x9b, 0x51, 0x12, 0x77, 0x02, 0x69,
+	0x1e, 0x55, 0x75, 0x3a, 0x6e, 0x1d, 0xaa, 0x67, 0x8c, 0x5f, 0xd1, 0x70, 0x7a, 0x64, 0xbf, 0x79,
+	0x7b, 0x60, 0xfc, 0xe5, 0xed, 0x81, 0xf1, 0xd7, 0xb7, 0x07, 0xc6, 0xcf, 0xff, 0x76, 0xb0, 0x75,
+	0x69, 0xc9, 0xbf, 0x4a, 0x7c, 0xfc, 0xef, 0x00, 0x00, 0x00, 0xff, 0xff, 0x78, 0x7d, 0x73, 0xba,
+	0xaa, 0x10, 0x00, 0x00,
 }
