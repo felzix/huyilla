@@ -138,6 +138,17 @@ message Action {
 
 }
 
+message Content {
+    map<uint32, PrimitiveMap> definitions = 1;
+}
+
+message AllContent {
+    Content entity = 1;
+    Content voxel = 2;
+    Content form = 3;
+    Content material = 4;
+}
+
 message PrimitiveMap {
     map<string, Primitive> map = 1;
 }
