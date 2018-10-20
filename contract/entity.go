@@ -59,6 +59,15 @@ func (c *Huyilla) getEntity (ctx contract.StaticContext, id int64) (*types.Entit
     return &entity, nil
 }
 
+func (c *Huyilla) getSpecificEntities (ctx contract.StaticContext, ids []int64) ([]types.Entity, error) {
+    entities := make([]types.Entity, len(ids))
+    for i := 0; i < len(ids); i++ {
+        err := ctx.Get(c.entityKey(ids[i]), &entities[i])
+        if err != nil { return nil, err }
+    }
+    return entities, nil
+}
+
 func (c *Huyilla) genUniqueEntityId (ctx contract.StaticContext) int64 {
     var id int64
     for true {

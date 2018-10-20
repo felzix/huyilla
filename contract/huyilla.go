@@ -121,3 +121,7 @@ func (c *Huyilla) LogIn (ctx contract.Context, req *types.PlayerName) (*types.Pl
 
     return &types.PlayerDetails{Player: player, Entity: entity}, nil
 }
+
+func (c *Huyilla) thisUser (ctx contract.StaticContext) []byte{
+    return []byte(ctx.Message().Sender.Local)
+}

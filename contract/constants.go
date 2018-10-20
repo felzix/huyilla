@@ -1,11 +1,13 @@
 package main
 
 const (
-    CHUNK_SIZE       = 16
-    PASSIVE_VITALITY = 4
-    SEED             = 12
+    CHUNK_SIZE          = 16
+    ACTIVE_CHUNK_RADIUS = 3
+    PASSIVE_VITALITY    = 4
+    SEED                = 12
 )
 
 const (
-    CHUNK_LENGTH = CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE
+    CHUNK_LENGTH      = CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE
+    ACTIVE_CHUNK_CUBE = ACTIVE_CHUNK_RADIUS * ACTIVE_CHUNK_RADIUS * ACTIVE_CHUNK_RADIUS
 )

@@ -50,6 +50,8 @@ message Chunk {
         Item item = 2;
     }
     repeated ItemAtPoint items = 4;
+
+    repeated Point activeVoxels = 5;
 }
 
 message Inventory {
