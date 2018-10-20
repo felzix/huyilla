@@ -94,16 +94,17 @@ func TestHuyilla_Move (t *testing.T) {
     CHUNK_POINT := newPoint(0, 0, 0)
     VOXEL_POINT := newPoint(2, 4, 8)
 
-    h.SignUp(ctx, &types.PlayerName{Name: NAME})
+    err := h.SignUp(ctx, &types.PlayerName{Name: NAME})
+    if err != nil {
+        t.Fatalf("Error: %v", err)
+    }
 
-    err := h.RegisterAction(ctx, &types.Action{
+    err = h.RegisterAction(ctx, &types.Action{
         PlayerName: NAME,
         Action: &types.Action_Move{
             Move: &types.Action_MoveAction{
                 WhereTo: &types.AbsolutePoint{CHUNK_POINT, VOXEL_POINT},
-            },
-        },
-    })
+            }}})
     if err != nil {
         t.Fatalf("Error: %v", err)
     }

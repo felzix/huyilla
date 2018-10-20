@@ -53,7 +53,7 @@ func (c *Huyilla) Init (ctx contract.Context, req *plugin.Request) error {
         })
     if err != nil { return err }
 
-    return c.genChunk(ctx, SEED, &types.Point{0, 0, 0})
+    return nil
 }
 
 
@@ -70,9 +70,9 @@ func (c *Huyilla) SignUp(ctx contract.Context, req *types.PlayerName) error {
     // Create new player
     defaultLocation := newAbsolutePoint(0, 0, 0, 0, 0, 0)
 
-    entity := c.newEntity(ctx, uint32(1), req.Name, defaultLocation)
+    entity := c.newEntity(ctx, ENTITY["human"], req.Name, defaultLocation)
     err = c.setEntity(ctx, entity)
-    if err != nil {return err}
+    if err != nil { return errors.Wrap(err, "Entity could not be set") }
 
     player = &types.Player{
         Id:      entity.Id,

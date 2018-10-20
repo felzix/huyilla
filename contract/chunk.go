@@ -28,6 +28,23 @@ func (c *Huyilla) getChunk (ctx contract.StaticContext, point *types.Point) (*ty
     return &chunk, nil
 }
 
+func (c *Huyilla) getChunkGuaranteed (ctx contract.Context, point *types.Point) (*types.Chunk, error) {
+    key := c.chunkKey(point)
+    var chunk types.Chunk
+
+    if !ctx.Has(key) {
+        if err := c.genChunk(ctx, SEED, point); err != nil {
+            return nil, err
+        }
+    }
+
+    if err := ctx.Get(key, &chunk); err != nil {
+        return nil, err
+    } else {
+        return &chunk, nil
+    }
+}
+
 func (c *Huyilla) setChunk (ctx contract.Context, point *types.Point, chunk *types.Chunk) error {
     key := c.chunkKey(point)
     if err := ctx.Set(key, chunk); err != nil { return err }
@@ -35,7 +52,7 @@ func (c *Huyilla) setChunk (ctx contract.Context, point *types.Point, chunk *typ
 }
 
 func (c *Huyilla) addEntityToChunk (ctx contract.Context, entity *types.Entity) error {
-    chunk, err := c.getChunk(ctx, entity.Location.Chunk)
+    chunk, err := c.getChunkGuaranteed(ctx, entity.Location.Chunk)
     if err != nil { return err }
 
     chunk.Entities = append(chunk.Entities, entity.Id)
@@ -47,7 +64,14 @@ func (c *Huyilla) addEntityToChunk (ctx contract.Context, entity *types.Entity) 
 
 func (c *Huyilla) removeEntityFromChunk (ctx contract.Context, entity *types.Entity) error {
     chunk, err := c.getChunk(ctx, entity.Location.Chunk)
-    if err != nil { return err }
+
+    if err != nil {
+        if err.Error() == "not found" {
+            return nil  // chunk doesn't exist anyway so it need not be changed
+        } else {
+            return err // something else went wrong
+        }
+    }
 
     entities := chunk.Entities
     for i := 0; i < len(entities); i++ {

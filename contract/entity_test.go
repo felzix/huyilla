@@ -18,7 +18,6 @@ func TestHuyilla_Entity (t *testing.T) {
 
     h.Init(ctx, &plugin.Request{})
 
-
     err := h.SignUp(ctx, &types.PlayerName{Name: "felzix"})
     if err != nil {
         t.Fatalf("Error: %v", err)

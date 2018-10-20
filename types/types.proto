@@ -79,7 +79,7 @@ message Entity {
     }
 
     int64 id = 1;
-    uint32 type = 2;
+    uint64 type = 2;
     Control control = 3;
     AbsolutePoint location = 4;
     PrimitiveMap properties = 5;
