@@ -4,7 +4,6 @@ import (
     "github.com/felzix/huyilla/types"
     "github.com/loomnetwork/go-loom/plugin"
     contract "github.com/loomnetwork/go-loom/plugin/contractpb"
-    "github.com/pkg/errors"
 )
 
 
@@ -23,21 +22,19 @@ func (c *Huyilla) GetPlayerList (ctx contract.StaticContext, req *plugin.Request
 }
 
 func (c *Huyilla) GetPlayer (ctx contract.StaticContext, req *types.PlayerName) (*types.PlayerDetails, error) {
-    player, err := c.getPlayer(ctx, req.Name)
-    if err != nil {return nil, errors.Wrap(err, "player not found")}
-
-    entity, err := c.getEntity(ctx, player.Id)
-
-    // NOTE: entity can be nil
-    details := &types.PlayerDetails{Player: player, Entity: entity}
-    return details, nil
+    return c.getPlayer(ctx, req.Name)
 }
 
-func (c *Huyilla) getPlayer (ctx contract.StaticContext, name string) (*types.Player, error) {
+func (c *Huyilla) getPlayer (ctx contract.StaticContext, name string) (*types.PlayerDetails, error) {
     players, err := c.getPlayers(ctx)
     if err != nil { return nil, err }
+
     player := players.Players[name]
-    return player, nil
+
+    entity, _ := c.getEntity(ctx, player.Id)
+    // NOTE: entity can be nil
+
+    return &types.PlayerDetails{Player: player, Entity: entity}, nil
 }
 
 func (c *Huyilla) getPlayers (ctx contract.StaticContext) (*types.Players, error) {

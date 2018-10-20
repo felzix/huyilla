@@ -1,17 +1,16 @@
 package main
 
 import (
+    "fmt"
     "github.com/felzix/huyilla/types"
     "github.com/loomnetwork/go-loom/plugin"
     contract "github.com/loomnetwork/go-loom/plugin/contractpb"
+    "github.com/pkg/errors"
 )
 
 
 
 func (c *Huyilla) Tick (ctx contract.Context, req *plugin.Request) error {
-    actions, err := c.getActions(ctx)
-    if err != nil { return err }
-
     players, err := c.getActivePlayers(ctx)
     if err != nil { return err }
 
@@ -57,10 +56,23 @@ func (c *Huyilla) Tick (ctx contract.Context, req *plugin.Request) error {
         }
     }
 
+    actions, err := c.getActions(ctx)
+    if err != nil { return err }
+
     for i := 0; i < len(actions.Actions); i++ {
-        // TODO
-        // if valid then apply then emit success event
-        // else, ignore then emit failure event
+        action := actions.Actions[i]
+
+        var fn func(contract.Context, *types.Action) error
+        switch a := action.Action.(type) {
+        case *types.Action_Move: fn = c.move
+        default: return errors.New(fmt.Sprintf("Invalid action %v", a))
+        }
+
+        if fn(ctx, action) == nil {
+            // TODO emit success event
+        } else {
+            // TODO emit failure event
+        }
     }
 
     // reset actions queue
