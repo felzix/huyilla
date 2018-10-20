@@ -72,7 +72,7 @@ func (c *Huyilla) SignUp(ctx contract.Context, req *types.PlayerName) error {
 
     entity := c.newEntity(ctx, ENTITY["human"], req.Name, defaultLocation)
     err = c.setEntity(ctx, entity)
-    if err != nil { return errors.Wrap(err, "Entity could not be set") }
+    if err != nil { return errors.Wrap(err, "Entity could not be created") }
 
     player = &types.Player{
         Id:      entity.Id,
@@ -84,7 +84,6 @@ func (c *Huyilla) SignUp(ctx contract.Context, req *types.PlayerName) error {
     err = ctx.Set(PLAYERS, players)
     if err != nil {return err}
 
-    // TODO what does this actually do?
     ctx.Logger().Info("Created player", "name", player.Name, "address", player.Address)
 
     // Tell the client that the player was created (as well as everyone else listening, as a side effect)
@@ -95,7 +94,7 @@ func (c *Huyilla) SignUp(ctx contract.Context, req *types.PlayerName) error {
     }{"SignUp", player.Name, player.Address}
     emitMsgJSON, err := json.Marshal(emitMsg)
     if err != nil {return err}
-    ctx.EmitTopics(emitMsgJSON, "huyilla:" + emitMsg.Method)
+    ctx.EmitTopics(emitMsgJSON, "huyilla:" + string(emitMsg.Addr))
 
     return nil
 }
@@ -119,7 +118,35 @@ func (c *Huyilla) LogIn (ctx contract.Context, req *types.PlayerName) (*types.Pl
 
     entity, err := c.getEntity(ctx, player.Id)
 
+    err = c.addEntityToChunk(ctx, entity)
+    if err != nil { return nil, err }
+
     return &types.PlayerDetails{Player: player, Entity: entity}, nil
+}
+
+func (c *Huyilla) LogOut (ctx contract.Context, req *types.PlayerName) error {
+    players, err := c.getPlayers(ctx)
+    player := players.Players[req.Name]
+    if err != nil { return err }
+
+    if !bytes.Equal(player.Address, c.thisUser(ctx)) {
+        return errors.New("Username is not associated with your address/key/account.")
+    }
+
+    if player.LoggedIn {
+        player.LoggedIn = false
+        err = ctx.Set(PLAYERS, players)
+        if err != nil {
+            return err
+        }
+    }
+
+    entity, err := c.getEntity(ctx, player.Id)
+
+    err = c.removeEntityFromChunk(ctx, entity)
+    if err != nil { return err }
+
+    return nil
 }
 
 func (c *Huyilla) thisUser (ctx contract.StaticContext) []byte{
