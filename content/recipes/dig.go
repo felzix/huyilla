@@ -1,10 +1,11 @@
 package recipes
 
 import (
-     "github.com/felzix/huyilla/engine"
+     "github.com/felzix/huyilla/types"
 )
 
-func Dig(world *engine.World, actor *engine.Entity, location engine.AbsolutePoint, input []interface{}, targetOutputs []interface{}) {
+// TODO params are placeholders
+func Dig(actor *types.Entity, location *types.AbsolutePoint) {
     // voxel := world.GetVoxel(location)
     // world.SetVoxel(location, engine.NewVoxel(world.Content.VT["air"]))
 }

@@ -1,7 +1,6 @@
 package main
 
 import (
-    "github.com/felzix/huyilla/engine"
     "github.com/felzix/huyilla/types"
     "github.com/loomnetwork/go-loom"
     "github.com/loomnetwork/go-loom/plugin"
@@ -28,7 +27,7 @@ func TestHuyilla_Chunk (t *testing.T) {
         t.Fatalf("Error: %v", err)
     }
 
-    expectedVoxelCount := engine.CHUNK_SIZE * engine.CHUNK_SIZE * engine.CHUNK_SIZE
+    expectedVoxelCount := CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE
     if len(chunk.Voxels) != expectedVoxelCount {
         t.Errorf(`Was expected %d voxels but got %d`, expectedVoxelCount, len(chunk.Voxels))
     }
