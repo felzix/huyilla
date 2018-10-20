@@ -31,11 +31,23 @@ func TestHuyilla_Actions (t *testing.T) {
     }
 
     // tests behavior when there are no queued actions
-    err := h.RegisterAction(ctx, &action)
+    actions, err := h.getActions(ctx)
     if err != nil {
         t.Fatalf("Error: %v", err)
     }
-    actions, err := h.getActions(ctx)
+    if len(actions.Actions) != 0 {
+        t.Errorf(`Expected 0 action but found %d`, len(actions.Actions))
+    }
+
+    err = h.RegisterAction(ctx, &action)
+    if err != nil {
+        t.Fatalf("Error: %v", err)
+    }
+
+    actions, err = h.getActions(ctx)
+    if err != nil {
+        t.Fatalf("Error: %v", err)
+    }
     if len(actions.Actions) != 1 {
         t.Errorf(`Expected 1 action but found %d`, len(actions.Actions))
     }
@@ -47,8 +59,25 @@ func TestHuyilla_Actions (t *testing.T) {
     }
 
     actions, err = h.getActions(ctx)
+    if err != nil {
+        t.Fatalf("Error: %v", err)
+    }
     if len(actions.Actions) != 2 {
         t.Errorf(`Expected 2 actions but found %d`, len(actions.Actions))
+    }
+
+    // tests behavior when action queue is reset
+    err = h.Tick(ctx, &plugin.Request{})
+    if err != nil {
+        t.Fatalf("Error: %v", err)
+    }
+
+    actions, err = h.getActions(ctx)
+    if err != nil {
+        t.Fatalf("Error: %v", err)
+    }
+    if len(actions.Actions) != 0 {
+        t.Errorf(`Expected 0 actions but found %d`, len(actions.Actions))
     }
 }
 

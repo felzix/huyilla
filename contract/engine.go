@@ -96,7 +96,9 @@ func (c *Huyilla) Tick (ctx contract.Context, req *plugin.Request) error {
     }
 
     // reset actions queue
-    return ctx.Set(ACTIONS, &types.Actions{})
+    ctx.Delete(ACTIONS)
+
+    return nil
 }
 
 func (c *Huyilla) voxelPhysics (ctx contract.Context, chunk *types.Chunk, location *types.AbsolutePoint) error {
