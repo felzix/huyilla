@@ -34,21 +34,6 @@ func (c *Huyilla) newEntity (ctx contract.StaticContext, typeInt uint64, playerN
 
 
 func (c *Huyilla) setEntity (ctx contract.Context, entity *types.Entity) error {
-    oldEntity, _ := c.getEntity(ctx, entity.Id)
-
-    // sync chunks' entity lists
-    if oldEntity == nil {
-        err := c.addEntityToChunk(ctx, entity)
-        if err != nil { return err }
-    } else if pointEquals(oldEntity.Location.Chunk, entity.Location.Chunk) {
-        if err := c.removeEntityFromChunk(ctx, oldEntity); err != nil {
-            return err
-        }
-        if err := c.addEntityToChunk(ctx, entity); err != nil {
-            return err
-        }
-    }
-
     return ctx.Set(c.entityKey(entity.Id), entity)
 }
 

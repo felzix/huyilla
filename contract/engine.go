@@ -14,14 +14,17 @@ func (c *Huyilla) Tick (ctx contract.Context, req *plugin.Request) error {
     players, err := c.getActivePlayers(ctx)
     if err != nil { return err }
 
-    activeChunks := make(map[types.Point]bool, len(players) * ACTIVE_CHUNK_CUBE)
+    activeChunks := make(map[types.Point]*types.Chunk, len(players) * ACTIVE_CHUNK_CUBE)
     for i := 0; i < len(players); i++ {
         player := players[i]
         loc := player.Entity.Location.Chunk
-        for x := loc.X - ACTIVE_CHUNK_RADIUS; x < loc.X + ACTIVE_CHUNK_RADIUS; x++ {
-            for y := loc.Y - ACTIVE_CHUNK_RADIUS; y < loc.Y + ACTIVE_CHUNK_RADIUS; y++ {
-                for z := loc.Z - ACTIVE_CHUNK_RADIUS; z < loc.Z + ACTIVE_CHUNK_RADIUS; z++ {
-                    activeChunks[*newPoint(x, y, z)] = true
+        for x := loc.X - ACTIVE_CHUNK_RADIUS; x < 1 + loc.X + ACTIVE_CHUNK_RADIUS; x++ {
+            for y := loc.Y - ACTIVE_CHUNK_RADIUS; y < 1 + loc.Y + ACTIVE_CHUNK_RADIUS; y++ {
+                for z := loc.Z - ACTIVE_CHUNK_RADIUS; z < 1 + loc.Z + ACTIVE_CHUNK_RADIUS; z++ {
+                    point := newPoint(x, y, z)
+                    chunk, err := c.getChunkGuaranteed(ctx, point)
+                    if err != nil { return err }
+                    activeChunks[*point] = chunk
                 }
             }
         }
@@ -32,8 +35,7 @@ func (c *Huyilla) Tick (ctx contract.Context, req *plugin.Request) error {
         vitalizedVoxels[i] = *randomPoint()
     }
 
-    for p, _ := range activeChunks {
-        chunk, err := c.getChunk(ctx, &p)
+    for p, chunk := range activeChunks {
         if err != nil { return err }
 
         for i := 0; i < len(chunk.ActiveVoxels); i++ {
@@ -95,8 +97,13 @@ func (c *Huyilla) Tick (ctx contract.Context, req *plugin.Request) error {
         ctx.EmitTopics(emitMsgJSON, "huyilla:action:" + string(emitMsg.Addr))
     }
 
-    // reset actions queue
+    // clear actions queue
     ctx.Delete(ACTIONS)
+
+    // save chunks
+    for p, chunk := range activeChunks {
+        c.setChunk(ctx, &p, chunk)
+    }
 
     return nil
 }

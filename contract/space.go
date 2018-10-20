@@ -19,6 +19,10 @@ func newPoint(x, y, z int64) *types.Point {
     return &types.Point{x, y, z}
 }
 
+func clonePoint (p *types.Point) *types.Point {
+    return newPoint(p.X, p.Y, p.Z)
+}
+
 func pointEquals (p0, p1 *types.Point) bool {
     return p0.X == p1.X &&
            p0.Y == p1.Y &&

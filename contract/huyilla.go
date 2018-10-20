@@ -75,16 +75,15 @@ func (c *Huyilla) SignUp(ctx contract.Context, req *types.PlayerName) error {
     if err != nil { return errors.Wrap(err, "Entity could not be created") }
 
     player = &types.Player{
-        Id:      entity.Id,
-        Name:    req.Name,
-        Address: c.thisUser(ctx),
-        Spawn:   defaultLocation,
+        Id:       entity.Id,
+        Name:     req.Name,
+        Address:  c.thisUser(ctx),
+        Spawn:    defaultLocation,
+        LoggedIn: false,
     }
     players.Players[player.Name] = player
     err = ctx.Set(PLAYERS, players)
     if err != nil {return err}
-
-    ctx.Logger().Info("Created player", "name", player.Name, "address", player.Address)
 
     // Tell the client that the player was created (as well as everyone else listening, as a side effect)
     emitMsg := struct {
@@ -108,15 +107,16 @@ func (c *Huyilla) LogIn (ctx contract.Context, req *types.PlayerName) (*types.Pl
         return nil, errors.New("Username is not associated with your address/key/account.")
     }
 
-    if !player.LoggedIn {
-        player.LoggedIn = true
-        err = ctx.Set(PLAYERS, players)
-        if err != nil {
-            return nil, err
-        }
+    entity, err := c.getEntity(ctx, player.Id)
+    if err != nil { return nil, err }
+
+    if player.LoggedIn {
+        return nil, errors.New("You are already logged in.")
     }
 
-    entity, err := c.getEntity(ctx, player.Id)
+    player.LoggedIn = true
+    err = ctx.Set(PLAYERS, players)
+    if err != nil { return nil, err }
 
     err = c.addEntityToChunk(ctx, entity)
     if err != nil { return nil, err }
@@ -133,12 +133,14 @@ func (c *Huyilla) LogOut (ctx contract.Context, req *types.PlayerName) error {
         return errors.New("Username is not associated with your address/key/account.")
     }
 
-    if player.LoggedIn {
-        player.LoggedIn = false
-        err = ctx.Set(PLAYERS, players)
-        if err != nil {
-            return err
-        }
+    if !player.LoggedIn {
+        return errors.New("You are already logged out.")
+    }
+
+    player.LoggedIn = false
+    err = ctx.Set(PLAYERS, players)
+    if err != nil {
+        return err
     }
 
     entity, err := c.getEntity(ctx, player.Id)
