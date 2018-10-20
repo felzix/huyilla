@@ -18,21 +18,24 @@ func TestHuyilla_Players (t *testing.T) {
 
     h.Init(ctx, &plugin.Request{})
 
+    h.SignUp(ctx, &types.PlayerName{"felzix"})
+    h.LogIn(ctx, &types.PlayerName{"felzix"})
+
     players, err := h.GetPlayerList(ctx, &plugin.Request{})
     if err != nil {
         t.Fatalf("Error: %v", err)
     }
 
-    if len(players.Names) != 1 {  // default has admin
-        t.Errorf(`Error: Should be no players but there aren't: "%v"`, players.Names)
+    if len(players.Names) != 2 {  // admin and new player "felzix"
+        t.Errorf(`Error: Should be two players but there aren't: "%v"`, players.Names)
     }
 
-    player, err := h.GetPlayer(ctx, &types.PlayerName{Name: "admin"})
+    player, err := h.GetPlayer(ctx, &types.PlayerName{Name: "felzix"})
     if err != nil {
         t.Fatalf("Error: %v", err)
     }
 
-    if player.Player.Name != "admin" {
-        t.Errorf(`Player name was "%v" instead of "admin"`, player.Player.Name)
+    if player.Player.Name != "felzix" {
+        t.Errorf(`Player name was "%v" instead of "felzix"`, player.Player.Name)
     }
 }
