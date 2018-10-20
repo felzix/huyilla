@@ -1,6 +1,7 @@
 package main
 
 import (
+    "fmt"
     "github.com/felzix/huyilla/types"
     "math"
     "math/rand"
@@ -37,4 +38,12 @@ func distance(p0, p1 *types.Point) float64 {
     z := float64(p0.Z - p1.Z)
 
     return math.Sqrt(x*x + y*y + z*z)
+}
+
+func pointToString (p *types.Point) string {
+    return fmt.Sprintf("(%d,%d,%d)", p.X, p.Y, p.Z)
+}
+
+func absolutePointToString (p *types.AbsolutePoint) string {
+    return fmt.Sprintf("(%s,%s)", pointToString(p.Chunk), pointToString(p.Voxel))
 }

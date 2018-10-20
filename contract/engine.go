@@ -1,11 +1,11 @@
 package main
 
 import (
+    "encoding/json"
     "fmt"
     "github.com/felzix/huyilla/types"
     "github.com/loomnetwork/go-loom/plugin"
     contract "github.com/loomnetwork/go-loom/plugin/contractpb"
-    "github.com/pkg/errors"
 )
 
 
@@ -62,17 +62,37 @@ func (c *Huyilla) Tick (ctx contract.Context, req *plugin.Request) error {
     for i := 0; i < len(actions.Actions); i++ {
         action := actions.Actions[i]
 
-        var fn func(contract.Context, *types.Action) error
+        var fn func(contract.Context, *types.Action) (bool, error)
+        var actionName string
         switch a := action.Action.(type) {
-        case *types.Action_Move: fn = c.move
-        default: return errors.New(fmt.Sprintf("Invalid action %v", a))
+        case *types.Action_Move:
+            fn = c.move
+            actionName = "move"
+        default:
+            // only log error - if the action is broken then don't block the engine
+            ctx.Logger().Error(fmt.Sprintf("Invalid action %v", a))
+            continue
         }
 
-        if fn(ctx, action) == nil {
-            // TODO emit success event
-        } else {
-            // TODO emit failure event
+        success, err := fn(ctx, action)
+        if err != nil {
+            // only log error - if the action is broken then don't block the engine
+            ctx.Logger().Error(err.Error())
+            continue
         }
+
+        emitMsg := struct {
+            Action  string
+            Addr    []byte
+            Success bool
+        }{actionName, c.thisUser(ctx), success}
+        emitMsgJSON, err := json.Marshal(emitMsg)
+        if err != nil {
+            // only log error - if the action is broken then don't block the engine
+            ctx.Logger().Error(err.Error())
+            continue
+        }
+        ctx.EmitTopics(emitMsgJSON, "huyilla:action:" + string(emitMsg.Addr))
     }
 
     // reset actions queue

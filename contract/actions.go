@@ -29,20 +29,25 @@ func (c *Huyilla) getActions (ctx contract.StaticContext) (*types.Actions, error
     return &actions, err
 }
 
-func (c *Huyilla) move (ctx contract.Context, action *types.Action) error {
+// returns true if move succeeded; false otherwise
+func (c *Huyilla) move (ctx contract.Context, action *types.Action) (bool, error) {
     player, err := c.getPlayer(ctx, action.PlayerName)
-    if err != nil { return err }
+    if err != nil { return false, err }
 
     if player.Entity == nil {
-        return nil  // player doesn't have an entity (player has not yet finished signup)
+        return false, nil  // player doesn't have an entity (player has not yet finished signup)
     }
 
     err = c.removeEntityFromChunk(ctx, player.Entity)
-    if err != nil { return err }
+    if err != nil { return false, err }
 
     player.Entity.Location = action.GetMove().WhereTo
-    err = c.addEntityToChunk(ctx, player.Entity)
-    if err != nil { return err }
 
-    return nil
+    err = c.setEntity(ctx, player.Entity)
+    if err != nil { return false, err }
+
+    err = c.addEntityToChunk(ctx, player.Entity)
+    if err != nil { return false, err }
+
+    return true, nil
 }
