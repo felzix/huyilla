@@ -2,6 +2,7 @@ package main
 
 import (
     "fmt"
+    C "github.com/felzix/huyilla/constants"
     "github.com/felzix/huyilla/types"
     contract "github.com/loomnetwork/go-loom/plugin/contractpb"
     "github.com/mitchellh/hashstructure"
@@ -14,7 +15,7 @@ func (c *Huyilla) GetChunk (ctx contract.StaticContext, req *types.Point) (*type
 }
 
 func (c *Huyilla) GenChunk (ctx contract.Context, p *types.Point) error {
-    return c.genChunk(ctx, SEED, p)
+    return c.genChunk(ctx, C.SEED, p)
 }
 
 func (c *Huyilla) chunkKey (point *types.Point) []byte {
@@ -33,7 +34,7 @@ func (c *Huyilla) getChunkGuaranteed (ctx contract.Context, point *types.Point) 
     var chunk types.Chunk
 
     if !ctx.Has(key) {
-        if err := c.genChunk(ctx, SEED, point); err != nil {
+        if err := c.genChunk(ctx, C.SEED, point); err != nil {
             return nil, err
         }
     }
@@ -93,13 +94,13 @@ func (c *Huyilla) genChunk (ctx contract.Context, worldSeed uint64, p *types.Poi
     chunkSeed, _ := hashstructure.Hash(p, nil)
     seed := int64(worldSeed * chunkSeed)
 
-    chunk := types.Chunk{Voxels: make([]uint64, CHUNK_LENGTH)}
+    chunk := types.Chunk{Voxels: make([]uint64, C.CHUNK_LENGTH)}
     var x, y, z int64
-    for x = 0; x < CHUNK_SIZE; x++ {
-        for y = 0; y < CHUNK_SIZE; y++ {
-            for z = 0; z < CHUNK_SIZE; z++ {
+    for x = 0; x < C.CHUNK_SIZE; x++ {
+        for y = 0; y < C.CHUNK_SIZE; y++ {
+            for z = 0; z < C.CHUNK_SIZE; z++ {
                 rand.Seed(seed)  // so voxels can use randomness
-                index := (x * CHUNK_SIZE * CHUNK_SIZE) + (y * CHUNK_SIZE) + z
+                index := (x * C.CHUNK_SIZE * C.CHUNK_SIZE) + (y * C.CHUNK_SIZE) + z
                 location := &types.AbsolutePoint{
                     Chunk: p,
                     Voxel: &types.Point{x, y, z},

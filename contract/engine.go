@@ -3,6 +3,7 @@ package main
 import (
     "encoding/json"
     "fmt"
+    C "github.com/felzix/huyilla/constants"
     "github.com/felzix/huyilla/types"
     "github.com/loomnetwork/go-loom/plugin"
     contract "github.com/loomnetwork/go-loom/plugin/contractpb"
@@ -14,13 +15,13 @@ func (c *Huyilla) Tick (ctx contract.Context, req *plugin.Request) error {
     players, err := c.getActivePlayers(ctx)
     if err != nil { return err }
 
-    activeChunks := make(map[types.Point]*types.Chunk, len(players) * ACTIVE_CHUNK_CUBE)
+    activeChunks := make(map[types.Point]*types.Chunk, len(players) * C.ACTIVE_CHUNK_CUBE)
     for i := 0; i < len(players); i++ {
         player := players[i]
         loc := player.Entity.Location.Chunk
-        for x := loc.X - ACTIVE_CHUNK_RADIUS; x < 1 + loc.X + ACTIVE_CHUNK_RADIUS; x++ {
-            for y := loc.Y - ACTIVE_CHUNK_RADIUS; y < 1 + loc.Y + ACTIVE_CHUNK_RADIUS; y++ {
-                for z := loc.Z - ACTIVE_CHUNK_RADIUS; z < 1 + loc.Z + ACTIVE_CHUNK_RADIUS; z++ {
+        for x := loc.X - C.ACTIVE_CHUNK_RADIUS; x < 1 + loc.X + C.ACTIVE_CHUNK_RADIUS; x++ {
+            for y := loc.Y - C.ACTIVE_CHUNK_RADIUS; y < 1 + loc.Y + C.ACTIVE_CHUNK_RADIUS; y++ {
+                for z := loc.Z - C.ACTIVE_CHUNK_RADIUS; z < 1 + loc.Z + C.ACTIVE_CHUNK_RADIUS; z++ {
                     point := newPoint(x, y, z)
                     chunk, err := c.getChunkGuaranteed(ctx, point)
                     if err != nil { return err }
@@ -30,8 +31,8 @@ func (c *Huyilla) Tick (ctx contract.Context, req *plugin.Request) error {
         }
     }
 
-    vitalizedVoxels := make([]types.Point, PASSIVE_VITALITY)
-    for i := 0; i < PASSIVE_VITALITY; i++ {
+    vitalizedVoxels := make([]types.Point, C.PASSIVE_VITALITY)
+    for i := 0; i < C.PASSIVE_VITALITY; i++ {
         vitalizedVoxels[i] = *randomPoint()
     }
 
@@ -43,7 +44,7 @@ func (c *Huyilla) Tick (ctx contract.Context, req *plugin.Request) error {
             if err != nil { return err }
         }
 
-        for i := 0; i < PASSIVE_VITALITY; i++ {
+        for i := 0; i < C.PASSIVE_VITALITY; i++ {
             err := c.voxelPhysics(ctx, chunk, &types.AbsolutePoint{Chunk: &p, Voxel: &vitalizedVoxels[i]})
             if err != nil { return err }
         }

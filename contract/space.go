@@ -2,6 +2,7 @@ package main
 
 import (
     "fmt"
+    C "github.com/felzix/huyilla/constants"
     "github.com/felzix/huyilla/types"
     "math"
     "math/rand"
@@ -30,9 +31,9 @@ func pointEquals (p0, p1 *types.Point) bool {
 }
 
 func randomPoint () *types.Point {
-    x := rand.Int63n(CHUNK_SIZE)
-    y := rand.Int63n(CHUNK_SIZE)
-    z := rand.Int63n(CHUNK_SIZE)
+    x := rand.Int63n(C.CHUNK_SIZE)
+    y := rand.Int63n(C.CHUNK_SIZE)
+    z := rand.Int63n(C.CHUNK_SIZE)
     return newPoint(x, y, z)
 }
 

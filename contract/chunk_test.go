@@ -1,13 +1,13 @@
 package main
 
 import (
+    C "github.com/felzix/huyilla/constants"
     "github.com/felzix/huyilla/types"
     "github.com/loomnetwork/go-loom"
     "github.com/loomnetwork/go-loom/plugin"
     "github.com/loomnetwork/go-loom/plugin/contractpb"
     "testing"
 )
-
 
 
 func TestHuyilla_Chunk (t *testing.T) {
@@ -27,7 +27,7 @@ func TestHuyilla_Chunk (t *testing.T) {
         t.Fatalf("Error: %v", err)
     }
 
-    expectedVoxelCount := CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE
+    expectedVoxelCount := C.CHUNK_SIZE * C.CHUNK_SIZE * C.CHUNK_SIZE
     if len(chunk.Voxels) != expectedVoxelCount {
         t.Errorf(`Was expected %d voxels but got %d`, expectedVoxelCount, len(chunk.Voxels))
     }

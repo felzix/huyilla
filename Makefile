@@ -1,6 +1,6 @@
 PKG = github.com/felzix/huyilla
 
-.PHONY: all clean test lint deps proto cli
+.PHONY: all clean test lint deps proto cli textclient
 
 all: external-plugin
 
@@ -13,6 +13,9 @@ huyilla.0.0.1: proto
 
 cli: proto
 	go build -o run/cli ./cli
+
+textclient: proto
+	go build -o run/textclient ./textclient
 
 huyilla.so: proto
 	mkdir -p run/contracts
@@ -45,6 +48,7 @@ clean:
 	go clean
 	rm -f \
 		types/types.pb.go \
-		testdata/test.pb.go \
-		run/contracts/huyilla.so
-		run/contracts/huyilla.0.0.1
+		run/cli \
+		run/textclient \
+		run/contracts/huyilla.so \
+		run/contracts/huyilla.0.0.1 \
