@@ -75,6 +75,7 @@ func (client *Client) Deinit () {
 func (client *Client) Run () error {
     go client.EventPoller()
     go client.Updater()
+    go client.Ticker()
 loop:
     for {
         if err := client.Draw(); err != nil {
@@ -174,7 +175,7 @@ func (client *Client) Draw() error {
             for x := 0; x < C.CHUNK_SIZE; x++ {
                 if chunk == nil {
                     style := tcell.StyleDefault.Background(tcell.ColorDarkGray)
-                    client.chunkView.SetContent(int(x), int(y), '.', nil, style)
+                    client.chunkView.SetContent(int(x), int(y), ' ', nil, style)
                 } else {
                     index := (x * C.CHUNK_SIZE * C.CHUNK_SIZE) + (y * C.CHUNK_SIZE) + zLevel
                     ch := voxelToRune(chunk.Voxels[index])
@@ -196,37 +197,15 @@ func (client *Client) Draw() error {
     return nil
 }
 
-func voxelToRune (voxel uint64) rune {
-    voxelType := voxel & 0xFFFF
-
-    charMap := map[string]rune {
-        "air": ' ',
-        "barren_earth": '.',
-        "barren_grass": ',',
-        "water": '~',
-    }
-
-    typeToRune := make(map[uint64]rune, len(charMap))
-    for name, rune := range charMap {
-        typeToRune[content.VOXEL[name]] = rune
-    }
-
-    return typeToRune[voxelType]
-}
-
-func (client *Client) Updater() {
+func (client *Client) Updater () {
     for {
         select {
         case <-client.quitq:
             return
-        // tick-query loop runs no faster than once every 10ms
-        case <-time.After(time.Millisecond * 50):
+        // query loop runs no faster than once every 10ms
+        case <-time.After(time.Millisecond * 10):
             if client.viewMode == VIEWMODE_GAME {
                 client.Lock()
-
-                // if err := tick(); err != nil {
-                //     client.Quit(errors.Wrap(err, "Tick error"))
-                // }
 
                 if age, err := getAge(); err == nil {
                     client.world.age = age
@@ -249,7 +228,24 @@ func (client *Client) Updater() {
     }
 }
 
-func (client *Client) EventPoller() {
+func (client *Client) Ticker () {
+    for {
+        select {
+        case <-client.quitq:
+            return
+        // tick as fast as possible - calls are synchronous and the consensus rules limit the tick speed
+        case <-time.After(time.Millisecond * 5):
+            if client.viewMode == VIEWMODE_GAME {
+                // if err := tick(); err != nil {
+                if err := tick(); err != nil {
+                    client.Quit(errors.Wrap(err, "Tick error"))
+                }
+            }
+        }
+    }
+}
+
+func (client *Client) EventPoller () {
     for {
         select {
         case <-client.quitq:
@@ -306,4 +302,22 @@ func drawString(view *views.ViewPort, x, y int, s string) {
     for i := 0; i < len(s); i++ {
         view.SetContent(x + i, y, rune(s[i]), nil, tcell.StyleDefault)
     }
+}
+
+func voxelToRune (voxel uint64) rune {
+    voxelType := voxel & 0xFFFF
+
+    charMap := map[string]rune {
+        "air": ' ',
+        "barren_earth": '.',
+        "barren_grass": ',',
+        "water": '~',
+    }
+
+    typeToRune := make(map[uint64]rune, len(charMap))
+    for name, rune := range charMap {
+        typeToRune[content.VOXEL[name]] = rune
+    }
+
+    return typeToRune[voxelType]
 }
