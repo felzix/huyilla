@@ -27,6 +27,8 @@ type Client struct {
 
     quitq chan struct{}
     quitOnce sync.Once
+    err error
+
     eventq chan tcell.Event
 }
 
@@ -80,7 +82,7 @@ loop:
     iev := tcell.NewEventInterrupt(nil)
     client.screen.PostEvent(iev)
 
-    return nil
+    return client.err
 }
 
 func (client *Client) HandleEvent (e tcell.Event) error {
@@ -93,9 +95,7 @@ func (client *Client) HandleEvent (e tcell.Event) error {
     case *tcell.EventKey:
         switch e.Key(){
         case tcell.KeyEsc:
-            client.quitOnce.Do(func () {
-                close(client.quitq)
-            })
+            client.Quit(nil)
         }
     case *tcell.EventMouse:
         // x, y := e.Position()
@@ -136,6 +136,11 @@ func (client *Client) Updater() {
             client.Lock()
 
             // TODO tick engine then query its state
+            if age, err := getAge(); err == nil {
+                client.world.age = age
+            } else {
+                client.Quit(err)
+            }
 
             client.Unlock()
         }
@@ -163,6 +168,13 @@ func (client *Client) EventPoller() {
     }
 }
 
+func (client *Client) Quit (err error) {
+    client.err = err
+    client.quitOnce.Do(func () {
+        close(client.quitq)
+    })
+}
+
 
 
 func generateKey(privFile string) error {
@@ -177,11 +189,9 @@ func generateKey(privFile string) error {
     return nil
 }
 
-const CONTRACT = "Huyilla"
-
 func getAge () (uint64, error) {
     var age types.Age
-    if err := StaticCallContract(CONTRACT, "GetAge", &types.Nothing{}, &age); err != nil {
+    if err := StaticCallContract("GetAge", &types.Nothing{}, &age); err != nil {
         return 0, err
     }
 
@@ -191,7 +201,7 @@ func getAge () (uint64, error) {
 func getConfig () (map[string]interface{}, error) {
     var config types.Config
 
-    if err := StaticCallContract(CONTRACT, "GetConfig", &types.Nothing{}, &config); err != nil {
+    if err := StaticCallContract("GetConfig", &types.Nothing{}, &config); err != nil {
         return nil, err
     }
 
@@ -212,7 +222,7 @@ func getConfig () (map[string]interface{}, error) {
 func getChunk (point *types.Point) (*types.Chunk, error) {
     var chunk types.Chunk
 
-    if err := StaticCallContract(CONTRACT, "GetChunk", point, &chunk); err != nil {
+    if err := StaticCallContract("GetChunk", point, &chunk); err != nil {
         return nil, err
     }
 

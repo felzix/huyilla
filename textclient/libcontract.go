@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/base64"
-	"errors"
 	"io/ioutil"
 
 	"github.com/gogo/protobuf/proto"
@@ -11,42 +10,34 @@ import (
 	"github.com/loomnetwork/go-loom/client"
 )
 
-var txFlags struct {
-	WriteURI     string
-	ReadURI      string
-	ContractAddr string
-	ChainID      string
-	PrivFile     string
-}
 
-func contract(defaultAddr string) (*client.Contract, error) {
-	contractAddrStr := txFlags.ContractAddr
-	if contractAddrStr == "" {
-		contractAddrStr = defaultAddr
-	}
+const (
+    ADDR = "Huyilla"
+    CHAIN_ID = "default"
+    WRITE_URI = "http://localhost:46658/rpc"
+    READ_URI = "http://localhost:46658/query"
+    PRIV_FILE = "key"
+)
 
-	if contractAddrStr == "" {
-		return nil, errors.New("contract address or name required")
-	}
 
-	contractAddr, err := ResolveAddress(contractAddrStr)
+func contract() (*client.Contract, error) {
+	contractAddr, err := ResolveAddress(ADDR)
 	if err != nil {
 		return nil, err
 	}
 
 	// create rpc client
-	rpcClient := client.NewDAppChainRPCClient(txFlags.ChainID, txFlags.WriteURI, txFlags.ReadURI)
+	rpcClient := client.NewDAppChainRPCClient(
+		CHAIN_ID,
+		WRITE_URI,
+		READ_URI)
 	// create contract
 	contract := client.NewContract(rpcClient, contractAddr.Local)
 	return contract, nil
 }
 
-func CallContract(defaultAddr string, method string, params proto.Message, result interface{}) error {
-	if txFlags.PrivFile == "" {
-		return errors.New("private key required to call contract")
-	}
-
-	privKeyB64, err := ioutil.ReadFile(txFlags.PrivFile)
+func CallContract(method string, params proto.Message, result interface{}) error {
+	privKeyB64, err := ioutil.ReadFile(PRIV_FILE)
 	if err != nil {
 		return err
 	}
@@ -58,7 +49,7 @@ func CallContract(defaultAddr string, method string, params proto.Message, resul
 
 	signer := auth.NewEd25519Signer(privKey)
 
-	contract, err := contract(defaultAddr)
+	contract, err := contract()
 	if err != nil {
 		return err
 	}
@@ -66,12 +57,12 @@ func CallContract(defaultAddr string, method string, params proto.Message, resul
 	return err
 }
 
-func StaticCallContract(defaultAddr string, method string, params proto.Message, result interface{}) error {
-	contract, err := contract(defaultAddr)
+func StaticCallContract(method string, params proto.Message, result interface{}) error {
+	contract, err := contract()
 	if err != nil {
 		return err
 	}
 
-	_, err = contract.StaticCall(method, params, loom.RootAddress(txFlags.ChainID), result)
+	_, err = contract.StaticCall(method, params, loom.RootAddress(CHAIN_ID), result)
 	return err
 }
