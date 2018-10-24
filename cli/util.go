@@ -49,10 +49,3 @@ func ResolveAddress(s string) (loom.Address, error) {
 
 	return contractAddr, nil
 }
-
-func sciNot(m, n int64) *loom.BigUInt {
-	ret := loom.NewBigUIntFromInt(10)
-	ret.Exp(ret, loom.NewBigUIntFromInt(n), nil)
-	ret.Mul(ret, loom.NewBigUIntFromInt(m))
-	return ret
-}
