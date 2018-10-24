@@ -56,9 +56,8 @@ func (client *Client) Init () error {
     return nil
 }
 
-func (client *Client) Deinit () error {
+func (client *Client) Deinit () {
     client.screen.Fini()
-    return nil
 }
 
 func (client *Client) Run () error {
