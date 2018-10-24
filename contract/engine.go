@@ -106,6 +106,11 @@ func (c *Huyilla) Tick (ctx contract.Context, req *plugin.Request) error {
         c.setChunk(ctx, &p, chunk)
     }
 
+    // advance age by one tick
+    if _, err := c.incrementAge(ctx); err != nil {
+        return err
+    }
+
     return nil
 }
 
