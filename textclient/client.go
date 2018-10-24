@@ -1,16 +1,10 @@
 package main
 
 import (
-    "encoding/base64"
     "fmt"
     C "github.com/felzix/huyilla/constants"
-    "github.com/felzix/huyilla/types"
     "github.com/gdamore/tcell"
     "github.com/gdamore/tcell/views"
-    "github.com/pkg/errors"
-    "golang.org/x/crypto/ed25519"
-    "io/ioutil"
-    "log"
     "sync"
     "time"
 )
@@ -20,9 +14,12 @@ type Client struct {
     sync.Mutex
 
     world *WorldCache
+    username string
+    viewMode int
 
     screen tcell.Screen
-    view *views.ViewPort
+    introView *views.ViewPort
+    chunkView *views.ViewPort
     debugView *views.ViewPort
 
     quitq chan struct{}
@@ -32,10 +29,17 @@ type Client struct {
     eventq chan tcell.Event
 }
 
+const (
+    VIEWMODE_INTRO = 0
+    VIEWMODE_GAME = 1
+)
+
 
 func (client *Client) Init () error {
     client.world = &WorldCache{}
     client.world.Init()
+
+    client.viewMode = VIEWMODE_INTRO
 
     if screen, err := tcell.NewScreen(); err != nil {
         return err
@@ -49,8 +53,10 @@ func (client *Client) Init () error {
         Foreground(tcell.ColorWhite))
     client.screen.EnableMouse()  // TODO do I want this?
 
-    client.view = views.NewViewPort(client.screen, 0, 2, C.CHUNK_SIZE, C.CHUNK_SIZE)
-    client.debugView = views.NewViewPort(client.screen, 0, 0, 80, 1)
+    width, height := client.screen.Size()
+    client.introView = views.NewViewPort(client.screen, 0, 0, width, height)
+    client.chunkView = views.NewViewPort(client.screen, 0, 2, width, height - 2)
+    client.debugView = views.NewViewPort(client.screen, 0, 0, width, 1)
 
     client.quitq = make(chan struct{})
     client.eventq = make(chan tcell.Event)
@@ -88,43 +94,84 @@ loop:
 func (client *Client) HandleEvent (e tcell.Event) error {
     switch e := e.(type) {
     case *tcell.EventResize:
-        width, height := e.Size()
-
-        client.view.Resize(0, 2, width, height)
-        client.debugView.Resize(0, 0, width, 1)
+        client.handleResize(e)
     case *tcell.EventKey:
-        switch e.Key(){
-        case tcell.KeyEsc:
-            client.Quit(nil)
-        }
+        return client.handleKey(e)
     case *tcell.EventMouse:
-        // x, y := e.Position()
-        // fmt.Printf("(%d,%d)", x, y)
+        return client.handleMouse(e)
     }
 
+    return nil
+}
+
+func (client *Client) handleResize (e *tcell.EventResize) {
+    width, height := e.Size()
+    client.introView.Resize(0, 0, width, height)
+    client.chunkView.Resize(0, 2, width, height - 2)
+    client.debugView.Resize(0, 0, width, 1)
+}
+
+func (client *Client) handleKey (e *tcell.EventKey) error {
+    if e.Key() == tcell.KeyEsc {
+        client.Quit(nil)
+        return nil
+    }
+
+    switch client.viewMode {
+    case VIEWMODE_INTRO:
+        if e.Key() == tcell.KeyEnter {
+            if len(client.username) > 0 {
+                client.viewMode = VIEWMODE_GAME
+            }
+        } else if e.Rune() != 0 {
+            client.username += string(e.Rune())
+        }
+    case VIEWMODE_GAME:
+        switch e.Key() {
+        case tcell.KeyUp:
+            // TODO issue move command to server for player entity to move up/north, depending on terrain
+        }
+
+        switch e.Rune() {
+        case 'q':
+            client.Quit(nil)
+        }
+    }
+    return nil
+}
+
+func (client *Client) handleMouse (e *tcell.EventMouse) error {
+    // x, y := e.Position()
+    // fmt.Printf("(%d,%d)", x, y)
     return nil
 }
 
 func (client *Client) Draw() {
     client.Lock()
 
-    client.view.Clear()
-    for y := 0; y < C.CHUNK_SIZE; y++ {
-        for x := 0; x < C.CHUNK_SIZE; x++ {
-            client.view.SetContent(x, y, '.', nil, tcell.StyleDefault)
+    switch client.viewMode {
+    case VIEWMODE_INTRO:
+        client.introView.Clear()
+        drawString(client.introView, 0, 0, "Hello!")
+        drawString(client.introView, 0, 2, "Enter username: " + client.username)
+    case VIEWMODE_GAME:
+        client.chunkView.Clear()
+        for y := 0; y < C.CHUNK_SIZE; y++ {
+            for x := 0; x < C.CHUNK_SIZE; x++ {
+                client.chunkView.SetContent(x, y, '.', nil, tcell.StyleDefault)
+            }
         }
-    }
 
-    client.debugView.Clear()
-    age := fmt.Sprintf("%d", client.world.age)
-    for i := 0; i < len(age); i++ {
-        client.debugView.SetContent(i, 0, rune(age[i]), nil, tcell.StyleDefault)
+        client.debugView.Clear()
+        age := fmt.Sprintf("%d", client.world.age)
+        for i := 0; i < len(age); i++ {
+            client.debugView.SetContent(i, 0, rune(age[i]), nil, tcell.StyleDefault)
+        }
     }
 
     client.screen.Show()
     client.Unlock()
 }
-
 
 func (client *Client) Updater() {
     for {
@@ -177,56 +224,8 @@ func (client *Client) Quit (err error) {
 
 
 
-func generateKey(privFile string) error {
-    _, priv, err := ed25519.GenerateKey(nil)
-    if err != nil {
-        return errors.Wrapf(err, "Error generating key pair")
+func drawString(view *views.ViewPort, x, y int, s string) {
+    for i := 0; i < len(s); i++ {
+        view.SetContent(x + i, y, rune(s[i]), nil, tcell.StyleDefault)
     }
-    data := base64.StdEncoding.EncodeToString(priv)
-    if err := ioutil.WriteFile(privFile, []byte(data), 0664); err != nil {
-        return errors.Wrapf(err, "Unable to write private key")
-    }
-    return nil
-}
-
-func getAge () (uint64, error) {
-    var age types.Age
-    if err := StaticCallContract("GetAge", &types.Nothing{}, &age); err != nil {
-        return 0, err
-    }
-
-    return age.Ticks, nil
-}
-
-func getConfig () (map[string]interface{}, error) {
-    var config types.Config
-
-    if err := StaticCallContract("GetConfig", &types.Nothing{}, &config); err != nil {
-        return nil, err
-    }
-
-    native := make(map[string]interface{})
-    for k, v := range config.Options.Map {
-        switch value := v.Value.(type) {
-        case *types.Primitive_Int: native[k] = value.Int
-        case *types.Primitive_Bool: native[k] = value.Bool
-        case *types.Primitive_String_: native[k] = value.String_
-        case *types.Primitive_Float: native[k] = value.Float
-        default: native[k] = nil
-        }
-    }
-
-    return native, nil
-}
-
-func getChunk (point *types.Point) (*types.Chunk, error) {
-    var chunk types.Chunk
-
-    if err := StaticCallContract("GetChunk", point, &chunk); err != nil {
-        return nil, err
-    }
-
-    log.Print(chunk.Voxels)
-
-    return &chunk, nil
 }
