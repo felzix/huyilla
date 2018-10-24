@@ -6,7 +6,6 @@ import (
     "github.com/pkg/errors"
     "golang.org/x/crypto/ed25519"
     "io/ioutil"
-    "log"
 )
 
 
@@ -77,7 +76,9 @@ func getChunk (point *types.Point) (*types.Chunk, error) {
         return nil, err
     }
 
-    log.Print(chunk.Voxels)
-
     return &chunk, nil
+}
+
+func tick () error {
+    return CallContract("Tick", &types.Nothing{}, &types.Nothing{})
 }

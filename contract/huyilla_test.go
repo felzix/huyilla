@@ -99,3 +99,20 @@ func TestHuyilla_Login (t *testing.T) {
             details.Entity.Location.Chunk.Z)
     }
 }
+
+
+func TestHuyilla_LoginNegative (t *testing.T) {
+    h := &Huyilla{}
+
+    addr1 := loom.MustParseAddress(ADDR_FROM_LOOM_EXAMPLE)
+    ctx := contractpb.WrapPluginContext(plugin.CreateFakeContext(addr1, addr1))
+
+    h.Init(ctx, &plugin.Request{})
+
+    _, err := h.LogIn(ctx, &types.PlayerName{Name: "felzix"})
+    if err == nil {
+        t.Fatal("Logging in before signup should throw an error but didn't")
+    } else if err.Error() != "Wrong username: no one has this username" {
+        t.Errorf("Wrong error. Got %v", err)
+    }
+}

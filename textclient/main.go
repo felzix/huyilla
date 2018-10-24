@@ -12,6 +12,7 @@ func main () {
     defer func() {
         if r := recover(); r != nil {
             fmt.Fprintf(os.Stderr, "Recovered %v", r)
+            os.Exit(2)
         }
     }()
 

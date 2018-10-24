@@ -3,8 +3,11 @@ package main
 import (
     "fmt"
     C "github.com/felzix/huyilla/constants"
+    "github.com/felzix/huyilla/content"
+    "github.com/felzix/huyilla/types"
     "github.com/gdamore/tcell"
     "github.com/gdamore/tcell/views"
+    "github.com/pkg/errors"
     "sync"
     "time"
 )
@@ -14,6 +17,7 @@ type Client struct {
     sync.Mutex
 
     world *WorldCache
+    player *types.PlayerDetails
     username string
     viewMode int
 
@@ -51,7 +55,7 @@ func (client *Client) Init () error {
     client.screen.SetStyle(tcell.StyleDefault.
         Background(tcell.ColorBlack).
         Foreground(tcell.ColorWhite))
-    client.screen.EnableMouse()  // TODO do I want this?
+    // client.screen.EnableMouse()  // TODO do I want this?
 
     width, height := client.screen.Size()
     client.introView = views.NewViewPort(client.screen, 0, 0, width, height)
@@ -73,14 +77,18 @@ func (client *Client) Run () error {
     go client.Updater()
 loop:
     for {
-        client.Draw()
+        if err := client.Draw(); err != nil {
+            client.Quit(err)
+        }
         select {
         case <-client.quitq:
             break loop
         // draw-input loop runs no faster than once every 10ms
         case <-time.After(time.Millisecond * 10):
         case ev := <-client.eventq:
-            client.HandleEvent(ev)
+            if err := client.HandleEvent(ev); err != nil {
+                client.Quit(err)
+            }
         }
     }
 
@@ -122,6 +130,7 @@ func (client *Client) handleKey (e *tcell.EventKey) error {
         if e.Key() == tcell.KeyEnter {
             if len(client.username) > 0 {
                 client.viewMode = VIEWMODE_GAME
+                return client.Auth()
             }
         } else if e.Rune() != 0 {
             client.username += string(e.Rune())
@@ -146,7 +155,7 @@ func (client *Client) handleMouse (e *tcell.EventMouse) error {
     return nil
 }
 
-func (client *Client) Draw() {
+func (client *Client) Draw() error {
     client.Lock()
 
     switch client.viewMode {
@@ -155,10 +164,17 @@ func (client *Client) Draw() {
         drawString(client.introView, 0, 0, "Hello!")
         drawString(client.introView, 0, 2, "Enter username: " + client.username)
     case VIEWMODE_GAME:
-        client.chunkView.Clear()
-        for y := 0; y < C.CHUNK_SIZE; y++ {
-            for x := 0; x < C.CHUNK_SIZE; x++ {
-                client.chunkView.SetContent(x, y, '.', nil, tcell.StyleDefault)
+        point := client.player.Entity.Location.Chunk
+        zLevel := client.player.Entity.Location.Voxel.Z
+        chunk := client.world.chunks[*point]
+        if chunk != nil {
+            client.chunkView.Clear()
+            for y := int64(0); y < C.CHUNK_SIZE; y++ {
+                for x := int64(0); x < C.CHUNK_SIZE; x++ {
+                    index := (x * C.CHUNK_SIZE * C.CHUNK_SIZE) + (y * C.CHUNK_SIZE) + zLevel
+                    ch := voxelToRune(chunk.Voxels[index])
+                    client.chunkView.SetContent(int(x), int(y), ch, nil, tcell.StyleDefault)
+                }
             }
         }
 
@@ -171,6 +187,26 @@ func (client *Client) Draw() {
 
     client.screen.Show()
     client.Unlock()
+
+    return nil
+}
+
+func voxelToRune (voxel uint64) rune {
+    voxelType := voxel & 0xFFFF
+
+    charMap := map[string]rune {
+        "air": ' ',
+        "barren_earth": '.',
+        "barren_grass": ',',
+        "water": '~',
+    }
+
+    typeToRune := make(map[uint64]rune, len(charMap))
+    for name, rune := range charMap {
+        typeToRune[content.VOXEL[name]] = rune
+    }
+
+    return typeToRune[voxelType]
 }
 
 func (client *Client) Updater() {
@@ -180,16 +216,30 @@ func (client *Client) Updater() {
             return
         // tick-query loop runs no faster than once every 10ms
         case <-time.After(time.Millisecond * 50):
-            client.Lock()
+            if client.viewMode == VIEWMODE_GAME {
+                client.Lock()
 
-            // TODO tick engine then query its state
-            if age, err := getAge(); err == nil {
-                client.world.age = age
-            } else {
-                client.Quit(err)
+                // if err := tick(); err != nil {
+                //     client.Quit(errors.Wrap(err, "Tick error"))
+                // }
+
+                if age, err := getAge(); err == nil {
+                    client.world.age = age
+                } else {
+                    client.Quit(errors.Wrap(err, "GetAge error"))
+                }
+
+                if client.player != nil {
+                    point := client.player.Entity.Location.Chunk
+                    if chunk, err := getChunk(point); err == nil {
+                        client.world.chunks[*point] = chunk
+                    } else {
+                        client.Quit(errors.Wrap(err, "GetChunk error"))
+                    }
+                }
+
+                client.Unlock()
             }
-
-            client.Unlock()
         }
     }
 }
@@ -222,6 +272,24 @@ func (client *Client) Quit (err error) {
     })
 }
 
+func (client *Client) Auth () error {
+    err := signUp(client.username)
+    if err != nil {
+        if err.Error() == "You are already signed up." {
+            // do nothing
+        } else {
+            return err
+        }
+    }
+
+    if player, err := logIn(client.username); err == nil {
+        client.player = player
+    } else {
+        return err
+    }
+
+    return nil
+}
 
 
 func drawString(view *views.ViewPort, x, y int, s string) {
