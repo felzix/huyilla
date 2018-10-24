@@ -68,6 +68,14 @@ func getAge () (uint64, error) {
     return age.Ticks, nil
 }
 
+func getPlayer (name string) (*types.PlayerDetails, error) {
+    playerName := types.PlayerName{Name: name}
+    var player types.PlayerDetails
+    if err := StaticCallContract("GetPlayer", &playerName, &player); err != nil {
+        return nil, err
+    }
+    return &player, nil
+}
 
 func getChunk (point *types.Point) (*types.Chunk, error) {
     var chunk types.Chunk

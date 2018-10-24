@@ -79,6 +79,7 @@ loop:
     for {
         if err := client.Draw(); err != nil {
             client.Quit(err)
+            break loop
         }
         select {
         case <-client.quitq:
@@ -88,6 +89,7 @@ loop:
         case ev := <-client.eventq:
             if err := client.HandleEvent(ev); err != nil {
                 client.Quit(err)
+                break loop
             }
         }
     }
@@ -165,15 +167,18 @@ func (client *Client) Draw() error {
         drawString(client.introView, 0, 2, "Enter username: " + client.username)
     case VIEWMODE_GAME:
         point := client.player.Entity.Location.Chunk
-        zLevel := client.player.Entity.Location.Voxel.Z
+        zLevel := int(client.player.Entity.Location.Voxel.Z)
         chunk := client.world.chunks[*point]
-        if chunk != nil {
-            client.chunkView.Clear()
-            for y := int64(0); y < C.CHUNK_SIZE; y++ {
-                for x := int64(0); x < C.CHUNK_SIZE; x++ {
+        client.chunkView.Clear()
+        for y := 0; y < C.CHUNK_SIZE; y++ {
+            for x := 0; x < C.CHUNK_SIZE; x++ {
+                if chunk == nil {
+                    style := tcell.StyleDefault.Background(tcell.ColorDarkGray)
+                    client.chunkView.SetContent(int(x), int(y), '.', nil, style)
+                } else {
                     index := (x * C.CHUNK_SIZE * C.CHUNK_SIZE) + (y * C.CHUNK_SIZE) + zLevel
                     ch := voxelToRune(chunk.Voxels[index])
-                    client.chunkView.SetContent(int(x), int(y), ch, nil, tcell.StyleDefault)
+                    client.chunkView.SetContent(x, y, ch, nil, tcell.StyleDefault)
                 }
             }
         }
@@ -275,17 +280,22 @@ func (client *Client) Quit (err error) {
 func (client *Client) Auth () error {
     err := signUp(client.username)
     if err != nil {
-        if err.Error() == "You are already signed up." {
-            // do nothing
-        } else {
-            return err
+        // if err.Error() != "You are already signed up." {
+        if err.Error() != "rpc error: code = Unknown desc = You are already signed up." {
+            return errors.Wrap(err, "Signup error")
         }
     }
 
     if player, err := logIn(client.username); err == nil {
         client.player = player
+    } else if err.Error() == "rpc error: code = Unknown desc = You are already logged in." {
+        if player, err := getPlayer(client.username); err == nil {
+            client.player = player
+        } else {
+            return errors.Wrap(err, "GetPlayer error")
+        }
     } else {
-        return err
+        return errors.Wrap(err, "Login error")
     }
 
     return nil
