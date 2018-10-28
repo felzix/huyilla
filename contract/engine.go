@@ -7,13 +7,16 @@ import (
     "github.com/felzix/huyilla/types"
     "github.com/loomnetwork/go-loom/plugin"
     contract "github.com/loomnetwork/go-loom/plugin/contractpb"
+    "github.com/pkg/errors"
 )
 
 
 
 func (c *Huyilla) Tick (ctx contract.Context, req *plugin.Request) error {
     players, err := c.getActivePlayers(ctx)
-    if err != nil { return err }
+    if err != nil {
+        return errors.Wrap(err, "get active players")
+    }
 
     activeChunks := make(map[types.Point]*types.Chunk, len(players) * C.ACTIVE_CHUNK_CUBE)
     for i := 0; i < len(players); i++ {
@@ -23,9 +26,11 @@ func (c *Huyilla) Tick (ctx contract.Context, req *plugin.Request) error {
             for y := loc.Y - C.ACTIVE_CHUNK_RADIUS; y < 1 + loc.Y + C.ACTIVE_CHUNK_RADIUS; y++ {
                 for z := loc.Z - C.ACTIVE_CHUNK_RADIUS; z < 1 + loc.Z + C.ACTIVE_CHUNK_RADIUS; z++ {
                     point := newPoint(x, y, z)
-                    chunk, err := c.getChunkGuaranteed(ctx, point)
-                    if err != nil { return err }
-                    activeChunks[*point] = chunk
+                    if chunk, err := c.getChunkGuaranteed(ctx, point); err == nil {
+                        activeChunks[*point] = chunk
+                    } else {
+                        return errors.Wrap(err, "failed to get/gen chunk")
+                    }
                 }
             }
         }
@@ -37,30 +42,36 @@ func (c *Huyilla) Tick (ctx contract.Context, req *plugin.Request) error {
     }
 
     for p, chunk := range activeChunks {
-        if err != nil { return err }
-
         for i := 0; i < len(chunk.ActiveVoxels); i++ {
-            err := c.voxelPhysics(ctx, chunk, &types.AbsolutePoint{Chunk: &p, Voxel: chunk.ActiveVoxels[i]} )
-            if err != nil { return err }
+            point := types.AbsolutePoint{Chunk: &p, Voxel: chunk.ActiveVoxels[i]}
+            if err := c.voxelPhysics(ctx, chunk, &point); err != nil {
+                return errors.Wrap(err, "voxel physics of active voxels")
+            }
         }
 
         for i := 0; i < C.PASSIVE_VITALITY; i++ {
-            err := c.voxelPhysics(ctx, chunk, &types.AbsolutePoint{Chunk: &p, Voxel: &vitalizedVoxels[i]})
-            if err != nil { return err }
+            point := types.AbsolutePoint{Chunk: &p, Voxel: &vitalizedVoxels[i]}
+            if err := c.voxelPhysics(ctx, chunk, &point); err != nil {
+                return errors.Wrap(err, "voxel physics of random voxels")
+            }
         }
 
         for i := 0; i < len(chunk.Entities); i++ {
             var entity types.Entity
-            err := ctx.Get(c.entityKey(chunk.Entities[i]), &entity)
-            if err != nil { return err }
+            if err := ctx.Get(c.entityKey(chunk.Entities[i]), &entity); err != nil {
+                return errors.Wrap(err, "get entity")
+            }
 
-            err = c.entityPhysics(ctx, chunk, &entity)
-            if err != nil { return err }
+            if err := c.entityPhysics(ctx, chunk, &entity); err != nil {
+                return errors.Wrap(err, "entity physics")
+            }
         }
     }
 
     actions, err := c.getActions(ctx)
-    if err != nil { return err }
+    if err != nil {
+        return errors.Wrap(err, "get list of actions")
+    }
 
     for i := 0; i < len(actions.Actions); i++ {
         action := actions.Actions[i]
@@ -108,7 +119,7 @@ func (c *Huyilla) Tick (ctx contract.Context, req *plugin.Request) error {
 
     // advance age by one tick
     if _, err := c.incrementAge(ctx); err != nil {
-        return err
+        return errors.Wrap(err, "increment age")
     }
 
     return nil
