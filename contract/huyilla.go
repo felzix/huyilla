@@ -161,5 +161,5 @@ func (c *Huyilla) LogOut (ctx contract.Context, req *types.PlayerName) error {
 }
 
 func (c *Huyilla) thisUser (ctx contract.StaticContext) []byte{
-    return []byte(ctx.Message().Sender.Local)
+    return ctx.Message().Sender.Local
 }
