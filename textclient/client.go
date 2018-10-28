@@ -202,16 +202,10 @@ func (client *Client) Updater () {
         select {
         case <-client.quitq:
             return
-        // query loop runs no faster than once every 10ms
-        case <-time.After(time.Millisecond * 10):
+        // query loop runs no faster than once every 500ms
+        case <-time.After(time.Millisecond * 500):
             if client.viewMode == VIEWMODE_GAME {
                 client.Lock()
-
-                if age, err := getAge(); err == nil {
-                    client.world.age = age
-                } else {
-                    client.Quit(errors.Wrap(err, "GetAge error"))
-                }
 
                 if client.player != nil {
                     point := client.player.Entity.Location.Chunk
@@ -233,12 +227,20 @@ func (client *Client) Ticker () {
         select {
         case <-client.quitq:
             return
-        // tick as fast as possible - calls are synchronous and the consensus rules limit the tick speed
-        case <-time.After(time.Millisecond * 5):
+        case <-time.After(time.Millisecond * 50):
             if client.viewMode == VIEWMODE_GAME {
-                // if err := tick(); err != nil {
-                if err := tick(); err != nil {
-                    client.Quit(errors.Wrap(err, "Tick error"))
+                if age, err := getAge(); err == nil {
+                    if age > client.world.age {
+                        client.Lock()
+                        client.world.age = age
+                        client.Unlock()
+
+                        if err := tick(); err != nil {
+                            client.Quit(errors.Wrap(err, "Tick error"))
+                        }
+                    }
+                } else {
+                    client.Quit(errors.Wrap(err, "GetAge error"))
                 }
             }
         }
