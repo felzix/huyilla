@@ -1,6 +1,7 @@
 package main
 
 import (
+    "bytes"
     "github.com/felzix/huyilla/types"
     "github.com/loomnetwork/go-loom"
     "github.com/loomnetwork/go-loom/plugin"
@@ -114,5 +115,23 @@ func TestHuyilla_LoginNegative (t *testing.T) {
         t.Fatal("Logging in before signup should throw an error but didn't")
     } else if err.Error() != "Wrong username: no one has this username" {
         t.Errorf("Wrong error. Got %v", err)
+    }
+}
+
+
+func TestHuyilla_thisUser (t *testing.T) {
+    h := &Huyilla{}
+
+    addr1 := loom.MustParseAddress(ADDR_FROM_LOOM_EXAMPLE)
+    ctx := contractpb.WrapPluginContext(plugin.CreateFakeContext(addr1, addr1))
+
+    h.Init(ctx, &plugin.Request{})
+
+    addr2 := h.thisUser(ctx)
+
+    if addr1Bytes, err := addr1.Local.Marshal(); err != nil {
+        t.Fatal(err)
+    } else if !bytes.Equal(addr1Bytes, addr2) {
+        t.Errorf(`Expected addr="%v" but it was "%v"`, addr1Bytes, addr2)
     }
 }
