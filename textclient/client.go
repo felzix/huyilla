@@ -7,6 +7,8 @@ import (
     "github.com/felzix/huyilla/types"
     "github.com/gdamore/tcell"
     "github.com/gdamore/tcell/views"
+    "github.com/loomnetwork/go-loom"
+    "github.com/loomnetwork/go-loom/auth"
     "github.com/pkg/errors"
     "sync"
     "time"
@@ -20,6 +22,7 @@ type Client struct {
     player *types.PlayerDetails
     username string
     viewMode int
+    signer *auth.Ed25519Signer
 
     screen tcell.Screen
     introView *views.ViewPort
@@ -44,6 +47,12 @@ func (client *Client) Init () error {
     client.world.Init()
 
     client.viewMode = VIEWMODE_INTRO
+
+    if signer, err := MakeSigner(); err != nil {
+        return err
+    } else {
+        client.signer = signer
+    }
 
     if screen, err := tcell.NewScreen(); err != nil {
         return err
@@ -281,7 +290,6 @@ func (client *Client) Quit (err error) {
 func (client *Client) Auth () error {
     err := signUp(client.username)
     if err != nil {
-        // if err.Error() != "You are already signed up." {
         if err.Error() != "rpc error: code = Unknown desc = You are already signed up." {
             return errors.Wrap(err, "Signup error")
         }
@@ -290,7 +298,7 @@ func (client *Client) Auth () error {
     if player, err := logIn(); err == nil {
         client.player = player
     } else if err.Error() == "rpc error: code = Unknown desc = You are already logged in." {
-        if player, err := getPlayer(client.username); err == nil {
+        if player, err := getPlayer(client.playerAddr()); err == nil {
             client.player = player
         } else {
             return errors.Wrap(err, "GetPlayer error")
@@ -302,6 +310,9 @@ func (client *Client) Auth () error {
     return nil
 }
 
+func (client *Client) playerAddr () string {
+    return loom.Address{"", client.signer.PublicKey()}.Local.String()
+}
 
 func drawString(view *views.ViewPort, x, y int, s string) {
     for i := 0; i < len(s); i++ {
