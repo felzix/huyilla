@@ -132,8 +132,11 @@ func (client *Client) handleKey (e *tcell.EventKey) error {
     case VIEWMODE_INTRO:
         if e.Key() == tcell.KeyEnter {
             if len(client.username) > 0 {
+                client.Lock()
                 client.viewMode = VIEWMODE_GAME
-                return client.Auth()
+                err := client.Auth()
+                client.Unlock()
+                return err
             }
         } else if e.Rune() != 0 {
             client.username += string(e.Rune())
@@ -284,7 +287,7 @@ func (client *Client) Auth () error {
         }
     }
 
-    if player, err := logIn(client.username); err == nil {
+    if player, err := logIn(); err == nil {
         client.player = player
     } else if err.Error() == "rpc error: code = Unknown desc = You are already logged in." {
         if player, err := getPlayer(client.username); err == nil {

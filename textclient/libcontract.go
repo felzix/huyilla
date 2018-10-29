@@ -36,18 +36,26 @@ func contract() (*client.Contract, error) {
 	return contract, nil
 }
 
-func CallContract(method string, params proto.Message, result interface{}) error {
+func MakeSigner () (*auth.Ed25519Signer, error) {
 	privKeyB64, err := ioutil.ReadFile(PRIV_FILE)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	privKey, err := base64.StdEncoding.DecodeString(string(privKeyB64))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	signer := auth.NewEd25519Signer(privKey)
+	return signer, nil
+}
+
+func CallContract(method string, params proto.Message, result interface{}) error {
+	signer , err := MakeSigner()
+	if err != nil {
+		return err
+	}
 
 	contract, err := contract()
 	if err != nil {

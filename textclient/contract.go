@@ -50,10 +50,9 @@ func signUp (name string) error {
     return nil
 }
 
-func logIn (name string) (*types.PlayerDetails, error) {
-    playerName := types.PlayerName{Name: name}
+func logIn () (*types.PlayerDetails, error) {
     var player types.PlayerDetails
-    if err := CallContract("LogIn", &playerName, &player); err != nil {
+    if err := CallContract("LogIn", &types.Nothing{}, &player); err != nil {
         return nil, err
     }
     return &player, nil
@@ -68,10 +67,10 @@ func getAge () (uint64, error) {
     return age.Ticks, nil
 }
 
-func getPlayer (name string) (*types.PlayerDetails, error) {
-    playerName := types.PlayerName{Name: name}
+func getPlayer (addr string) (*types.PlayerDetails, error) {
+    playerAddress := types.Address{Addr: addr}
     var player types.PlayerDetails
-    if err := StaticCallContract("GetPlayer", &playerName, &player); err != nil {
+    if err := StaticCallContract("GetPlayer", &playerAddress, &player); err != nil {
         return nil, err
     }
     return &player, nil
