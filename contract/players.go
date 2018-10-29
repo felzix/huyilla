@@ -16,24 +16,24 @@ func (c *Huyilla) GetPlayerList (ctx contract.StaticContext, req *plugin.Request
     if err != nil { return nil, err }
 
     list := types.PlayerList{}
-    for name, _ := range players.Players {
-        list.Names = append(list.Names, name)
+    for _, player := range players.Players {
+        list.Names = append(list.Names, player.Name)
     }
     return &list, nil
 }
 
-func (c *Huyilla) GetPlayer (ctx contract.StaticContext, req *types.PlayerName) (*types.PlayerDetails, error) {
-    return c.getPlayer(ctx, req.Name)
+func (c *Huyilla) GetPlayer (ctx contract.StaticContext, req *types.Address) (*types.PlayerDetails, error) {
+    return c.getPlayer(ctx, req.Addr)
 }
 
-func (c *Huyilla) getPlayer (ctx contract.StaticContext, name string) (*types.PlayerDetails, error) {
+func (c *Huyilla) getPlayer (ctx contract.StaticContext, addr string) (*types.PlayerDetails, error) {
     players, err := c.getPlayers(ctx)
     if err != nil { return nil, err }
 
-    player := players.Players[name]
+    player := players.Players[addr]
 
     if player == nil {
-        return nil, errors.New("No such player " + name)
+        return nil, errors.New("No such player " + addr)
     }
 
     entity, _ := c.getEntity(ctx, player.EntityId)

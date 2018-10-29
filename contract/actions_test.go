@@ -19,7 +19,7 @@ func TestHuyilla_Actions (t *testing.T) {
     h.Init(ctx, &plugin.Request{})
 
     action := types.Action{
-        PlayerName: "FAKE",
+        PlayerAddr: "FAKE",
         Action: &types.Action_Move{
             Move: &types.Action_MoveAction{
                 WhereTo: &types.AbsolutePoint{
@@ -100,7 +100,7 @@ func TestHuyilla_Move (t *testing.T) {
     }
 
     err = h.RegisterAction(ctx, &types.Action{
-        PlayerName: NAME,
+        PlayerAddr: addr1.Local.String(),
         Action: &types.Action_Move{
             Move: &types.Action_MoveAction{
                 WhereTo: &types.AbsolutePoint{CHUNK_POINT, VOXEL_POINT},
@@ -114,7 +114,7 @@ func TestHuyilla_Move (t *testing.T) {
         t.Fatalf("Error: %v", err)
     }
 
-    player, err := h.GetPlayer(ctx, &types.PlayerName{Name: NAME})
+    player, err := h.GetPlayer(ctx, &types.Address{addr1.Local.String()})
     if err != nil {
         t.Error("Error:", err)
     }

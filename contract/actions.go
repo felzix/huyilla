@@ -31,7 +31,7 @@ func (c *Huyilla) getActions (ctx contract.StaticContext) (*types.Actions, error
 
 // returns true if move succeeded; false otherwise
 func (c *Huyilla) move (ctx contract.Context, action *types.Action) (bool, error) {
-    player, err := c.getPlayer(ctx, action.PlayerName)
+    player, err := c.getPlayer(ctx, action.PlayerAddr)
     if err != nil { return false, err }
 
     if player.Entity == nil {

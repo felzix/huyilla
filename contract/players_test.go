@@ -19,7 +19,7 @@ func TestHuyilla_Players (t *testing.T) {
     h.Init(ctx, &plugin.Request{})
 
     h.SignUp(ctx, &types.PlayerName{"felzix"})
-    h.LogIn(ctx, &types.PlayerName{"felzix"})
+    h.LogIn(ctx, &plugin.Request{})
 
     players, err := h.GetPlayerList(ctx, &plugin.Request{})
     if err != nil {
@@ -30,7 +30,7 @@ func TestHuyilla_Players (t *testing.T) {
         t.Errorf(`Error: Should be two players but there aren't: "%v"`, players.Names)
     }
 
-    player, err := h.GetPlayer(ctx, &types.PlayerName{Name: "felzix"})
+    player, err := h.GetPlayer(ctx, &types.Address{addr1.Local.String()})
     if err != nil {
         t.Fatalf("Error: %v", err)
     }

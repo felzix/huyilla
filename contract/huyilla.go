@@ -2,7 +2,6 @@ package main
 
 import (
     "encoding/json"
-    "fmt"
     "github.com/felzix/huyilla/content"
     "github.com/felzix/huyilla/types"
     "github.com/loomnetwork/go-loom/plugin"
@@ -63,13 +62,9 @@ func (c *Huyilla) SignUp(ctx contract.Context, req *types.PlayerName) error {
     players, err := c.getPlayers(ctx)
     if err != nil { return err }
 
-    player := players.Players[req.Name]
+    player := players.Players[c.thisUser(ctx)]
     if player != nil {
-        if player.Address == c.thisUser(ctx) {
-            return errors.New("You are already signed up.")
-        } else {
-            return errors.New(fmt.Sprintf(`Name "%v" is taken. Try another.`, req.Name))
-        }
+        return errors.New("You are already signed up.")
     }
 
     // Create new player
@@ -86,7 +81,7 @@ func (c *Huyilla) SignUp(ctx contract.Context, req *types.PlayerName) error {
         Spawn:    defaultLocation,
         LoggedIn: false,
     }
-    players.Players[player.Name] = player
+    players.Players[player.Address] = player
     err = ctx.Set(PLAYERS, players)
     if err != nil {return err}
 
@@ -103,18 +98,14 @@ func (c *Huyilla) SignUp(ctx contract.Context, req *types.PlayerName) error {
     return nil
 }
 
-func (c *Huyilla) LogIn (ctx contract.Context, req *types.PlayerName) (*types.PlayerDetails, error) {
+func (c *Huyilla) LogIn (ctx contract.Context, req *plugin.Request) (*types.PlayerDetails, error) {
     players, err := c.getPlayers(ctx)
     if err != nil { return nil, err }
 
-    player := players.Players[req.Name]
+    player := players.Players[c.thisUser(ctx)]
 
     if player == nil {
-        return nil, errors.New(`Wrong username: no one has this username`)
-    }
-
-    if player.Address != c.thisUser(ctx) {
-        return nil, errors.New("Username is not associated with your address/key/account.")
+        return nil, errors.New("You have not yet signed up")
     }
 
     entity, err := c.getEntity(ctx, player.EntityId)
@@ -134,10 +125,11 @@ func (c *Huyilla) LogIn (ctx contract.Context, req *types.PlayerName) (*types.Pl
     return &types.PlayerDetails{Player: player, Entity: entity}, nil
 }
 
-func (c *Huyilla) LogOut (ctx contract.Context, req *types.PlayerName) error {
+func (c *Huyilla) LogOut (ctx contract.Context, req *plugin.Request) error {
     players, err := c.getPlayers(ctx)
-    player := players.Players[req.Name]
     if err != nil { return err }
+
+    player := players.Players[c.thisUser(ctx)]
 
     if player.Address != c.thisUser(ctx) {
         return errors.New("Username is not associated with your address/key/account.")

@@ -39,7 +39,7 @@ func TestHuyilla_SignUp (t *testing.T) {
         t.Fatalf("Error: %v", err)
     }
 
-    player, err := h.GetPlayer(ctx, &types.PlayerName{Name: "felzix"})
+    player, err := h.GetPlayer(ctx, &types.Address{addr1.Local.String()})
     if err != nil {
         t.Fatalf("Error: %v", err)
     }
@@ -67,7 +67,7 @@ func TestHuyilla_Login (t *testing.T) {
         t.Fatalf("Error: %v", err)
     }
 
-    details, err := h.LogIn(ctx, &types.PlayerName{Name: "felzix"})
+    details, err := h.LogIn(ctx, &plugin.Request{})
     if err != nil {
         t.Fatalf("Error: %v", err)
     }
@@ -109,11 +109,11 @@ func TestHuyilla_LoginNegative (t *testing.T) {
 
     h.Init(ctx, &plugin.Request{})
 
-    _, err := h.LogIn(ctx, &types.PlayerName{Name: "felzix"})
+    _, err := h.LogIn(ctx, &plugin.Request{})
     if err == nil {
         t.Fatal("Logging in before signup should throw an error but didn't")
-    } else if err.Error() != "Wrong username: no one has this username" {
-        t.Errorf("Wrong error. Got %v", err)
+    } else if err.Error() != "You have not yet signed up" {
+        t.Errorf(`Wrong error. Got "%v"`, err)
     }
 }
 

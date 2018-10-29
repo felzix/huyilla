@@ -28,6 +28,10 @@ message PlayerName {
     string name = 1;
 }
 
+message Address {
+    string addr = 1;
+}
+
 message PlayerDetails {
     Player player = 1;
     Entity entity = 2;
@@ -132,7 +136,7 @@ message Action {
         repeated uint32 outputForms = 4;
     }
 
-    string playerName = 1;
+    string playerAddr = 1;
     oneof action {
         MoveAction move = 2;
         CraftAction craft = 3;

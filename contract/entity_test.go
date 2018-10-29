@@ -23,7 +23,7 @@ func TestHuyilla_Entity (t *testing.T) {
         t.Fatalf("Error: %v", err)
     }
 
-    player, err := h.GetPlayer(ctx, &types.PlayerName{Name: "felzix"})
+    player, err := h.GetPlayer(ctx, &types.Address{addr1.Local.String()})
     if err != nil {
         t.Fatalf("Error: %v", err)
     }

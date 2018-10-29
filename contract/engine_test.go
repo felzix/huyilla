@@ -22,7 +22,7 @@ func TestHuyilla_ActiveChunkRadius (t *testing.T) {
     if err != nil {
         t.Fatal(err)
     }
-    player, err := h.LogIn(ctx, &types.PlayerName{"felzix"})
+    player, err := h.LogIn(ctx, &plugin.Request{})
     if err != nil {
         t.Fatal(err)
     }
