@@ -180,7 +180,7 @@ func (client *Client) Draw() error {
         drawString(client.introView, 0, 2, "Enter username: " + client.username)
     case VIEWMODE_GAME:
         point := client.player.Entity.Location.Chunk
-        zLevel := int(client.player.Entity.Location.Voxel.Z)
+        zLevel := int(client.player.Entity.Location.Voxel.Z) + 1
         chunk := client.world.chunks[*point]
         client.chunkView.Clear()
         for y := 0; y < C.CHUNK_SIZE; y++ {
@@ -323,17 +323,11 @@ func drawString(view *views.ViewPort, x, y int, s string) {
 func voxelToRune (voxel uint64) rune {
     voxelType := voxel & 0xFFFF
 
-    charMap := map[string]rune {
-        "air": ' ',
-        "barren_earth": '.',
-        "barren_grass": ',',
-        "water": '~',
+    switch voxelType {
+    case content.VOXEL["air"]: return ' '
+    case content.VOXEL["barren_earth"]: return '.'
+    case content.VOXEL["barren_grass"]: return ','
+    case content.VOXEL["water"]: return '~'
+    default: return rune(0)
     }
-
-    typeToRune := make(map[uint64]rune, len(charMap))
-    for name, rune := range charMap {
-        typeToRune[content.VOXEL[name]] = rune
-    }
-
-    return typeToRune[voxelType]
 }

@@ -126,9 +126,12 @@ func TestHuyilla_MyAddress (t *testing.T) {
 
     h.Init(ctx, &plugin.Request{})
 
-    addr2 := h.MyAddress(ctx, &plugin.Request{})
+    addr2, err := h.MyAddress(ctx, &plugin.Request{})
+    if err != nil {
+        t.Fatal(err)
+    }
 
-    if addr1 := addr1.Local.String(); addr1 != addr2 {
+    if addr1 := addr1.Local.String(); addr1 != addr2.Addr {
         t.Errorf(`Expected addr="%v" but it was "%v"`, addr1, addr2)
     }
 }
