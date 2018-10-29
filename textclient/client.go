@@ -187,7 +187,7 @@ func (client *Client) Draw() error {
             for x := 0; x < C.CHUNK_SIZE; x++ {
                 if chunk == nil {
                     style := tcell.StyleDefault.Background(tcell.ColorDarkGray)
-                    client.chunkView.SetContent(int(x), int(y), ' ', nil, style)
+                    client.chunkView.SetContent(x, y, ' ', nil, style)
                 } else {
                     index := (x * C.CHUNK_SIZE * C.CHUNK_SIZE) + (y * C.CHUNK_SIZE) + zLevel
                     ch := voxelToRune(chunk.Voxels[index])
@@ -198,9 +198,7 @@ func (client *Client) Draw() error {
 
         client.debugView.Clear()
         age := fmt.Sprintf("%d", client.world.age)
-        for i := 0; i < len(age); i++ {
-            client.debugView.SetContent(i, 0, rune(age[i]), nil, tcell.StyleDefault)
-        }
+        drawString(client.debugView, 0, 0, age)
     }
 
     client.screen.Show()
