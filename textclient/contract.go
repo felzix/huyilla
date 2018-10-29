@@ -58,6 +58,15 @@ func logIn () (*types.PlayerDetails, error) {
     return &player, nil
 }
 
+func myAddress () (string, error) {
+    var addr types.Address
+    if err := CallContract("MyAddress", &types.Nothing{}, &addr); err != nil {
+        return "", err
+    }
+
+    return addr.Addr, nil
+}
+
 func getAge () (uint64, error) {
     var age types.Age
     if err := StaticCallContract("GetAge", &types.Nothing{}, &age); err != nil {

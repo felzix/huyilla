@@ -298,10 +298,12 @@ func (client *Client) Auth () error {
     if player, err := logIn(); err == nil {
         client.player = player
     } else if err.Error() == "rpc error: code = Unknown desc = You are already logged in." {
-        if player, err := getPlayer(client.playerAddr()); err == nil {
-            client.player = player
-        } else {
+        if addr, err := myAddress(); err != nil {
+            return errors.Wrap(err, "MyAddress error")
+        } else if player, err := getPlayer(addr); err != nil {
             return errors.Wrap(err, "GetPlayer error")
+        } else {
+            client.player = player
         }
     } else {
         return errors.Wrap(err, "Login error")

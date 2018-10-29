@@ -118,7 +118,7 @@ func TestHuyilla_LoginNegative (t *testing.T) {
 }
 
 
-func TestHuyilla_thisUser (t *testing.T) {
+func TestHuyilla_MyAddress (t *testing.T) {
     h := &Huyilla{}
 
     addr1 := loom.MustParseAddress(ADDR_FROM_LOOM_EXAMPLE)
@@ -126,7 +126,7 @@ func TestHuyilla_thisUser (t *testing.T) {
 
     h.Init(ctx, &plugin.Request{})
 
-    addr2 := h.thisUser(ctx)
+    addr2 := h.MyAddress(ctx, &plugin.Request{})
 
     if addr1 := addr1.Local.String(); addr1 != addr2 {
         t.Errorf(`Expected addr="%v" but it was "%v"`, addr1, addr2)

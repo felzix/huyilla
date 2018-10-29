@@ -1,6 +1,7 @@
 package main
 
 import (
+    "fmt"
     "github.com/felzix/huyilla/types"
     "github.com/loomnetwork/go-loom/plugin"
     contract "github.com/loomnetwork/go-loom/plugin/contractpb"
@@ -29,6 +30,8 @@ func (c *Huyilla) GetPlayer (ctx contract.StaticContext, req *types.Address) (*t
 func (c *Huyilla) getPlayer (ctx contract.StaticContext, addr string) (*types.PlayerDetails, error) {
     players, err := c.getPlayers(ctx)
     if err != nil { return nil, err }
+
+    ctx.Logger().Info(fmt.Sprintf("ROBERT %v", players))
 
     player := players.Players[addr]
 

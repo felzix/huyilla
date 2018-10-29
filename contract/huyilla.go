@@ -62,7 +62,7 @@ func (c *Huyilla) SignUp(ctx contract.Context, req *types.PlayerName) error {
     players, err := c.getPlayers(ctx)
     if err != nil { return err }
 
-    player := players.Players[c.thisUser(ctx)]
+    player := players.Players[c.myAddress(ctx)]
     if player != nil {
         return errors.New("You are already signed up.")
     }
@@ -77,7 +77,7 @@ func (c *Huyilla) SignUp(ctx contract.Context, req *types.PlayerName) error {
     player = &types.Player{
         EntityId: entity.Id,
         Name:     req.Name,
-        Address:  c.thisUser(ctx),
+        Address:  c.myAddress(ctx),
         Spawn:    defaultLocation,
         LoggedIn: false,
     }
@@ -102,7 +102,7 @@ func (c *Huyilla) LogIn (ctx contract.Context, req *plugin.Request) (*types.Play
     players, err := c.getPlayers(ctx)
     if err != nil { return nil, err }
 
-    player := players.Players[c.thisUser(ctx)]
+    player := players.Players[c.myAddress(ctx)]
 
     if player == nil {
         return nil, errors.New("You have not yet signed up")
@@ -129,9 +129,9 @@ func (c *Huyilla) LogOut (ctx contract.Context, req *plugin.Request) error {
     players, err := c.getPlayers(ctx)
     if err != nil { return err }
 
-    player := players.Players[c.thisUser(ctx)]
+    player := players.Players[c.myAddress(ctx)]
 
-    if player.Address != c.thisUser(ctx) {
+    if player.Address != c.myAddress(ctx) {
         return errors.New("Username is not associated with your address/key/account.")
     }
 
@@ -153,6 +153,12 @@ func (c *Huyilla) LogOut (ctx contract.Context, req *plugin.Request) error {
     return nil
 }
 
-func (c *Huyilla) thisUser (ctx contract.StaticContext) string{
+// must be Context not StaticContext because ctx.message().Sender is 0x0 under static context
+func (c *Huyilla) MyAddress (ctx contract.Context, req *plugin.Request) (*types.Address, error) {
+    addr := types.Address{c.myAddress(ctx)}
+    return &addr, nil
+}
+
+func (c *Huyilla) myAddress (ctx contract.StaticContext) string {
     return ctx.Message().Sender.Local.String()
 }

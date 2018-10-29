@@ -99,7 +99,7 @@ func (c *Huyilla) Tick (ctx contract.Context, req *plugin.Request) error {
             Action  string
             Addr    string
             Success bool
-        }{actionName, c.thisUser(ctx), success}
+        }{actionName, c.myAddress(ctx), success}
         emitMsgJSON, err := json.Marshal(emitMsg)
         if err != nil {
             // only log error - if the action is broken then don't block the engine
