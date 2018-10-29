@@ -1,7 +1,6 @@
 package main
 
 import (
-    "bytes"
     "encoding/json"
     "fmt"
     "github.com/felzix/huyilla/content"
@@ -64,7 +63,7 @@ func (c *Huyilla) SignUp(ctx contract.Context, req *types.PlayerName) error {
 
     player := players.Players[req.Name]
     if player != nil {
-        if bytes.Equal(player.Address, c.thisUser(ctx)) {
+        if player.Address == c.thisUser(ctx) {
             return errors.New("You are already signed up.")
         } else {
             return errors.New(fmt.Sprintf(`Name "%v" is taken. Try another.`, req.Name))
@@ -93,7 +92,7 @@ func (c *Huyilla) SignUp(ctx contract.Context, req *types.PlayerName) error {
     emitMsg := struct {
         Method string
         Owner  string
-        Addr   []byte
+        Addr   string
     }{"SignUp", player.Name, player.Address}
     emitMsgJSON, err := json.Marshal(emitMsg)
     if err != nil {return err}
@@ -112,7 +111,7 @@ func (c *Huyilla) LogIn (ctx contract.Context, req *types.PlayerName) (*types.Pl
         return nil, errors.New(`Wrong username: no one has this username`)
     }
 
-    if !bytes.Equal(player.Address, c.thisUser(ctx)) {
+    if player.Address != c.thisUser(ctx) {
         return nil, errors.New("Username is not associated with your address/key/account.")
     }
 
@@ -138,7 +137,7 @@ func (c *Huyilla) LogOut (ctx contract.Context, req *types.PlayerName) error {
     player := players.Players[req.Name]
     if err != nil { return err }
 
-    if !bytes.Equal(player.Address, c.thisUser(ctx)) {
+    if player.Address != c.thisUser(ctx) {
         return errors.New("Username is not associated with your address/key/account.")
     }
 
@@ -160,6 +159,6 @@ func (c *Huyilla) LogOut (ctx contract.Context, req *types.PlayerName) error {
     return nil
 }
 
-func (c *Huyilla) thisUser (ctx contract.StaticContext) []byte{
-    return ctx.Message().Sender.Local
+func (c *Huyilla) thisUser (ctx contract.StaticContext) string{
+    return ctx.Message().Sender.Local.String()
 }

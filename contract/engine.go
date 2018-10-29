@@ -97,7 +97,7 @@ func (c *Huyilla) Tick (ctx contract.Context, req *plugin.Request) error {
 
         emitMsg := struct {
             Action  string
-            Addr    []byte
+            Addr    string
             Success bool
         }{actionName, c.thisUser(ctx), success}
         emitMsgJSON, err := json.Marshal(emitMsg)

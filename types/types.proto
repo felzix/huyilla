@@ -10,7 +10,7 @@ message Config {
 
 message Player {
     int64 id = 1;
-    bytes address = 2;
+    string address = 2;
     string name = 3;
     bool loggedIn = 4;
     AbsolutePoint spawn = 5;

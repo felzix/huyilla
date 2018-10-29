@@ -1,7 +1,6 @@
 package main
 
 import (
-    "bytes"
     "github.com/felzix/huyilla/types"
     "github.com/loomnetwork/go-loom"
     "github.com/loomnetwork/go-loom/plugin"
@@ -50,7 +49,7 @@ func TestHuyilla_SignUp (t *testing.T) {
             `Player's entity has wrong name: player="%v", entity="%v"`,
             player.Player.Name, player.Entity.PlayerName)
     }
-    if player.Player.Address == nil {
+    if player.Player.Address == "" {
         t.Error("Expected player to have a private key-associated address but it does not")
     }
 }
@@ -129,9 +128,7 @@ func TestHuyilla_thisUser (t *testing.T) {
 
     addr2 := h.thisUser(ctx)
 
-    if addr1Bytes, err := addr1.Local.Marshal(); err != nil {
-        t.Fatal(err)
-    } else if !bytes.Equal(addr1Bytes, addr2) {
-        t.Errorf(`Expected addr="%v" but it was "%v"`, addr1Bytes, addr2)
+    if addr1 := addr1.Local.String(); addr1 != addr2 {
+        t.Errorf(`Expected addr="%v" but it was "%v"`, addr1, addr2)
     }
 }
