@@ -28,7 +28,7 @@ func TestHuyilla_Entity (t *testing.T) {
         t.Fatalf("Error: %v", err)
     }
 
-    entity, err := h.GetEntity(ctx, &types.EntityId{Id: player.Player.Id})
+    entity, err := h.GetEntity(ctx, &types.EntityId{Id: player.Player.EntityId})
 
     if entity.Type != player.Entity.Type {
         t.Errorf(`GetPlayer and GetEntity returned different entities: "%v" != "%v"`, entity, player.Entity)

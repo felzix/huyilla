@@ -47,7 +47,7 @@ func (c *Huyilla) Init (ctx contract.Context, req *plugin.Request) error {
     // Add *any* entry to contract state of PLAYERS so it exists
     err = ctx.Set(PLAYERS, &types.Players{
         Players: map[string]*types.Player{
-            "FAKE": {Id: -1,
+            "FAKE": {EntityId: -1,
                      Name: "FAKE",
                      Address: "FAKE",
                      LoggedIn: false}},
@@ -80,7 +80,7 @@ func (c *Huyilla) SignUp(ctx contract.Context, req *types.PlayerName) error {
     if err != nil { return errors.Wrap(err, "Entity could not be created") }
 
     player = &types.Player{
-        Id:       entity.Id,
+        EntityId: entity.Id,
         Name:     req.Name,
         Address:  c.thisUser(ctx),
         Spawn:    defaultLocation,
@@ -117,7 +117,7 @@ func (c *Huyilla) LogIn (ctx contract.Context, req *types.PlayerName) (*types.Pl
         return nil, errors.New("Username is not associated with your address/key/account.")
     }
 
-    entity, err := c.getEntity(ctx, player.Id)
+    entity, err := c.getEntity(ctx, player.EntityId)
     if err != nil { return nil, err }
 
     if player.LoggedIn {
@@ -153,7 +153,7 @@ func (c *Huyilla) LogOut (ctx contract.Context, req *types.PlayerName) error {
         return err
     }
 
-    entity, err := c.getEntity(ctx, player.Id)
+    entity, err := c.getEntity(ctx, player.EntityId)
 
     err = c.removeEntityFromChunk(ctx, entity)
     if err != nil { return err }

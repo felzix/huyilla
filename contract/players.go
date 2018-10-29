@@ -36,7 +36,7 @@ func (c *Huyilla) getPlayer (ctx contract.StaticContext, name string) (*types.Pl
         return nil, errors.New("No such player " + name)
     }
 
-    entity, _ := c.getEntity(ctx, player.Id)
+    entity, _ := c.getEntity(ctx, player.EntityId)
     // NOTE: entity can be nil
 
     return &types.PlayerDetails{Player: player, Entity: entity}, nil
@@ -56,7 +56,7 @@ func (c *Huyilla) getActivePlayers (ctx contract.StaticContext) ([]*types.Player
 
     for _, player := range players.Players {
         if player.LoggedIn {
-            entity, err := c.getEntity(ctx, player.Id)
+            entity, err := c.getEntity(ctx, player.EntityId)
             if err != nil { return nil, err }
             activePlayers = append(activePlayers, &types.PlayerDetails{Player: player, Entity: entity})
         }
