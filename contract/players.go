@@ -4,6 +4,7 @@ import (
     "github.com/felzix/huyilla/types"
     "github.com/loomnetwork/go-loom/plugin"
     contract "github.com/loomnetwork/go-loom/plugin/contractpb"
+    "github.com/pkg/errors"
 )
 
 
@@ -30,6 +31,10 @@ func (c *Huyilla) getPlayer (ctx contract.StaticContext, name string) (*types.Pl
     if err != nil { return nil, err }
 
     player := players.Players[name]
+
+    if player == nil {
+        return nil, errors.New("No such player " + name)
+    }
 
     entity, _ := c.getEntity(ctx, player.Id)
     // NOTE: entity can be nil

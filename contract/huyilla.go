@@ -44,11 +44,13 @@ func (c *Huyilla) Init (ctx contract.Context, req *plugin.Request) error {
     err = ctx.Set(CONFIG, config)
     if err != nil { return err }
 
+    // Add *any* entry to contract state of PLAYERS so it exists
     err = ctx.Set(PLAYERS, &types.Players{
         Players: map[string]*types.Player{
-            "admin": {Id: -1,
-                      Name: "admin",
-                      LoggedIn: false}},
+            "FAKE": {Id: -1,
+                     Name: "FAKE",
+                     Address: "FAKE",
+                     LoggedIn: false}},
         })
     if err != nil { return err }
 

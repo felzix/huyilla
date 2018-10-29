@@ -26,7 +26,7 @@ func TestHuyilla_Players (t *testing.T) {
         t.Fatalf("Error: %v", err)
     }
 
-    if len(players.Names) != 2 {  // admin and new player "felzix"
+    if len(players.Names) != 2 {  // FAKE and new player "felzix"
         t.Errorf(`Error: Should be two players but there aren't: "%v"`, players.Names)
     }
 

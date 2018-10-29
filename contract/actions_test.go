@@ -19,7 +19,7 @@ func TestHuyilla_Actions (t *testing.T) {
     h.Init(ctx, &plugin.Request{})
 
     action := types.Action{
-        PlayerName: "admin",
+        PlayerName: "FAKE",
         Action: &types.Action_Move{
             Move: &types.Action_MoveAction{
                 WhereTo: &types.AbsolutePoint{
