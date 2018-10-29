@@ -46,6 +46,8 @@ func (client *Client) Init () error {
     client.world = &WorldCache{}
     client.world.Init()
 
+    content.PopulateContentNameMaps()
+
     client.viewMode = VIEWMODE_INTRO
 
     if signer, err := MakeSigner(); err != nil {
@@ -180,7 +182,7 @@ func (client *Client) Draw() error {
         drawString(client.introView, 0, 2, "Enter username: " + client.username)
     case VIEWMODE_GAME:
         point := client.player.Entity.Location.Chunk
-        zLevel := int(client.player.Entity.Location.Voxel.Z) + 1
+        zLevel := int(client.player.Entity.Location.Voxel.Z)
         chunk := client.world.chunks[*point]
         client.chunkView.Clear()
         for y := 0; y < C.CHUNK_SIZE; y++ {
