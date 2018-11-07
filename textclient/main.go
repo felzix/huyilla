@@ -19,6 +19,7 @@ func main () {
     defer finish(&client, 0, nil)
 
     if err := client.Init(); err != nil {
+        fmt.Fprintf(os.Stderr, "%s\n", err)
         finish(&client, 1, err)
     }
 
@@ -32,7 +33,7 @@ func main () {
 func finish(client *Client, returnCode int, err error) {
     defer os.Exit(returnCode)
 
-    defer client.Deinit()  // resets terminal changes
+    client.Deinit()  // resets terminal changes
 
     if err == nil {
         fmt.Println("Thanks for playing!")
