@@ -32,7 +32,7 @@ func main () {
 func finish(client *Client, returnCode int, err error) {
     defer os.Exit(returnCode)
 
-    client.Deinit()  // resets terminal changes
+    defer client.Deinit()  // resets terminal changes
 
     if err == nil {
         fmt.Println("Thanks for playing!")
