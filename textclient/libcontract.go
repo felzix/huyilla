@@ -10,15 +10,13 @@ import (
 	"github.com/loomnetwork/go-loom/client"
 )
 
-
 const (
-    ADDR = "Huyilla"
-    CHAIN_ID = "default"
-    WRITE_URI = "http://localhost:46658/rpc"
-    READ_URI = "http://localhost:46658/query"
-    PRIV_FILE = "key"
+	ADDR      = "Huyilla"
+	CHAIN_ID  = "default"
+	WRITE_URI = "http://localhost:46658/rpc"
+	READ_URI  = "http://localhost:46658/query"
+	PRIV_FILE = "key"
 )
-
 
 func contract() (*client.Contract, error) {
 	contractAddr, err := ResolveAddress(ADDR)
@@ -31,12 +29,12 @@ func contract() (*client.Contract, error) {
 		CHAIN_ID,
 		WRITE_URI,
 		READ_URI)
-	// create contract
+	// create engine
 	contract := client.NewContract(rpcClient, contractAddr.Local)
 	return contract, nil
 }
 
-func MakeSigner () (*auth.Ed25519Signer, error) {
+func MakeSigner() (*auth.Ed25519Signer, error) {
 	privKeyB64, err := ioutil.ReadFile(PRIV_FILE)
 	if err != nil {
 		return nil, err
@@ -52,7 +50,7 @@ func MakeSigner () (*auth.Ed25519Signer, error) {
 }
 
 func CallContract(method string, params proto.Message, result interface{}) error {
-	signer , err := MakeSigner()
+	signer, err := MakeSigner()
 	if err != nil {
 		return err
 	}
