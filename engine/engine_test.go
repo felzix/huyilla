@@ -2,34 +2,25 @@ package main
 
 import (
 	"github.com/felzix/huyilla/types"
-	"github.com/loomnetwork/go-loom"
-	"github.com/loomnetwork/go-loom/plugin"
-	"github.com/loomnetwork/go-loom/plugin/contractpb"
 	"testing"
 )
 
 func TestHuyilla_ActiveChunkRadius(t *testing.T) {
-	h := &Huyilla{}
+	h := &Engine{}
+	h.Init(&types.Config{})
 
-	addr1 := loom.MustParseAddress(ADDR_FROM_LOOM_EXAMPLE)
-	ctx := contractpb.WrapPluginContext(plugin.CreateFakeContext(addr1, addr1))
-
-	h.Init(ctx, &plugin.Request{})
-
-	err := h.SignUp(ctx, &types.PlayerName{"felzix"})
+	if err := h.SignUp("felzix", "PASS"); err != nil {
+		t.Fatal(err)
+	}
+	player, err := h.LogIn("felzix", "PASS")
 	if err != nil {
 		t.Fatal(err)
 	}
-	player, err := h.LogIn(ctx, &plugin.Request{})
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = h.Tick(ctx, &plugin.Request{})
-	if err != nil {
+	if err := h.Tick(); err != nil {
 		t.Fatal(err)
 	}
 
-	chunk, err := h.getChunk(ctx, player.Entity.Location.Chunk)
+	chunk, err := h.GetChunk(player.Entity.Location.Chunk)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -40,7 +31,7 @@ func TestHuyilla_ActiveChunkRadius(t *testing.T) {
 	// active range in the positive direction
 	edge := clonePoint(player.Entity.Location.Chunk)
 	edge.X += 3
-	chunk, err = h.getChunk(ctx, edge)
+	chunk, err = h.GetChunk(edge)
 	if chunk == nil {
 		t.Error("Chunk within player's range should exist but it does not.")
 	}
@@ -50,7 +41,7 @@ func TestHuyilla_ActiveChunkRadius(t *testing.T) {
 
 	beyond := clonePoint(player.Entity.Location.Chunk)
 	beyond.X += 4
-	chunk, err = h.getChunk(ctx, beyond)
+	chunk, err = h.GetChunk(beyond)
 	if err == nil { // note that this is "==" not "!="
 		t.Error("Chunk beyond player's range exists when it should not.")
 	}
@@ -58,7 +49,7 @@ func TestHuyilla_ActiveChunkRadius(t *testing.T) {
 	// active range in the negative direction
 	edge = clonePoint(player.Entity.Location.Chunk)
 	edge.X -= 3
-	chunk, err = h.getChunk(ctx, edge)
+	chunk, err = h.GetChunk(edge)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -68,7 +59,7 @@ func TestHuyilla_ActiveChunkRadius(t *testing.T) {
 
 	beyond = clonePoint(player.Entity.Location.Chunk)
 	beyond.X -= 4
-	chunk, err = h.getChunk(ctx, beyond)
+	chunk, err = h.GetChunk(beyond)
 	if err == nil { // note that this is "==" not "!="
 		t.Error("Chunk beyond player's range exists when it should not.")
 	}

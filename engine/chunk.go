@@ -4,72 +4,44 @@ import (
 	"fmt"
 	C "github.com/felzix/huyilla/constants"
 	"github.com/felzix/huyilla/types"
-	contract "github.com/loomnetwork/go-loom/plugin/contractpb"
 	"github.com/mitchellh/hashstructure"
+	"github.com/pkg/errors"
 	"math/rand"
 )
 
-func (c *Huyilla) GetChunk(ctx contract.StaticContext, req *types.Point) (*types.Chunk, error) {
-	return c.getChunk(ctx, req)
-}
-
-func (c *Huyilla) GenChunk(ctx contract.Context, p *types.Point) error {
-	return c.genChunk(ctx, C.SEED, p)
-}
-
-func (c *Huyilla) chunkKey(point *types.Point) []byte {
-	return []byte(fmt.Sprintf(`Chunk.%d.%d.%d`, point.X, point.Y, point.Z))
-}
-
-func (c *Huyilla) getChunk(ctx contract.StaticContext, point *types.Point) (*types.Chunk, error) {
-	key := c.chunkKey(point)
-	var chunk types.Chunk
-	if err := ctx.Get(key, &chunk); err != nil {
-		return nil, err
-	}
-	return &chunk, nil
-}
-
-func (c *Huyilla) getChunkGuaranteed(ctx contract.Context, point *types.Point) (*types.Chunk, error) {
-	key := c.chunkKey(point)
-	var chunk types.Chunk
-
-	if !ctx.Has(key) {
-		if err := c.genChunk(ctx, C.SEED, point); err != nil {
-			return nil, err
-		}
-	}
-
-	if err := ctx.Get(key, &chunk); err != nil {
-		return nil, err
+func (engine *Engine) GetChunk(p *types.Point) (*types.Chunk, error) {
+	if chunk, ok := engine.Chunks[*p]; ok {
+		return chunk, nil
 	} else {
-		return &chunk, nil
+		return nil, errors.New(fmt.Sprintf("Chunk (%d,%d,%d) has yet to be generated", p.X, p.Y, p.Z))
 	}
 }
 
-func (c *Huyilla) setChunk(ctx contract.Context, point *types.Point, chunk *types.Chunk) error {
-	key := c.chunkKey(point)
-	if err := ctx.Set(key, chunk); err != nil {
+func (engine *Engine) getChunkGuaranteed(p *types.Point) (*types.Chunk, error) {
+	if chunk, err := engine.GetChunk(p); err == nil {
+		return chunk, nil
+	} else if chunk, err := engine.GenChunk(C.SEED, p); err == nil {
+		return chunk, nil
+	} else {
+		return nil, errors.Wrap(err, "Chunk generation failure")
+	}
+}
+
+func (engine *Engine) SetChunk(p *types.Point, chunk *types.Chunk) {
+	engine.Chunks[*p] = chunk
+}
+
+func (engine *Engine) addEntityToChunk(entity *types.Entity) error {
+	if chunk, err := engine.getChunkGuaranteed(entity.Location.Chunk); err == nil {
+		chunk.Entities = append(chunk.Entities, entity.Id)
+		return nil
+	} else {
 		return err
 	}
-	return nil
 }
 
-func (c *Huyilla) addEntityToChunk(ctx contract.Context, entity *types.Entity) error {
-	chunk, err := c.getChunkGuaranteed(ctx, entity.Location.Chunk)
-	if err != nil {
-		return err
-	}
-
-	chunk.Entities = append(chunk.Entities, entity.Id)
-
-	err = c.setChunk(ctx, entity.Location.Chunk, chunk)
-
-	return nil
-}
-
-func (c *Huyilla) removeEntityFromChunk(ctx contract.Context, entity *types.Entity) error {
-	chunk, err := c.getChunk(ctx, entity.Location.Chunk)
+func (engine *Engine) removeEntityFromChunk(entity *types.Entity) error {
+	chunk, err := engine.GetChunk(entity.Location.Chunk)
 
 	if err != nil {
 		if err.Error() == "not found" {
@@ -91,10 +63,11 @@ func (c *Huyilla) removeEntityFromChunk(ctx contract.Context, entity *types.Enti
 	}
 
 	chunk.Entities = append(chunk.Entities, entity.Id)
-	return c.setChunk(ctx, entity.Location.Chunk, chunk)
+	engine.SetChunk(entity.Location.Chunk, chunk)
+	return nil
 }
 
-func (c *Huyilla) genChunk(ctx contract.Context, worldSeed uint64, p *types.Point) error {
+func (engine *Engine) GenChunk(worldSeed uint64, p *types.Point) (*types.Chunk, error) {
 	chunkSeed, _ := hashstructure.Hash(p, nil)
 	seed := int64(worldSeed * chunkSeed)
 
@@ -113,7 +86,9 @@ func (c *Huyilla) genChunk(ctx contract.Context, worldSeed uint64, p *types.Poin
 			}
 		}
 	}
-	return c.setChunk(ctx, p, &chunk)
+
+	engine.SetChunk(p, &chunk)
+	return &chunk, nil
 }
 
 func genVoxel(p *types.AbsolutePoint) uint64 {

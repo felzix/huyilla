@@ -10,8 +10,8 @@ message Config {
 
 message Player {
     int64 entityId = 1;
-    string address = 2;
-    string name = 3;
+    string name = 2;
+    bytes password = 3;
     bool loggedIn = 4;
     AbsolutePoint spawn = 5;
 }
@@ -136,7 +136,7 @@ message Action {
         repeated uint32 outputForms = 4;
     }
 
-    string playerAddr = 1;
+    string playerName = 1;
     oneof action {
         MoveAction move = 2;
         CraftAction craft = 3;

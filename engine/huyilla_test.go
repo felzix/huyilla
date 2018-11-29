@@ -2,43 +2,18 @@ package main
 
 import (
 	"github.com/felzix/huyilla/types"
-	"github.com/loomnetwork/go-loom"
-	"github.com/loomnetwork/go-loom/plugin"
-	"github.com/loomnetwork/go-loom/plugin/contractpb"
 	"testing"
 )
 
-const ADDR_FROM_LOOM_EXAMPLE = "chain:0xb16a379ec18d4093666f8f38b11a3071c920207d"
-
-func Test_Huyilla_Meta(t *testing.T) {
-	h := &Huyilla{}
-	meta, err := h.Meta()
-	if err != nil {
-		t.Fatalf(`Error: %v`, err)
-	}
-
-	if meta.Name != "Huyilla" {
-		t.Errorf(`Contract name is "%v"; should be "Huyilla"`, meta.Name)
-	}
-	if meta.Version != "0.0.1" {
-		t.Errorf(`Contract version is "%v"; should be "0.0.1"`, meta.Version)
-	}
-}
-
 func TestHuyilla_SignUp(t *testing.T) {
-	h := &Huyilla{}
+	h := &Engine{}
+	h.Init(&types.Config{})
 
-	addr1 := loom.MustParseAddress(ADDR_FROM_LOOM_EXAMPLE)
-	ctx := contractpb.WrapPluginContext(plugin.CreateFakeContext(addr1, addr1))
-
-	h.Init(ctx, &plugin.Request{})
-
-	err := h.SignUp(ctx, &types.PlayerName{Name: "felzix"})
-	if err != nil {
-		t.Fatalf("Error: %v", err)
+	if err := h.SignUp("felzix", "PASS"); err != nil {
+		t.Fatal(err)
 	}
 
-	player, err := h.GetPlayer(ctx, &types.Address{addr1.Local.String()})
+	player, err := h.GetPlayer("felzix")
 	if err != nil {
 		t.Fatalf("Error: %v", err)
 	}
@@ -48,27 +23,19 @@ func TestHuyilla_SignUp(t *testing.T) {
 			`Player's entity has wrong name: player="%v", entity="%v"`,
 			player.Player.Name, player.Entity.PlayerName)
 	}
-	if player.Player.Address == "" {
-		t.Error("Expected player to have a private key-associated address but it does not")
-	}
 }
 
 func TestHuyilla_Login(t *testing.T) {
-	h := &Huyilla{}
+	h := &Engine{}
+	h.Init(&types.Config{})
 
-	addr1 := loom.MustParseAddress(ADDR_FROM_LOOM_EXAMPLE)
-	ctx := contractpb.WrapPluginContext(plugin.CreateFakeContext(addr1, addr1))
-
-	h.Init(ctx, &plugin.Request{})
-
-	err := h.SignUp(ctx, &types.PlayerName{Name: "felzix"})
-	if err != nil {
-		t.Fatalf("Error: %v", err)
+	if err := h.SignUp("felzix", "PASS"); err != nil {
+		t.Fatal(err)
 	}
 
-	details, err := h.LogIn(ctx, &plugin.Request{})
+	details, err := h.LogIn("felzix", "PASS")
 	if err != nil {
-		t.Fatalf("Error: %v", err)
+		t.Fatal(err)
 	}
 
 	if details.Player.Spawn == nil {
@@ -79,9 +46,9 @@ func TestHuyilla_Login(t *testing.T) {
 		t.Fatal("Player entity should have been created but it was not (no location)")
 	}
 
-	chunk, err := h.GetChunk(ctx, details.Entity.Location.Chunk)
+	chunk, err := h.GetChunk(details.Entity.Location.Chunk)
 	if err != nil {
-		t.Fatalf("Error: %v", err)
+		t.Fatal(err)
 	}
 
 	entityIsPresent := false
@@ -100,35 +67,13 @@ func TestHuyilla_Login(t *testing.T) {
 }
 
 func TestHuyilla_LoginNegative(t *testing.T) {
-	h := &Huyilla{}
+	h := &Engine{}
+	h.Init(&types.Config{})
 
-	addr1 := loom.MustParseAddress(ADDR_FROM_LOOM_EXAMPLE)
-	ctx := contractpb.WrapPluginContext(plugin.CreateFakeContext(addr1, addr1))
-
-	h.Init(ctx, &plugin.Request{})
-
-	_, err := h.LogIn(ctx, &plugin.Request{})
+	_, err := h.LogIn("felzix", "PASS")
 	if err == nil {
 		t.Fatal("Logging in before signup should throw an error but didn't")
-	} else if err.Error() != "You have not yet signed up" {
+	} else if err.Error() != `No such player "felzix"` {
 		t.Errorf(`Wrong error. Got "%v"`, err)
-	}
-}
-
-func TestHuyilla_MyAddress(t *testing.T) {
-	h := &Huyilla{}
-
-	addr1 := loom.MustParseAddress(ADDR_FROM_LOOM_EXAMPLE)
-	ctx := contractpb.WrapPluginContext(plugin.CreateFakeContext(addr1, addr1))
-
-	h.Init(ctx, &plugin.Request{})
-
-	addr2, err := h.MyAddress(ctx, &plugin.Request{})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if addr1 := addr1.Local.String(); addr1 != addr2.Addr {
-		t.Errorf(`Expected addr="%v" but it was "%v"`, addr1, addr2)
 	}
 }
