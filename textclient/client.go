@@ -2,14 +2,11 @@ package main
 
 import (
 	"fmt"
+	"github.com/felzix/go-curses-react"
 	C "github.com/felzix/huyilla/constants"
 	"github.com/felzix/huyilla/content"
 	"github.com/felzix/huyilla/types"
 	"github.com/gdamore/tcell"
-	"github.com/gdamore/tcell/views"
-	"github.com/loomnetwork/go-loom"
-	"github.com/loomnetwork/go-loom/auth"
-	"github.com/pkg/errors"
 	"sync"
 	"time"
 )
@@ -20,13 +17,8 @@ type Client struct {
 	world    *WorldCache
 	player   *types.PlayerDetails
 	username string
-	viewMode int
-	signer   *auth.Ed25519Signer
 
-	screen    tcell.Screen
-	introView *views.ViewPort
-	chunkView *views.ViewPort
-	debugView *views.ViewPort
+	screen    *react.Screen
 
 	quitq    chan struct{}
 	quitOnce sync.Once
@@ -36,55 +28,43 @@ type Client struct {
 }
 
 const (
-	VIEWMODE_INTRO = 0
-	VIEWMODE_GAME  = 1
+	VIEWMODE_INTRO = iota
+	VIEWMODE_GAME
 )
 
 func (client *Client) Init() error {
+	if screen, err := react.NewScreen(); err == nil {
+		client.screen = screen
+	} else {
+		return err
+	}
+
+	client.quitq = make(chan struct{})
+	client.eventq = make(chan tcell.Event)
+
+	root := MakeApp()
+	root.Props = react.Properties{
+		"client": client,
+	}
+	client.screen.Init(root, func(err error) error {
+		client.Quit(err)
+		return nil
+	})
+
 	client.world = &WorldCache{}
 	client.world.Init()
 
 	content.PopulateContentNameMaps()
 
-	client.viewMode = VIEWMODE_INTRO
-
-	if signer, err := MakeSigner(); err != nil {
-		return err
-	} else {
-		client.signer = signer
-	}
-
-	if screen, err := tcell.NewScreen(); err != nil {
-		return err
-	} else if err = screen.Init(); err != nil {
-		return err
-	} else {
-		client.screen = screen
-	}
-	client.screen.SetStyle(tcell.StyleDefault.
-		Background(tcell.ColorBlack).
-		Foreground(tcell.ColorWhite))
-	// client.screen.EnableMouse()  // TODO do I want this?
-
-	width, height := client.screen.Size()
-	client.introView = views.NewViewPort(client.screen, 0, 0, width, height)
-	client.chunkView = views.NewViewPort(client.screen, 0, 2, width, height-2)
-	client.debugView = views.NewViewPort(client.screen, 0, 0, width, 1)
-
-	client.quitq = make(chan struct{})
-	client.eventq = make(chan tcell.Event)
-
 	return nil
 }
 
 func (client *Client) Deinit() {
-	client.screen.Fini()
+	client.screen.TCellScreen.Fini()
 }
 
 func (client *Client) Run() error {
 	go client.EventPoller()
-	go client.Updater()
-	go client.Ticker()
 loop:
 	for {
 		if err := client.Draw(); err != nil {
@@ -106,7 +86,7 @@ loop:
 
 	// Inject a wakeup interrupt
 	iev := tcell.NewEventInterrupt(nil)
-	client.screen.PostEvent(iev)
+	client.screen.TCellScreen.PostEvent(iev)
 
 	return client.err
 }
@@ -125,42 +105,14 @@ func (client *Client) HandleEvent(e tcell.Event) error {
 }
 
 func (client *Client) handleResize(e *tcell.EventResize) {
-	width, height := e.Size()
-	client.introView.Resize(0, 0, width, height)
-	client.chunkView.Resize(0, 2, width, height-2)
-	client.debugView.Resize(0, 0, width, 1)
+	client.screen.Resize()
+	client.screen.TCellScreen.Sync() // visually jarring but needed after a resize
 }
 
 func (client *Client) handleKey(e *tcell.EventKey) error {
-	if e.Key() == tcell.KeyEsc {
-		client.Quit(nil)
-		return nil
-	}
-
-	switch client.viewMode {
-	case VIEWMODE_INTRO:
-		if e.Key() == tcell.KeyEnter {
-			if len(client.username) > 0 {
-				client.Lock()
-				client.viewMode = VIEWMODE_GAME
-				err := client.Auth()
-				client.Unlock()
-				return err
-			}
-		} else if e.Rune() != 0 {
-			client.username += string(e.Rune())
-		}
-	case VIEWMODE_GAME:
-		switch e.Key() {
-		case tcell.KeyUp:
-			// TODO issue move command to server for player entity to move up/north, depending on terrain
-		}
-
-		switch e.Rune() {
-		case 'q':
-			client.Quit(nil)
-		}
-	}
+	client.Lock()
+	defer client.Unlock()
+	client.screen.HandleKey(e)
 	return nil
 }
 
@@ -172,89 +124,13 @@ func (client *Client) handleMouse(e *tcell.EventMouse) error {
 
 func (client *Client) Draw() error {
 	client.Lock()
+	defer client.Unlock()
 
-	switch client.viewMode {
-	case VIEWMODE_INTRO:
-		client.introView.Clear()
-		drawString(client.introView, 0, 0, "Hello!")
-		drawString(client.introView, 0, 2, "Enter username: "+client.username)
-	case VIEWMODE_GAME:
-		point := client.player.Entity.Location.Chunk
-		zLevel := int(client.player.Entity.Location.Voxel.Z)
-		chunk := client.world.chunks[*point]
-		client.chunkView.Clear()
-		for y := 0; y < C.CHUNK_SIZE; y++ {
-			for x := 0; x < C.CHUNK_SIZE; x++ {
-				if chunk == nil {
-					style := tcell.StyleDefault.Background(tcell.ColorDarkGray)
-					client.chunkView.SetContent(x, y, ' ', nil, style)
-				} else {
-					index := (x * C.CHUNK_SIZE * C.CHUNK_SIZE) + (y * C.CHUNK_SIZE) + zLevel
-					ch := voxelToRune(chunk.Voxels[index])
-					client.chunkView.SetContent(x, y, ch, nil, tcell.StyleDefault)
-				}
-			}
-		}
-
-		client.debugView.Clear()
-		age := fmt.Sprintf("%d", client.world.age)
-		drawString(client.debugView, 0, 0, age)
+	err := client.screen.Draw()
+	if err == nil {
+		client.screen.TCellScreen.Show()
 	}
-
-	client.screen.Show()
-	client.Unlock()
-
-	return nil
-}
-
-func (client *Client) Updater() {
-	for {
-		select {
-		case <-client.quitq:
-			return
-		// query loop runs no faster than once every 500ms
-		case <-time.After(time.Millisecond * 500):
-			if client.viewMode == VIEWMODE_GAME {
-				client.Lock()
-
-				if client.player != nil {
-					point := client.player.Entity.Location.Chunk
-					if chunk, err := getChunk(point); err == nil {
-						client.world.chunks[*point] = chunk
-					} else {
-						client.Quit(errors.Wrap(err, "GetChunk error"))
-					}
-				}
-
-				client.Unlock()
-			}
-		}
-	}
-}
-
-func (client *Client) Ticker() {
-	for {
-		select {
-		case <-client.quitq:
-			return
-		case <-time.After(time.Millisecond * 50):
-			if client.viewMode == VIEWMODE_GAME {
-				if age, err := getAge(); err == nil {
-					if age > client.world.age {
-						client.Lock()
-						client.world.age = age
-						client.Unlock()
-
-						if err := tick(); err != nil {
-							client.Quit(errors.Wrap(err, "Tick error"))
-						}
-					}
-				} else {
-					client.Quit(errors.Wrap(err, "GetAge error"))
-				}
-			}
-		}
-	}
+	return err
 }
 
 func (client *Client) EventPoller() {
@@ -265,7 +141,7 @@ func (client *Client) EventPoller() {
 		default:
 		}
 
-		e := client.screen.PollEvent()
+		e := client.screen.TCellScreen.PollEvent()
 		if e == nil {
 			return
 		}
@@ -286,6 +162,9 @@ func (client *Client) Quit(err error) {
 }
 
 func (client *Client) Auth() error {
+	// TODO this is blocked by there not yet being a way for client and engine to communicate
+
+	/*
 	err := signUp(client.username)
 	if err != nil {
 		if err.Error() != "rpc error: code = Unknown desc = You are already signed up." {
@@ -306,17 +185,153 @@ func (client *Client) Auth() error {
 	} else {
 		return errors.Wrap(err, "Login error")
 	}
-
+	*/
 	return nil
 }
 
-func (client *Client) playerAddr() string {
-	return loom.Address{"", client.signer.PublicKey()}.Local.String()
+func MakeApp() *react.ReactElement {
+	root := &react.ReactElement{
+		State: react.State{
+			"mode": VIEWMODE_INTRO,
+		},
+		DrawFn: func(r *react.ReactElement, maxWidth, maxHeight int) (*react.DrawResult, error) {
+			client := r.Props["client"].(*Client)
+			mode := r.State["mode"].(int)
+
+			var element *react.ReactElement
+			var props react.Properties
+			switch mode {
+			case VIEWMODE_INTRO:
+				element = Intro()
+				props = react.Properties{
+					"client": client,
+					"nextMode": func () {
+						r.State["mode"] = VIEWMODE_GAME
+					},
+				}
+			case VIEWMODE_GAME:
+				element = GameBoard()
+				props = react.Properties{
+					"client": client,
+				}
+			}
+
+			result := react.DrawResult{
+				Elements: []react.Child{
+					*react.NewChild(element, string(mode), maxWidth, maxHeight, props),
+				}}
+			return &result, nil
+		},
+	}
+
+	return root
 }
 
-func drawString(view *views.ViewPort, x, y int, s string) {
-	for i := 0; i < len(s); i++ {
-		view.SetContent(x+i, y, rune(s[i]), nil, tcell.StyleDefault)
+func Intro() *react.ReactElement {
+	return &react.ReactElement{
+		Type: "Intro",
+		DrawFn: func(r *react.ReactElement, maxWidth, maxHeight int) (*react.DrawResult, error) {
+			client := r.Props["client"].(*Client)
+			nextMode := r.Props["nextMode"].(func())
+
+			child := react.NewChild(react.HorizontalLayout(), "", maxWidth, maxHeight, react.Properties{
+				"children": []*react.Child{
+					react.ManagedChild(react.Label(), "hello", react.Properties{
+						"label": "Hello!",
+					}),
+					react.ManagedChild(react.Label(), "blank", react.Properties{
+						"label": "",
+					}),
+					react.ManagedChild(react.TextEntry(), "", react.Properties{
+						"label": "Enter username",
+						"whenFinished": func(username string) error {
+							client.username = username
+							nextMode()
+							return nil
+						},
+						// TODO when TextEntry can do validation, reject empty or taken username
+					}),
+				},
+			})
+			result := react.DrawResult{
+				Elements: []react.Child{*child},
+			}
+			return &result, nil
+		},
+	}
+}
+
+// TODO this should be polling the engine, once that's possible
+func GameBoard() *react.ReactElement {
+	return &react.ReactElement{
+		Type: "GameBoard",
+		DrawFn: func(r *react.ReactElement, maxWidth, maxHeight int) (*react.DrawResult, error) {
+			client := r.Props["client"].(*Client)
+
+			child := react.NewChild(react.HorizontalLayout(), "", maxWidth, maxHeight, react.Properties{
+				"children": []*react.Child{
+					react.ManagedChild(react.Label(), "debug-bar", react.Properties{
+						"label": fmt.Sprintf("%d", client.world.age),
+					}),
+					react.ManagedChild(react.Label(), "blank", react.Properties{
+						"label": "",
+					}),
+					react.ManagedChild(Tiles(), "", react.Properties{
+						"client": client,
+						"absPoint": client.player.Entity.Location,
+					}),
+				},
+			})
+			result := react.DrawResult{
+				Elements: []react.Child{*child},
+			}
+			return &result, nil
+		},
+	}
+}
+
+func Tiles() *react.ReactElement {
+	return &react.ReactElement{
+		Type: "Tiles",
+		DrawFn: func(r *react.ReactElement, maxWidth, maxHeight int) (*react.DrawResult, error) {
+			client := r.Props["client"].(*Client)
+			absPoint := r.Props["absPoint"].(*types.AbsolutePoint)
+
+			chunk := client.world.chunks[*absPoint.Chunk]
+			zLevel := int(absPoint.Voxel.Z)
+
+			width := C.CHUNK_SIZE
+			if width > maxWidth {
+				width = maxWidth
+			}
+			height := C.CHUNK_SIZE
+			if height > maxHeight {
+				height = maxHeight
+			}
+
+			result := react.DrawResult{
+				Region: react.NewRegion(0, 0, maxWidth, maxHeight),
+			}
+
+			for y := 0; y < height; y++ {
+				for x := 0; x < width; x++ {
+					if chunk == nil {
+						result.Region.Cells[x][y] = react.Cell{
+							R: ' ',
+							Style: tcell.StyleDefault.Background(tcell.ColorDarkGray),
+						}
+					} else {
+						index := (x * C.CHUNK_SIZE * C.CHUNK_SIZE) + (y * C.CHUNK_SIZE) + zLevel
+						ch := voxelToRune(chunk.Voxels[index])
+						result.Region.Cells[x][y] = react.Cell{
+							R: ch,
+							Style: tcell.StyleDefault,
+						}
+					}
+				}
+			}
+			return &result, nil
+		},
 	}
 }
 
