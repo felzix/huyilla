@@ -9,20 +9,20 @@ import (
 )
 
 type Engine struct {
-	Config   types.Config
-	Age      uint64
+	World    *World
 	Players  map[string]*types.Player // name -> player
 	Entities map[int64]*types.Entity
 	Chunks   map[types.Point]*types.Chunk
 	Actions  []*types.Action // TODO locking
 }
 
-func (engine *Engine) Init(config *types.Config) error {
+func (engine *Engine) Init() error {
 	// So that recipes and terrain generator can reference content by name.
 	content.PopulateContentNameMaps()
 
-	engine.Config = *config
-	engine.Age = 1
+	engine.World = &World{}
+	engine.World.Init("/tmp/huyilla", 1024*1024)
+
 	engine.Players = make(map[string]*types.Player)
 	engine.Entities = make(map[int64]*types.Entity)
 	engine.Chunks = make(map[types.Point]*types.Chunk)

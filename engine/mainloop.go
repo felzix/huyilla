@@ -9,18 +9,27 @@ import (
 )
 
 func main() {
-	fmt.Println("Engine started!")
+	fmt.Println("Starting engine...")
+
+	engine := &Engine{}
+	engine.Init()
 
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+
+	fmt.Println("Engine started!")
 
 mainloop:
 	for {
 		select {
 		case <-sigs:
 			break mainloop
-		case <-time.After(time.Millisecond * 50):
-			// TODO tick
+		case <-time.After(time.Millisecond * 500):
+			if err := engine.Tick(); err != nil {
+				os.Stderr.WriteString("Error!")
+				os.Stderr.WriteString(err.Error())
+				os.Exit(1)
+			}
 		}
 	}
 

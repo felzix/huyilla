@@ -90,7 +90,9 @@ func (engine *Engine) Tick() error {
 	}
 
 	// advance age by one tick
-	engine.Age++
+	if err := engine.World.IncrementAge(); err != nil {
+		return err
+	}
 
 	return nil
 }

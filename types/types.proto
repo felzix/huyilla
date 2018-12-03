@@ -4,10 +4,6 @@ message Age {
     uint64 ticks = 1;
 }
 
-message Config {
-    PrimitiveMap options = 1;
-}
-
 message Player {
     int64 entityId = 1;
     string name = 2;
