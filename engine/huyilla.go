@@ -36,9 +36,9 @@ func (engine *Engine) SignUp(name, password string) error {
 		return errors.New(fmt.Sprintf(`Player "%s" already exists`, name))
 	}
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	hashedPassword, err := hashPassword(password)
 	if err != nil {
-		return errors.Wrap(err, "Failed to hash password")
+		return err
 	}
 
 	// Create new player
@@ -98,4 +98,13 @@ func (engine *Engine) LogOut(name string) error {
 	}
 
 	return nil
+}
+
+
+func hashPassword (password string) ([]byte, error) {
+	if hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), 14); err == nil {
+		return hashedPassword, nil
+	} else {
+		return nil, errors.Wrap(err, "Failed to hash password")
+	}
 }

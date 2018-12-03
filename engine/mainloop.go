@@ -26,7 +26,7 @@ mainloop:
 			break mainloop
 		case <-time.After(time.Millisecond * 500):
 			if err := engine.Tick(); err != nil {
-				os.Stderr.WriteString("Error!")
+				os.Stderr.WriteString("Error!\n")
 				os.Stderr.WriteString(err.Error())
 				os.Exit(1)
 			}
