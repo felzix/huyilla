@@ -43,26 +43,26 @@ func TestHuyilla_Web_Signup_flow(t *testing.T) {
 	NAME := "felzix"
 	PASS := "murakami"
 
-	auth := types.Auth{Name: NAME, Password: []byte(PASS)}
-	blob, err := auth.Marshal()
-	if err != nil {
-		t.Fatal(err)
-	}
-	res, err := http.Post(web.URL+"/auth/signup", "application/protobuf", bytes.NewReader(blob))
+	auth, err := (&types.Auth{Name: NAME, Password: []byte(PASS)}).Marshal()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	t.Log(res)
+	// Signup
 
-	var body []byte
-	if _, err := res.Body.Read(body); err != nil {
+	res, err := http.Post(web.URL+"/auth/signup", "application/protobuf", bytes.NewReader(auth))
+	if err != nil {
 		t.Fatal(err)
 	}
-	t.Log(body)
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
 	if string(body) != "Signup successful!" {
 		t.Errorf(`Expected "Signup successful!" but got "%s"`, string(body))
 	}
+
+	// Verify database
 
 	player, err := h.World.Player(NAME)
 	if player == nil {
@@ -71,7 +71,28 @@ func TestHuyilla_Web_Signup_flow(t *testing.T) {
 		t.Fatalf("Error: %v", err)
 	}
 
+	if player.LoggedIn {
+		t.Error("Player should not be logged-in just because they signed up")
+	}
+
 	if player.Name != "felzix" {
 		t.Errorf(`Player name was "%v" instead of "felzix"`, player.Name)
 	}
+
+	// Login
+	/*
+
+	res, err = http.Post(web.URL+"/auth/login", "application/protobuf", bytes.NewReader(auth))
+	if err != nil {
+		t.Fatal(err)
+	}
+	body, err = ioutil.ReadAll(res.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// TODO turn body into whatever Login returns
+	// TODO verify return value
+	// TODO verify database
+	*/
 }
