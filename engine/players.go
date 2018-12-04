@@ -4,38 +4,64 @@ import (
 	"fmt"
 	"github.com/felzix/huyilla/types"
 	"github.com/pkg/errors"
+	"strings"
 )
 
-func (engine *Engine) GetPlayerList() []string {
-	list := make([]string, len(engine.Players))
-
-	i := 0
-	for name, _ := range engine.Players {
-		list[i] = name
-		i++
-	}
-
-	return list
+func playerKey(name string) string {
+	return fmt.Sprintf(`Player.%s`, name)
 }
 
-func (engine *Engine) GetPlayer(name string) (*types.PlayerDetails, error) {
-	if player, ok := engine.Players[name]; ok {
-		entity, _ := engine.Entities[player.EntityId]
-		// NOTE: entity can be nil
-		return &types.PlayerDetails{Player: player, Entity: entity}, nil
+func playerNameFromKey(key string) string {
+	return strings.Split(key, ".")[1]
+}
+
+func (world *World) Player(name string) (*types.Player, error) {
+	var player types.Player
+	if err := gettum(world, playerKey(name), &player); err == nil {
+		return &player, nil
+	} else if fileIsNotFound(err) {
+		return nil, nil
 	} else {
-		return nil, errors.New(fmt.Sprintf(`No such player "%s"`, name))
+		return nil, err
 	}
-
 }
 
-func (engine *Engine) getActivePlayers() ([]*types.PlayerDetails, error) {
+func (world *World) CreatePlayer(name string, password []byte, entityId int64, spawn *types.AbsolutePoint) error {
+	player := types.Player{
+		Name:     name,
+		Password: password,
+		EntityId: entityId,
+		Spawn:    spawn,
+		LoggedIn: false,
+	}
+	return settum(world, playerKey(player.Name), &player)
+}
+
+func (world *World) SetPlayer(player *types.Player) error {
+	return settum(world, playerKey(player.Name), player)
+}
+
+func (world *World) DeletePlayer(name string) error {
+	return enddum(world, playerKey(name))
+}
+
+func (world *World) GetActivePlayers() ([]*types.PlayerDetails, error) {
 	var activePlayers []*types.PlayerDetails
 
-	for _, player := range engine.Players {
-		if player.LoggedIn {
-			entity := engine.Entities[player.EntityId]
-			activePlayers = append(activePlayers, &types.PlayerDetails{Player: player, Entity: entity})
+	for key := range world.DB.KeysPrefix("Player.", nil) {
+		name := playerNameFromKey(key)
+		if player, err := world.Player(name); player != nil {
+			if player.LoggedIn {
+				if entity, err := world.Entity(player.EntityId); err == nil {
+					activePlayers = append(activePlayers, &types.PlayerDetails{Player: player, Entity: entity})
+				} else {
+					return nil, err
+				}
+			}
+		} else if err == nil {
+			return nil, errors.New(fmt.Sprintf(`Player "%s" should exist but doens't`, name))
+		} else {
+			return nil, err
 		}
 	}
 

@@ -8,7 +8,7 @@ import (
 )
 
 func (engine *Engine) Tick() error {
-	players, err := engine.getActivePlayers()
+	players, err := engine.World.GetActivePlayers()
 	if err != nil {
 		return errors.Wrap(err, "get active players")
 	}
@@ -21,7 +21,7 @@ func (engine *Engine) Tick() error {
 			for y := loc.Y - C.ACTIVE_CHUNK_RADIUS; y < 1+loc.Y+C.ACTIVE_CHUNK_RADIUS; y++ {
 				for z := loc.Z - C.ACTIVE_CHUNK_RADIUS; z < 1+loc.Z+C.ACTIVE_CHUNK_RADIUS; z++ {
 					point := newPoint(x, y, z)
-					if chunk, err := engine.getChunkGuaranteed(point); err == nil {
+					if chunk, err := engine.World.Chunk(point); err == nil {
 						activeChunks[*point] = chunk
 					} else {
 						return errors.Wrap(err, "failed to get/gen chunk")
@@ -52,7 +52,10 @@ func (engine *Engine) Tick() error {
 		}
 
 		for i := 0; i < len(chunk.Entities); i++ {
-			entity := engine.Entities[chunk.Entities[i]]
+			entity, err := engine.World.Entity(chunk.Entities[i])
+			if err != nil {
+				return err
+			}
 			if err := engine.entityPhysics(chunk, entity); err != nil {
 				return errors.Wrap(err, "entity physics")
 			}
@@ -86,7 +89,7 @@ func (engine *Engine) Tick() error {
 
 	// save chunks
 	for p, chunk := range activeChunks {
-		engine.SetChunk(&p, chunk)
+		engine.World.SetChunk(&p, chunk)
 	}
 
 	// advance age by one tick

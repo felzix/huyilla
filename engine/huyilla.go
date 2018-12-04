@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/felzix/huyilla/content"
+	C "github.com/felzix/huyilla/constants"
 	"github.com/felzix/huyilla/types"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
@@ -10,9 +11,6 @@ import (
 
 type Engine struct {
 	World    *World
-	Players  map[string]*types.Player // name -> player
-	Entities map[int64]*types.Entity
-	Chunks   map[types.Point]*types.Chunk
 	Actions  []*types.Action // TODO locking
 }
 
@@ -20,20 +18,19 @@ func (engine *Engine) Init() error {
 	// So that recipes and terrain generator can reference content by name.
 	content.PopulateContentNameMaps()
 
-	engine.World = &World{}
+	engine.World = &World{Seed: C.SEED}
 	engine.World.Init("/tmp/huyilla", 1024*1024)
 
-	engine.Players = make(map[string]*types.Player)
-	engine.Entities = make(map[int64]*types.Entity)
-	engine.Chunks = make(map[types.Point]*types.Chunk)
 	engine.Actions = make([]*types.Action, 0)
 
 	return nil
 }
 
 func (engine *Engine) SignUp(name, password string) error {
-	if _, ok := engine.Players[name]; ok {
+	if player, err := engine.World.Player(name); player != nil {
 		return errors.New(fmt.Sprintf(`Player "%s" already exists`, name))
+	} else if err != nil {
+		return err
 	}
 
 	hashedPassword, err := hashPassword(password)
@@ -44,24 +41,22 @@ func (engine *Engine) SignUp(name, password string) error {
 	// Create new player
 	defaultLocation := newAbsolutePoint(0, 0, 0, 0, 0, 0)
 
-	entity := engine.newEntity(ENTITY["human"], name, defaultLocation)
-
-	player := &types.Player{
-		EntityId: entity.Id,
-		Name:     name,
-		Password: hashedPassword,
-		Spawn:    defaultLocation,
-		LoggedIn: false,
+	entity, err := engine.World.CreateEntity(ENTITY["human"], name, defaultLocation)
+	if err != nil {
+		return err
 	}
-	engine.Players[player.Name] = player
+
+	engine.World.CreatePlayer(name, hashedPassword, entity.Id, defaultLocation)
 
 	return nil
 }
 
 func (engine *Engine) LogIn(name, password string) (*types.PlayerDetails, error) {
-	player, ok := engine.Players[name]
-	if !ok {
+	player, err := engine.World.Player(name)
+	if player == nil {
 		return nil, errors.New(fmt.Sprintf(`No such player "%s"`, name))
+	} else if err != nil {
+		return nil, err
 	}
 
 	if bcrypt.CompareHashAndPassword(player.Password, []byte(password)) != nil {
@@ -73,8 +68,13 @@ func (engine *Engine) LogIn(name, password string) (*types.PlayerDetails, error)
 	}
 	player.LoggedIn = true
 
-	entity := engine.Entities[player.EntityId]
-	if err := engine.addEntityToChunk(entity); err != nil {
+	entity, err := engine.World.Entity(player.EntityId)
+	if entity == nil {
+		return nil, errors.New(fmt.Sprintf(`Player's entity does not exist: "%d"`, player.EntityId))
+	} else if err != nil {
+		return nil, err
+	}
+	if err := engine.World.AddEntityToChunk(entity); err != nil {
 		return nil, err
 	}
 
@@ -82,26 +82,32 @@ func (engine *Engine) LogIn(name, password string) (*types.PlayerDetails, error)
 }
 
 func (engine *Engine) LogOut(name string) error {
-	player, ok := engine.Players[name]
-	if !ok {
+	player, err := engine.World.Player(name)
+	if player == nil {
 		return errors.New(fmt.Sprintf(`No such player "%s"`, name))
+	} else if err != nil {
+		return err
 	}
 
 	if !player.LoggedIn {
-		return errors.New("You are already logged out.")
+		return errors.New("You are already logged out")
 	}
 	player.LoggedIn = false
 
-	entity := engine.Entities[player.EntityId]
-	if err := engine.removeEntityFromChunk(entity); err != nil {
+	entity, err := engine.World.Entity(player.EntityId)
+	if entity == nil {
+		return errors.New(fmt.Sprintf(`Player's entity does not exist: "%d"`, player.EntityId))
+	} else if err != nil {
+		return err
+	}
+	if err := engine.World.RemoveEntityFromChunk(entity.Id, entity.Location.Chunk); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-
-func hashPassword (password string) ([]byte, error) {
+func hashPassword(password string) ([]byte, error) {
 	if hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), 14); err == nil {
 		return hashedPassword, nil
 	} else {

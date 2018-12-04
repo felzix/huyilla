@@ -15,11 +15,11 @@ func makeDB(saveDir string, cacheSize uint64) (*diskv.Diskv, error) {
 	}
 
 	return diskv.New(diskv.Options{
-		BasePath: saveDir,
-		TempDir: "/tmp/tempdir-huyilla-" + unique.String(),
+		BasePath:          saveDir,
+		TempDir:           "/tmp/tempdir-huyilla-" + unique.String(),
 		AdvancedTransform: filesystemTransform,
-		InverseTransform: filesystemInverseTransform,
-		CacheSizeMax: cacheSize,
+		InverseTransform:  filesystemInverseTransform,
+		CacheSizeMax:      cacheSize,
 	}), nil
 }
 
@@ -37,11 +37,12 @@ func filesystemInverseTransform(pathKey *diskv.PathKey) (key string) {
 }
 
 var regexFileNotFound = regexp.MustCompile("no such file or directory")
-func fileIsNotFound (err error) bool {
+
+func fileIsNotFound(err error) bool {
 	return regexFileNotFound.MatchString(err.Error())
 }
 
-func gettem(world *World, key string, thing proto.Unmarshaler) error {
+func gettum(world *World, key string, thing proto.Unmarshaler) error {
 	if blob, err := world.DB.Read(key); err == nil {
 		if err := thing.Unmarshal(blob); err != nil {
 			return err
@@ -52,7 +53,7 @@ func gettem(world *World, key string, thing proto.Unmarshaler) error {
 	return nil
 }
 
-func settem(world *World, key string, thing proto.Marshaler) error {
+func settum(world *World, key string, thing proto.Marshaler) error {
 	if blob, err := thing.Marshal(); err == nil {
 		if err := world.DB.Write(key, blob); err != nil {
 			return err
@@ -61,4 +62,12 @@ func settem(world *World, key string, thing proto.Marshaler) error {
 		return err
 	}
 	return nil
+}
+
+func enddum(world *World, key string) error {
+	return world.DB.Erase(key)
+}
+
+func hassum(world *World, key string) bool {
+	return world.DB.Has(key)
 }

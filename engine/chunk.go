@@ -9,52 +9,75 @@ import (
 	"math/rand"
 )
 
-func (engine *Engine) GetChunk(p *types.Point) (*types.Chunk, error) {
-	if chunk, ok := engine.Chunks[*p]; ok {
+
+//
+// Chunk
+//
+
+func chunkKey(p *types.Point) string {
+	return fmt.Sprintf(`Chunk.%d.%d.%d`, p.X, p.Y, p.Z)
+}
+
+func (world *World) Chunk(p *types.Point) (*types.Chunk, error) {
+	if chunk, err := world.OnlyGetChunk(p); chunk != nil {
 		return chunk, nil
+	} else if err == nil {
+		if chunk, err := world.GenerateChunk(p); err == nil {
+			return chunk, nil
+		} else {
+			return nil, errors.Wrap(err, "Chunk generation failure")
+		}
 	} else {
-		return nil, errors.New(fmt.Sprintf("Chunk (%d,%d,%d) has yet to be generated", p.X, p.Y, p.Z))
+		return nil, err
 	}
 }
 
-func (engine *Engine) getChunkGuaranteed(p *types.Point) (*types.Chunk, error) {
-	if chunk, err := engine.GetChunk(p); err == nil {
-		return chunk, nil
-	} else if chunk, err := engine.GenChunk(C.SEED, p); err == nil {
-		return chunk, nil
+func (world *World) OnlyGetChunk(p *types.Point) (*types.Chunk, error) {
+	var chunk types.Chunk
+	if err := gettum(world, chunkKey(p), &chunk); err == nil {
+		return &chunk, nil
+	} else if fileIsNotFound(err) {
+		return nil, nil
 	} else {
-		return nil, errors.Wrap(err, "Chunk generation failure")
+		return nil, err
 	}
 }
 
-func (engine *Engine) SetChunk(p *types.Point, chunk *types.Chunk) {
-	engine.Chunks[*p] = chunk
+func (world *World) CreateChunk(p *types.Point, chunk *types.Chunk) error {
+	return settum(world, chunkKey(p), chunk)
 }
 
-func (engine *Engine) addEntityToChunk(entity *types.Entity) error {
-	if chunk, err := engine.getChunkGuaranteed(entity.Location.Chunk); err == nil {
+func (world *World) SetChunk(p *types.Point, chunk *types.Chunk) error {
+	return world.CreateChunk(p, chunk)
+}
+
+func (world *World) DeleteChunk(p *types.Point) error {
+	return enddum(world, chunkKey(p))
+}
+
+
+
+
+
+func (world *World) AddEntityToChunk(entity *types.Entity) error {
+	if chunk, err := world.Chunk(entity.Location.Chunk); err == nil {
 		chunk.Entities = append(chunk.Entities, entity.Id)
-		return nil
+		return world.SetChunk(entity.Location.Chunk, chunk)
 	} else {
 		return err
 	}
 }
 
-func (engine *Engine) removeEntityFromChunk(entity *types.Entity) error {
-	chunk, err := engine.GetChunk(entity.Location.Chunk)
-
+func (world *World) RemoveEntityFromChunk(entityId int64, p *types.Point) error {
+	chunk, err := world.Chunk(p)
 	if err != nil {
-		if err.Error() == "not found" {
-			return nil // chunk doesn't exist anyway so it need not be changed
-		} else {
-			return err // something else went wrong
-		}
+		return err
 	}
 
 	entities := chunk.Entities
 	for i := 0; i < len(entities); i++ {
 		id := entities[i]
-		if entity.Id == id {
+		if entityId == id {
 			// idiomatic way of removing a list element in Go
 			entities[i] = entities[len(entities)-1]
 			entities = entities[:len(entities)-1]
@@ -62,14 +85,12 @@ func (engine *Engine) removeEntityFromChunk(entity *types.Entity) error {
 		}
 	}
 
-	chunk.Entities = append(chunk.Entities, entity.Id)
-	engine.SetChunk(entity.Location.Chunk, chunk)
-	return nil
+	return world.SetChunk(p, chunk)
 }
 
-func (engine *Engine) GenChunk(worldSeed uint64, p *types.Point) (*types.Chunk, error) {
+func (world *World) GenerateChunk(p *types.Point) (*types.Chunk, error) {
 	chunkSeed, _ := hashstructure.Hash(p, nil)
-	seed := int64(worldSeed * chunkSeed)
+	seed := int64(world.Seed * chunkSeed)
 
 	chunk := types.Chunk{Voxels: make([]uint64, C.CHUNK_LENGTH)}
 	var x, y, z int64
@@ -87,7 +108,7 @@ func (engine *Engine) GenChunk(worldSeed uint64, p *types.Point) (*types.Chunk, 
 		}
 	}
 
-	engine.SetChunk(p, &chunk)
+	world.SetChunk(p, &chunk)
 	return &chunk, nil
 }
 

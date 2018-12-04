@@ -5,28 +5,6 @@ import (
 	"testing"
 )
 
-func TestConfigProtobuf(t *testing.T) {
-	optionsMap := map[string]*Primitive{
-		"PlayerCap": &Primitive{Value: &Primitive_Int{Int: 10}},
-	}
-	config := &Config{Options: &PrimitiveMap{Map: optionsMap}}
-
-	data, err := proto.Marshal(config)
-	if err != nil {
-		t.Fatal("marshaling error: ", err)
-	}
-	newConfig := &Config{}
-	err = proto.Unmarshal(data, newConfig)
-	if err != nil {
-		t.Fatal("unmarshaling error: ", err)
-	}
-	playerCap := config.GetOptions().GetMap()["PlayerCap"].GetInt()
-	newPlayerCap := newConfig.GetOptions().GetMap()["PlayerCap"].GetInt()
-	if playerCap != newPlayerCap {
-		t.Fatalf("data mismatch %v != %v", playerCap, newPlayerCap)
-	}
-}
-
 func TestPrimitiveProtobuf(t *testing.T) {
 	primitiveInt := &Primitive{Value: &Primitive_Int{Int: 12}}
 

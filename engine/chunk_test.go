@@ -8,13 +8,14 @@ import (
 
 func TestHuyilla_Chunk(t *testing.T) {
 	h := &Engine{}
-	h.Init(&types.Config{})
+	h.Init()
+	defer h.World.WipeDatabase()
 
-	if _, err := h.GenChunk(C.SEED, &types.Point{0, 0, 0}); err != nil {
+	if _, err := h.World.Chunk(&types.Point{0, 0, 0}); err != nil {
 		t.Fatal(err)
 	}
 
-	chunk, err := h.GetChunk(&types.Point{0, 0, 0})
+	chunk, err := h.World.Chunk(&types.Point{0, 0, 0})
 	if err != nil {
 		t.Fatal(err)
 	}

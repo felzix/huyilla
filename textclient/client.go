@@ -18,7 +18,7 @@ type Client struct {
 	player   *types.PlayerDetails
 	username string
 
-	screen    *react.Screen
+	screen *react.Screen
 
 	quitq    chan struct{}
 	quitOnce sync.Once
@@ -165,26 +165,26 @@ func (client *Client) Auth() error {
 	// TODO this is blocked by there not yet being a way for client and engine to communicate
 
 	/*
-	err := signUp(client.username)
-	if err != nil {
-		if err.Error() != "rpc error: code = Unknown desc = You are already signed up." {
-			return errors.Wrap(err, "Signup error")
+		err := signUp(client.username)
+		if err != nil {
+			if err.Error() != "rpc error: code = Unknown desc = You are already signed up." {
+				return errors.Wrap(err, "Signup error")
+			}
 		}
-	}
 
-	if player, err := logIn(); err == nil {
-		client.player = player
-	} else if err.Error() == "rpc error: code = Unknown desc = You are already logged in." {
-		if addr, err := myAddress(); err != nil {
-			return errors.Wrap(err, "MyAddress error")
-		} else if player, err := getPlayer(addr); err != nil {
-			return errors.Wrap(err, "GetPlayer error")
-		} else {
+		if player, err := logIn(); err == nil {
 			client.player = player
+		} else if err.Error() == "rpc error: code = Unknown desc = You are already logged in." {
+			if addr, err := myAddress(); err != nil {
+				return errors.Wrap(err, "MyAddress error")
+			} else if player, err := getPlayer(addr); err != nil {
+				return errors.Wrap(err, "GetPlayer error")
+			} else {
+				client.player = player
+			}
+		} else {
+			return errors.Wrap(err, "Login error")
 		}
-	} else {
-		return errors.Wrap(err, "Login error")
-	}
 	*/
 	return nil
 }
@@ -205,7 +205,7 @@ func MakeApp() *react.ReactElement {
 				element = Intro()
 				props = react.Properties{
 					"client": client,
-					"nextMode": func () {
+					"nextMode": func() {
 						r.State["mode"] = VIEWMODE_GAME
 					},
 				}
@@ -277,7 +277,7 @@ func GameBoard() *react.ReactElement {
 						"label": "",
 					}),
 					react.ManagedChild(Tiles(), "", react.Properties{
-						"client": client,
+						"client":   client,
 						"absPoint": client.player.Entity.Location,
 					}),
 				},
@@ -317,14 +317,14 @@ func Tiles() *react.ReactElement {
 				for x := 0; x < width; x++ {
 					if chunk == nil {
 						result.Region.Cells[x][y] = react.Cell{
-							R: ' ',
+							R:     ' ',
 							Style: tcell.StyleDefault.Background(tcell.ColorDarkGray),
 						}
 					} else {
 						index := (x * C.CHUNK_SIZE * C.CHUNK_SIZE) + (y * C.CHUNK_SIZE) + zLevel
 						ch := voxelToRune(chunk.Voxels[index])
 						result.Region.Cells[x][y] = react.Cell{
-							R: ch,
+							R:     ch,
 							Style: tcell.StyleDefault,
 						}
 					}

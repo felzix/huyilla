@@ -1,13 +1,13 @@
 package main
 
 import (
-	"github.com/felzix/huyilla/types"
 	"testing"
 )
 
 func TestHuyilla_ActiveChunkRadius(t *testing.T) {
 	h := &Engine{}
-	h.Init(&types.Config{})
+	h.Init()
+	defer h.World.WipeDatabase()
 
 	if err := h.SignUp("felzix", "PASS"); err != nil {
 		t.Fatal(err)
@@ -20,7 +20,7 @@ func TestHuyilla_ActiveChunkRadius(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	chunk, err := h.GetChunk(player.Entity.Location.Chunk)
+	chunk, err := h.World.Chunk(player.Entity.Location.Chunk)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -31,7 +31,7 @@ func TestHuyilla_ActiveChunkRadius(t *testing.T) {
 	// active range in the positive direction
 	edge := clonePoint(player.Entity.Location.Chunk)
 	edge.X += 3
-	chunk, err = h.GetChunk(edge)
+	chunk, err = h.World.Chunk(edge)
 	if chunk == nil {
 		t.Error("Chunk within player's range should exist but it does not.")
 	}
@@ -41,15 +41,15 @@ func TestHuyilla_ActiveChunkRadius(t *testing.T) {
 
 	beyond := clonePoint(player.Entity.Location.Chunk)
 	beyond.X += 4
-	chunk, err = h.GetChunk(beyond)
-	if err == nil { // note that this is "==" not "!="
+	chunk, err = h.World.OnlyGetChunk(beyond)
+	if chunk != nil {
 		t.Error("Chunk beyond player's range exists when it should not.")
 	}
 
 	// active range in the negative direction
 	edge = clonePoint(player.Entity.Location.Chunk)
 	edge.X -= 3
-	chunk, err = h.GetChunk(edge)
+	chunk, err = h.World.Chunk(edge)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -59,8 +59,8 @@ func TestHuyilla_ActiveChunkRadius(t *testing.T) {
 
 	beyond = clonePoint(player.Entity.Location.Chunk)
 	beyond.X -= 4
-	chunk, err = h.GetChunk(beyond)
-	if err == nil { // note that this is "==" not "!="
+	chunk, err = h.World.OnlyGetChunk(beyond)
+	if chunk != nil {
 		t.Error("Chunk beyond player's range exists when it should not.")
 	}
 }

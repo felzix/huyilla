@@ -1,33 +1,41 @@
 package main
 
 import (
-	"github.com/felzix/huyilla/types"
 	"testing"
 )
 
 func TestHuyilla_SignUp(t *testing.T) {
 	h := &Engine{}
-	h.Init(&types.Config{})
+	h.Init()
+	defer h.World.WipeDatabase()
 
 	if err := h.SignUp("felzix", "PASS"); err != nil {
 		t.Fatal(err)
 	}
 
-	player, err := h.GetPlayer("felzix")
+	player, err := h.World.Player("felzix")
 	if err != nil {
 		t.Fatalf("Error: %v", err)
 	}
 
-	if player.Player.Name != player.Entity.PlayerName {
+	entity, err := h.World.Entity(player.EntityId)
+	if entity == nil {
+		t.Fatalf("Entity %d should exist but doesn't", player.EntityId)
+	} else if err != nil {
+		t.Fatal(err)
+	}
+
+	if player.Name != entity.PlayerName {
 		t.Errorf(
 			`Player's entity has wrong name: player="%v", entity="%v"`,
-			player.Player.Name, player.Entity.PlayerName)
+			player.Name, entity.PlayerName)
 	}
 }
 
 func TestHuyilla_Login(t *testing.T) {
 	h := &Engine{}
-	h.Init(&types.Config{})
+	h.Init()
+	defer h.World.WipeDatabase()
 
 	if err := h.SignUp("felzix", "PASS"); err != nil {
 		t.Fatal(err)
@@ -46,7 +54,7 @@ func TestHuyilla_Login(t *testing.T) {
 		t.Fatal("Player entity should have been created but it was not (no location)")
 	}
 
-	chunk, err := h.GetChunk(details.Entity.Location.Chunk)
+	chunk, err := h.World.Chunk(details.Entity.Location.Chunk)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -68,7 +76,8 @@ func TestHuyilla_Login(t *testing.T) {
 
 func TestHuyilla_LoginNegative(t *testing.T) {
 	h := &Engine{}
-	h.Init(&types.Config{})
+	h.Init()
+	defer h.World.WipeDatabase()
 
 	_, err := h.LogIn("felzix", "PASS")
 	if err == nil {

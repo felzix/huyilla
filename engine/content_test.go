@@ -1,13 +1,13 @@
 package main
 
 import (
-	"github.com/felzix/huyilla/types"
 	"testing"
 )
 
 func TestHuyilla_Content(t *testing.T) {
 	h := &Engine{}
-	h.Init(&types.Config{})
+	h.Init()
+	defer h.World.WipeDatabase()
 
 	content := h.GetContent()
 

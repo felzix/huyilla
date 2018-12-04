@@ -7,7 +7,8 @@ import (
 
 func TestHuyilla_Actions(t *testing.T) {
 	h := &Engine{}
-	h.Init(&types.Config{})
+	h.Init()
+	defer h.World.WipeDatabase()
 
 	NAME := "FAKE"
 	PASS := "PASS"
@@ -61,7 +62,8 @@ func TestHuyilla_Actions(t *testing.T) {
 
 func TestHuyilla_Move(t *testing.T) {
 	h := &Engine{}
-	h.Init(&types.Config{})
+	h.Init()
+	defer h.World.WipeDatabase()
 
 	NAME := "felzix"
 	PASS := "PASS"
@@ -86,14 +88,16 @@ func TestHuyilla_Move(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	player, err := h.GetPlayer(NAME)
+	player, err := h.World.Player(NAME)
 	if err != nil {
 		t.Error("Error:", err)
 	}
 
-	entity := player.Entity
+	entity, err := h.World.Entity(player.EntityId)
 	if entity == nil {
 		t.Fatal("Entity should exist but doesn't")
+	} else if err != nil {
+		t.Fatal(err)
 	}
 
 	if !(pointEquals(entity.Location.Chunk, CHUNK_POINT) && pointEquals(entity.Location.Voxel, VOXEL_POINT)) {

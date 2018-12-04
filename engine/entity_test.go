@@ -1,26 +1,31 @@
 package main
 
 import (
-	"github.com/felzix/huyilla/types"
 	"testing"
 )
 
 func TestHuyilla_Entity(t *testing.T) {
 	h := &Engine{}
-	h.Init(&types.Config{})
+	h.Init()
+	defer h.World.WipeDatabase()
 
 	if err := h.SignUp("felzix", "PASS"); err != nil {
 		t.Fatal(err)
 	}
 
-	player, err := h.GetPlayer("felzix")
+	player, err := h.World.Player("felzix")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	entity := h.Entities[player.Player.EntityId]
+	entity, err := h.World.Entity(player.EntityId)
+	if entity == nil {
+		t.Fatalf("Entity %d should exist but doesn't", player.EntityId)
+	} else if err != nil {
+		t.Fatal(err)
+	}
 
-	if entity.Type != player.Entity.Type {
-		t.Errorf(`GetPlayer and GetEntity returned different entities: "%v" != "%v"`, entity, player.Entity)
+	if entity.Type != entity.Type {
+		t.Errorf(`GetPlayer and GetEntity returned different entities: "%v" != "%v"`, entity, entity)
 	}
 }

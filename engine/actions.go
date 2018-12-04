@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/felzix/huyilla/types"
+	"github.com/pkg/errors"
 )
 
 func (engine *Engine) RegisterAction(action *types.Action) {
@@ -10,23 +11,29 @@ func (engine *Engine) RegisterAction(action *types.Action) {
 
 // returns true if move succeeded; false otherwise
 func (engine *Engine) move(action *types.Action) (bool, error) {
-	player, err := engine.GetPlayer(action.PlayerName)
+	player, err := engine.World.Player(action.PlayerName)
 	if err != nil {
 		return false, err
 	}
 
-	if player.Entity == nil {
-		return false, nil // player doesn't have an entity (player has not yet finished signup)
+	if player.EntityId == 0 {
+		return false, errors.New("player doesn't have an entity (player has not yet finished signup)")
 	}
 
-	err = engine.removeEntityFromChunk(player.Entity)
+	entity, err := engine.World.Entity(player.EntityId)
 	if err != nil {
 		return false, err
 	}
 
-	player.Entity.Location = action.GetMove().WhereTo
+	err = engine.World.RemoveEntityFromChunk(player.EntityId, entity.Location.Chunk)
+	if err != nil {
+		return false, err
+	}
 
-	err = engine.addEntityToChunk(player.Entity)
+	entity.Location = action.GetMove().WhereTo
+	engine.World.SetEntity(entity.Id, entity)
+
+	err = engine.World.AddEntityToChunk(entity)
 	if err != nil {
 		return false, err
 	}
