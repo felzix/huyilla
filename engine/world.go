@@ -8,7 +8,7 @@ import (
 )
 
 type World struct {
-	DB *diskv.Diskv
+	DB   *diskv.Diskv
 	Seed uint64
 }
 

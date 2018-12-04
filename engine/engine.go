@@ -9,10 +9,9 @@ import (
 )
 
 type Engine struct {
-	World    *World
-	Actions  []*types.Action // TODO locking
+	World   *World
+	Actions []*types.Action // TODO locking
 }
-
 
 func (engine *Engine) Init() error {
 	// So that recipes and terrain generator can reference content by name.
@@ -25,7 +24,6 @@ func (engine *Engine) Init() error {
 
 	return nil
 }
-
 
 func (engine *Engine) Tick() error {
 	players, err := engine.World.GetActivePlayers()

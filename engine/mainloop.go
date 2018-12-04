@@ -38,7 +38,7 @@ mainloop:
 	fmt.Println("Engine stopped!")
 }
 
-func fail (err error) {
+func fail(err error) {
 	os.Stderr.WriteString("Error!\n")
 	os.Stderr.WriteString(err.Error())
 	os.Exit(1)

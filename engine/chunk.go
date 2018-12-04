@@ -9,7 +9,6 @@ import (
 	"math/rand"
 )
 
-
 //
 // Chunk
 //
@@ -54,10 +53,6 @@ func (world *World) SetChunk(p *types.Point, chunk *types.Chunk) error {
 func (world *World) DeleteChunk(p *types.Point) error {
 	return enddum(world, chunkKey(p))
 }
-
-
-
-
 
 func (world *World) AddEntityToChunk(entity *types.Entity) error {
 	if chunk, err := world.Chunk(entity.Location.Chunk); err == nil {
