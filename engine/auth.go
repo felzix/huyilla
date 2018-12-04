@@ -2,29 +2,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/felzix/huyilla/content"
-	C "github.com/felzix/huyilla/constants"
 	"github.com/felzix/huyilla/types"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 )
-
-type Engine struct {
-	World    *World
-	Actions  []*types.Action // TODO locking
-}
-
-func (engine *Engine) Init() error {
-	// So that recipes and terrain generator can reference content by name.
-	content.PopulateContentNameMaps()
-
-	engine.World = &World{Seed: C.SEED}
-	engine.World.Init("/tmp/huyilla", 1024*1024)
-
-	engine.Actions = make([]*types.Action, 0)
-
-	return nil
-}
 
 func (engine *Engine) SignUp(name, password string) error {
 	if player, err := engine.World.Player(name); player != nil {

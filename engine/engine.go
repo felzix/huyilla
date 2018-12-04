@@ -3,9 +3,29 @@ package main
 import (
 	"fmt"
 	C "github.com/felzix/huyilla/constants"
+	"github.com/felzix/huyilla/content"
 	"github.com/felzix/huyilla/types"
 	"github.com/pkg/errors"
 )
+
+type Engine struct {
+	World    *World
+	Actions  []*types.Action // TODO locking
+}
+
+
+func (engine *Engine) Init() error {
+	// So that recipes and terrain generator can reference content by name.
+	content.PopulateContentNameMaps()
+
+	engine.World = &World{Seed: C.SEED}
+	engine.World.Init("/tmp/huyilla", 1024*1024)
+
+	engine.Actions = make([]*types.Action, 0)
+
+	return nil
+}
+
 
 func (engine *Engine) Tick() error {
 	players, err := engine.World.GetActivePlayers()
