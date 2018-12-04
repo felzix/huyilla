@@ -7,7 +7,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func (engine *Engine) SignUp(name, password string) error {
+func (engine *Engine) SignUp(name string, password string) error {
 	if player, err := engine.World.Player(name); player != nil {
 		return errors.New(fmt.Sprintf(`Player "%s" already exists`, name))
 	} else if err != nil {
