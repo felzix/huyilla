@@ -11,6 +11,7 @@ import (
 type Engine struct {
 	World   *World
 	Actions []*types.Action // TODO locking
+	Secret  []byte
 }
 
 func (engine *Engine) Init() error {
@@ -18,9 +19,12 @@ func (engine *Engine) Init() error {
 	content.PopulateContentNameMaps()
 
 	engine.World = &World{Seed: C.SEED}
-	engine.World.Init("/tmp/huyilla", 1024*1024)
+	engine.World.Init("/tmp/huyilla", 1024*1024)  // 1 MB
 
 	engine.Actions = make([]*types.Action, 0)
+
+	// TODO not hard-coded
+	engine.Secret = []byte(`&$0C-7#o4sK"W*&Q7;8PD_pz^8%]"v),zY(b-3.v`)
 
 	return nil
 }

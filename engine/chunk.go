@@ -75,7 +75,7 @@ func (world *World) RemoveEntityFromChunk(entityId int64, p *types.Point) error 
 		if entityId == id {
 			// idiomatic way of removing a list element in Go
 			entities[i] = entities[len(entities)-1]
-			entities = entities[:len(entities)-1]
+			chunk.Entities = entities[:len(entities)-1]
 			break
 		}
 	}

@@ -12,15 +12,28 @@ func TestHuyilla_ActiveChunkRadius(t *testing.T) {
 	if err := h.SignUp("felzix", "PASS"); err != nil {
 		t.Fatal(err)
 	}
-	player, err := h.LogIn("felzix", "PASS")
+	_, err := h.LogIn("felzix", "PASS")
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if err := h.Tick(); err != nil {
 		t.Fatal(err)
 	}
 
-	chunk, err := h.World.Chunk(player.Entity.Location.Chunk)
+	player, err := h.World.Player("felzix")
+	if err != nil {
+		t.Fatalf("Error: %v", err)
+	}
+
+	entity, err := h.World.Entity(player.EntityId)
+	if entity == nil {
+		t.Fatalf("Entity %d should exist but doesn't", player.EntityId)
+	} else if err != nil {
+		t.Fatal(err)
+	}
+
+	chunk, err := h.World.Chunk(entity.Location.Chunk)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -29,7 +42,7 @@ func TestHuyilla_ActiveChunkRadius(t *testing.T) {
 	}
 
 	// active range in the positive direction
-	edge := clonePoint(player.Entity.Location.Chunk)
+	edge := clonePoint(entity.Location.Chunk)
 	edge.X += 3
 	chunk, err = h.World.Chunk(edge)
 	if chunk == nil {
@@ -39,7 +52,7 @@ func TestHuyilla_ActiveChunkRadius(t *testing.T) {
 		t.Errorf("Expected 0 entities in chunk but there were %d", len(chunk.Entities))
 	}
 
-	beyond := clonePoint(player.Entity.Location.Chunk)
+	beyond := clonePoint(entity.Location.Chunk)
 	beyond.X += 4
 	chunk, err = h.World.OnlyGetChunk(beyond)
 	if chunk != nil {
@@ -47,7 +60,7 @@ func TestHuyilla_ActiveChunkRadius(t *testing.T) {
 	}
 
 	// active range in the negative direction
-	edge = clonePoint(player.Entity.Location.Chunk)
+	edge = clonePoint(entity.Location.Chunk)
 	edge.X -= 3
 	chunk, err = h.World.Chunk(edge)
 	if err != nil {
@@ -57,7 +70,7 @@ func TestHuyilla_ActiveChunkRadius(t *testing.T) {
 		t.Error("Chunk within player's range should exist but it does not.")
 	}
 
-	beyond = clonePoint(player.Entity.Location.Chunk)
+	beyond = clonePoint(entity.Location.Chunk)
 	beyond.X -= 4
 	chunk, err = h.World.OnlyGetChunk(beyond)
 	if chunk != nil {
