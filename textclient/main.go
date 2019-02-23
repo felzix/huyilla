@@ -3,40 +3,38 @@ package main
 import (
 	"fmt"
 	"os"
+	"runtime/debug"
 )
 
 func main() {
 	var client Client
+	initialized := false
 
 	defer func() {
-		if r := recover(); r != nil {
-			fmt.Fprintf(os.Stderr, "Recovered %v", r)
+        if initialized {
+            client.Deinit() // resets terminal changes
+        }
+
+		if r := recover(); r == nil {
+            fmt.Println("Thanks for playing :)")
+            os.Exit(0)
+        } else {
+            _, _ = fmt.Fprintln(os.Stderr, r)
+			debug.PrintStack()
 			os.Exit(2)
 		}
 	}()
 
-	defer finish(&client, 0, nil)
-
-	if err := client.Init(); err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err)
-		finish(&client, 1, err)
+	if err := client.Init(); err == nil {
+        initialized = true
+    } else {
+		_, _ = fmt.Fprintf(os.Stderr, "%s\n", err)
+		os.Exit(1)
 	}
 
 	if err := client.Run(); err != nil {
-		finish(&client, 1, err)
-	}
-
-	defer fmt.Println("Thanks for playing!")
-}
-
-func finish(client *Client, returnCode int, err error) {
-	defer os.Exit(returnCode)
-
-	client.Deinit() // resets terminal changes
-
-	if err == nil {
-		fmt.Println("Thanks for playing!")
-	} else {
-		fmt.Fprintf(os.Stderr, "%s\n", err)
+		client.Deinit() // resets terminal changes
+		_, _ = fmt.Fprintf(os.Stderr, "%s\n", err)
+		os.Exit(1)
 	}
 }
