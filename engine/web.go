@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/felzix/huyilla/types"
 	"io/ioutil"
 	"net/http"
 	"time"
+
+	"github.com/felzix/huyilla/types"
 )
 
 func pingHandler(_ *Engine) http.HandlerFunc {
@@ -93,7 +94,6 @@ func (engine *Engine) Serve(errChan chan error) {
 	http.HandleFunc("/auth/login", loginHandler(engine))
 	http.HandleFunc("/auth/logout", logoutHandler(engine))
 
-	// http.HandleFunc("/auth/login", loginHandler)
 	// http.HandleFunc("/player/", playerHandler)
 	// http.HandleFunc("/chunk/", chunkHandler)
 	// http.HandleFunc("/stats", statsHandler)
