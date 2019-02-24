@@ -2,13 +2,16 @@ package main
 
 import (
 	"fmt"
-	"github.com/felzix/go-curses-react"
+	"io/ioutil"
+	"net/http"
+	"sync"
+	"time"
+
+	react "github.com/felzix/go-curses-react"
 	C "github.com/felzix/huyilla/constants"
 	"github.com/felzix/huyilla/content"
 	"github.com/felzix/huyilla/types"
 	"github.com/gdamore/tcell"
-	"sync"
-	"time"
 )
 
 type Client struct {
@@ -162,6 +165,17 @@ func (client *Client) Quit(err error) {
 }
 
 func (client *Client) Auth() error {
+	base := "http://localhost:8080"
+	res, err := http.Get(base + "/ping")
+
+	fmt.Println(res)
+	fmt.Println(err)
+
+	body, err := ioutil.ReadAll(res.Body)
+
+	fmt.Println(body)
+	fmt.Println(err)
+
 	// TODO this is blocked by there not yet being a way for client and engine to communicate
 
 	/*
@@ -268,6 +282,7 @@ func GameBoard() *react.ReactElement {
 		DrawFn: func(r *react.ReactElement, maxWidth, maxHeight int) (*react.DrawResult, error) {
 			client := r.Props["client"].(*Client)
 
+			// there is no client.player
 			child := react.NewChild(react.HorizontalLayout(), "", maxWidth, maxHeight, react.Properties{
 				"children": []*react.Child{
 					react.ManagedChild(react.Label(), "debug-bar", react.Properties{
