@@ -19,7 +19,9 @@ func (engine *Engine) Init() error {
 	content.PopulateContentNameMaps()
 
 	engine.World = &World{Seed: C.SEED}
-	engine.World.Init("/tmp/huyilla", 1024*1024)  // 1 MB
+	if err := engine.World.Init("/tmp/huyilla", 1024*1024); err != nil { // 1 MB
+		return err
+	}
 
 	engine.Actions = make([]*types.Action, 0)
 
@@ -111,7 +113,9 @@ func (engine *Engine) Tick() error {
 
 	// save chunks
 	for p, chunk := range activeChunks {
-		engine.World.SetChunk(&p, chunk)
+		if err := engine.World.SetChunk(&p, chunk); err != nil {
+			return err
+		}
 	}
 
 	// advance age by one tick
