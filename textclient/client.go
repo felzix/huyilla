@@ -49,10 +49,12 @@ func (client *Client) Init() error {
 	root.Props = react.Properties{
 		"client": client,
 	}
-	client.screen.Init(root, func(err error) error {
+	if err := client.screen.Init(root, func(err error) error {
 		client.Quit(err)
 		return nil
-	})
+	}); err != nil {
+		return err
+	}
 
 	client.world = &WorldCache{}
 	client.world.Init()
@@ -89,7 +91,9 @@ loop:
 
 	// Inject a wakeup interrupt
 	iev := tcell.NewEventInterrupt(nil)
-	client.screen.TCellScreen.PostEvent(iev)
+	if err := client.screen.TCellScreen.PostEvent(iev); err != nil {
+		return err
+	}
 
 	return client.err
 }
@@ -115,8 +119,7 @@ func (client *Client) handleResize(e *tcell.EventResize) {
 func (client *Client) handleKey(e *tcell.EventKey) error {
 	client.Lock()
 	defer client.Unlock()
-	client.screen.HandleKey(e)
-	return nil
+	return client.screen.HandleKey(e)
 }
 
 func (client *Client) handleMouse(e *tcell.EventMouse) error {
@@ -282,21 +285,30 @@ func GameBoard() *react.ReactElement {
 		DrawFn: func(r *react.ReactElement, maxWidth, maxHeight int) (*react.DrawResult, error) {
 			client := r.Props["client"].(*Client)
 
-			// there is no client.player
-			child := react.NewChild(react.HorizontalLayout(), "", maxWidth, maxHeight, react.Properties{
-				"children": []*react.Child{
-					react.ManagedChild(react.Label(), "debug-bar", react.Properties{
-						"label": fmt.Sprintf("%d", client.world.age),
-					}),
-					react.ManagedChild(react.Label(), "blank", react.Properties{
-						"label": "",
-					}),
-					react.ManagedChild(Tiles(), "", react.Properties{
-						"client":   client,
-						"absPoint": client.player.Entity.Location,
-					}),
-				},
-			})
+			var child *react.Child
+			if client.world.age == 0 {
+				child = react.NewChild(react.Label(), "loading", maxWidth, maxHeight, react.Properties{
+					"label": "Loading world from engine. Please wait.",
+				})
+			} else {
+				// TODO there is no client.player
+				child = react.NewChild(react.HorizontalLayout(), "", maxWidth, maxHeight, react.Properties{
+					"children": []*react.Child{
+						react.ManagedChild(react.Label(), "debug-bar", react.Properties{
+							"label": fmt.Sprintf("%d", client.world.age),
+						}),
+						react.ManagedChild(react.Label(), "blank", react.Properties{
+							"label": "",
+						}),
+						react.ManagedChild(Tiles(), "", react.Properties{
+							"client":   client,
+							"absPoint": &types.AbsolutePoint{},
+							// "absPoint": client.player.Entity.Location,
+						}),
+					},
+				})
+			}
+
 			result := react.DrawResult{
 				Elements: []react.Child{*child},
 			}
