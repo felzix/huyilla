@@ -13,8 +13,14 @@ import (
 func TestHuyilla_Web_Ping(t *testing.T) {
 	defer func() { http.DefaultServeMux = new(http.ServeMux) }()
 	h := &Engine{}
-	h.Init()
-	defer h.World.WipeDatabase()
+	if err := h.Init(); err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		if err := h.World.WipeDatabase(); err != nil {
+			t.Fatal(err)
+		}
+	}()
 	web := httptest.NewServer(pingHandler(h))
 	defer web.Close()
 
@@ -38,8 +44,14 @@ func TestHuyilla_Web_Ping(t *testing.T) {
 func TestHuyilla_Web_Signup_flow(t *testing.T) {
 	defer func() { http.DefaultServeMux = new(http.ServeMux) }()
 	h := &Engine{}
-	h.Init()
-	defer h.World.WipeDatabase()
+	if err := h.Init(); err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		if err := h.World.WipeDatabase(); err != nil {
+			t.Fatal(err)
+		}
+	}()
 
 	NAME := "felzix"
 	PASS := "murakami"

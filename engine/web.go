@@ -11,7 +11,9 @@ import (
 
 func pingHandler(_ *Engine) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "pong")
+		if _, err := fmt.Fprintf(w, "pong"); err != nil {
+			panic(err)
+		}
 	}
 }
 
@@ -30,7 +32,9 @@ func signupHandler(engine *Engine) http.HandlerFunc {
 		}
 
 		if err := engine.SignUp(auth.Name, string(auth.Password)); err == nil {
-			fmt.Fprint(w, "Signup successful!")
+			if _, err := fmt.Fprint(w, "Signup successful!"); err != nil {
+				panic(err)
+			}
 		} else {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
@@ -52,7 +56,9 @@ func loginHandler(engine *Engine) http.HandlerFunc {
 		}
 
 		if token, err := engine.LogIn(auth.Name, string(auth.Password)); err == nil {
-			fmt.Fprint(w, token)
+			if _, err := fmt.Fprint(w, token); err != nil {
+				panic(err)
+			}
 		} else {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
@@ -80,7 +86,9 @@ func logoutHandler(engine *Engine) http.HandlerFunc {
 		}
 
 		if err := engine.LogOut(name); err == nil {
-			fmt.Fprint(w, "Logout successful!")
+			if _, err := fmt.Fprint(w, "Logout successful!"); err != nil {
+				panic(err)
+			}
 		} else {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
