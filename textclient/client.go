@@ -186,16 +186,6 @@ func (client *Client) Auth() error {
 	}
 
 
-	// res, err := http.Get(base + "/ping")
-	// if err != nil {
-	// 	return err
-	// }
-	//
-	// body, err := ioutil.ReadAll(res.Body)
-	// if err != nil {
-	// 	return err
-	// }
-	//
 	// res, err = http.Get(base + "/")
 	// err := signUp(client.username)
 	// if err != nil {

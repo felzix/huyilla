@@ -56,8 +56,8 @@ func TestHuyilla_Login(t *testing.T) {
 		t.Fatalf("Error: %v", err)
 	}
 
-	if !player.LoggedIn {
-		t.Error(`Player should have been set to LoggedIn=true`)
+	if len(player.Token) == 0 {
+		t.Error(`Player should have been given a token`)
 	}
 
 	entity, err := h.World.Entity(player.EntityId)
@@ -124,8 +124,8 @@ func TestHuyilla_Logout(t *testing.T) {
 		t.Fatalf("Error: %v", err)
 	}
 
-	if player.LoggedIn {
-		t.Error(`Player should have been set to LoggedIn=false`)
+	if len(player.Token) > 0 {
+		t.Error(`Player should not have a token`)
 	}
 
 	entity, err := h.World.Entity(player.EntityId)
@@ -165,7 +165,7 @@ func TestHuyilla_token(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	name, expiry, err := readToken(SECRET, token)
+	name, tokenId, expiry, err := readToken(SECRET, token)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -176,5 +176,9 @@ func TestHuyilla_token(t *testing.T) {
 
 	if expiry != EXPIRY {
 		t.Errorf(`Expiry mismatch: "%d" != "%d"`, expiry, EXPIRY)
+	}
+
+	if len(tokenId) == 0 {
+		t.Errorf("Expected a token id but it's empty")
 	}
 }

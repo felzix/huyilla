@@ -68,7 +68,7 @@ func (engine *Engine) LogIn(name, password string) (string, error) {
 		return "", err
 	}
 
-	return makeToken(engine.Secret, name, time.Now().Add(time.Hour * 24).Unix())
+	return player.Token, nil
 }
 
 func (engine *Engine) LogOut(name string) error {

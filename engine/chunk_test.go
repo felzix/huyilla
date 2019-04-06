@@ -11,11 +11,11 @@ func TestHuyilla_Chunk(t *testing.T) {
 	h.Init()
 	defer h.World.WipeDatabase()
 
-	if _, err := h.World.Chunk(&types.Point{0, 0, 0}); err != nil {
+	if _, err := h.World.Chunk(&types.Point{X: 0, Y: 0, Z: 0}); err != nil {
 		t.Fatal(err)
 	}
 
-	chunk, err := h.World.Chunk(&types.Point{0, 0, 0})
+	chunk, err := h.World.Chunk(&types.Point{X: 0, Y: 0, Z: 0})
 	if err != nil {
 		t.Fatal(err)
 	}

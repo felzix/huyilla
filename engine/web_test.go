@@ -53,7 +53,7 @@ func TestHuyilla_Web_Signup_flow(t *testing.T) {
 		}
 	}()
 
-	NAME := "felzix"
+	NAME := "arana"
 	PASS := "murakami"
 
 	auth, err := (&types.Auth{Name: NAME, Password: []byte(PASS)}).Marshal()
@@ -91,12 +91,12 @@ func TestHuyilla_Web_Signup_flow(t *testing.T) {
 		t.Fatalf("Error: %v", err)
 	}
 
-	if player.LoggedIn {
+	if len(player.Token) > 0 {
 		t.Error("Player should not be logged-in just because they signed up")
 	}
 
-	if player.Name != "felzix" {
-		t.Errorf(`Player name was "%v" instead of "felzix"`, player.Name)
+	if player.Name != NAME {
+		t.Errorf(`Player name was "%v" instead of "%s"`, player.Name, NAME)
 	}
 
 	// Login
@@ -129,7 +129,7 @@ func TestHuyilla_Web_Signup_flow(t *testing.T) {
 		t.Fatalf("Error: %v", err)
 	}
 
-	if !player.LoggedIn {
+	if len(player.Token) == 0 {
 		t.Error("Player should be logged-in")
 	}
 
@@ -149,7 +149,7 @@ func TestHuyilla_Web_Signup_flow(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	} else if res.StatusCode != http.StatusOK {
-		t.Fatal(fmt.Sprintf(`Expected status 200 but got %d`, res.StatusCode))
+		t.Errorf(`Expected status 200 but got %d`, res.StatusCode)
 	}
 
 	// Verify Database
@@ -161,7 +161,7 @@ func TestHuyilla_Web_Signup_flow(t *testing.T) {
 		t.Fatalf("Error: %v", err)
 	}
 
-	if player.LoggedIn {
+	if len(player.Token) > 0 {
 		t.Error("Player should be logged-out")
 	}
 }

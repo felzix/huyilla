@@ -36,9 +36,7 @@ func (api *API) Signup() error {
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		return errors.New(fmt.Sprintf("Signup failure: %v", err))
-	}
-
-	if res.StatusCode != http.StatusOK {
+	} else if res.StatusCode != http.StatusOK {
 		return errors.New(fmt.Sprintf(`Signup failure: Expected status 200 but got %d. %s`, res.StatusCode, body))
 	}
 
@@ -58,9 +56,7 @@ func (api *API) Login() ([]byte, error) {
 	token, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("Login failure: %v", err))
-	}
-
-	if res.StatusCode != http.StatusOK {
+	} else if res.StatusCode != http.StatusOK {
 		return nil, errors.New(fmt.Sprintf(`Login failure: Expected status 200 but got %d. %s`, res.StatusCode, token))
 	}
 
@@ -76,9 +72,7 @@ func (api *API) UserExists() (bool, error) {
 	rawExists, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		return false, errors.New(fmt.Sprintf("UserExists failure: %v", err))
-	}
-
-	if res.StatusCode != http.StatusOK {
+	} else if res.StatusCode != http.StatusOK {
 		return false, errors.New(fmt.Sprintf(`UserExists failure: Expected status 200 but got %d. %s`, res.StatusCode, rawExists))
 	}
 
@@ -89,4 +83,25 @@ func (api *API) UserExists() (bool, error) {
 	} else {
 		return false, errors.New(fmt.Sprintf(`UserExists failure: Expected true or false but got: %v`, rawExists))
 	}
+}
+
+func (api *API) GetPlayer(name string) (*types.Player, error) {
+	res, err := http.Get(api.Base + "/player/" + name)
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("GetPlayer failure: %v", err))
+	}
+
+	blob, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("GetPlayer failure: %v", err))
+	} else if res.StatusCode != http.StatusOK {
+		return nil, errors.New(fmt.Sprintf(`GetPlayer failure: Expected status 200 but got %d. %s`, res.StatusCode, blob))
+	}
+
+	var player types.Player
+	if err := player.Unmarshal(blob); err != nil {
+		return nil, errors.New(fmt.Sprintf(`GetPlayer failure: Malformed protobuf blob: %v`, err))
+	}
+
+	return &player, nil
 }

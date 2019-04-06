@@ -37,6 +37,7 @@ deps:
 		github.com/grpc-ecosystem/go-grpc-prometheus \
 		github.com/hashicorp/go-plugin \
 		github.com/felzix/go-curses-react \
+		github.com/gorilla/mux \
 
 
 clean:

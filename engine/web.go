@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/felzix/huyilla/types"
+	"github.com/gorilla/mux"
 	"io/ioutil"
 	"net/http"
 )
@@ -119,15 +120,38 @@ func userExistsHandler(engine *Engine) http.HandlerFunc {
 	}
 }
 
+func playerHandler(engine *Engine) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+
+		if player, err := engine.World.Player(vars["name"]); err == nil {
+			if blob, err := player.Marshal(); err == nil {
+				if _, err := fmt.Fprint(w, blob); err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+				}
+			} else {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	}
+}
+
 func (engine *Engine) Serve(errChan chan error) {
-	http.HandleFunc("/ping", pingHandler(engine))
+	r := mux.NewRouter()
+	r.HandleFunc("/ping", pingHandler(engine))
 
-	http.HandleFunc("/auth/signup", signupHandler(engine))
-	http.HandleFunc("/auth/login", loginHandler(engine))
-	http.HandleFunc("/auth/logout", logoutHandler(engine))
-	http.HandleFunc("/auth/exists", userExistsHandler(engine))
+	r = mux.NewRouter()
+	r.PathPrefix("/auth/")
+	r.HandleFunc("signup", signupHandler(engine))
+	r.HandleFunc("login", loginHandler(engine))
+	r.HandleFunc("logout", logoutHandler(engine))
+	r.HandleFunc("exists", userExistsHandler(engine))
 
-	// http.HandleFunc("/player/", playerHandler)
+	r = mux.NewRouter()
+	r.PathPrefix("/world/")
+	r.HandleFunc("player/{name}", playerHandler(engine))
 	// http.HandleFunc("/chunk/", chunkHandler)
 	// http.HandleFunc("/stats", statsHandler)
 

@@ -25,8 +25,8 @@ func TestHuyilla_Actions(t *testing.T) {
 		Action: &types.Action_Move{
 			Move: &types.Action_MoveAction{
 				WhereTo: &types.AbsolutePoint{
-					&types.Point{1, 12, 144},
-					&types.Point{2, 4, 8},
+					Chunk: &types.Point{X: 1, Y: 12, Z: 144},
+					Voxel: &types.Point{X: 2, Y: 4, Z: 8},
 				},
 			},
 		},
@@ -81,7 +81,7 @@ func TestHuyilla_Move(t *testing.T) {
 		PlayerName: NAME,
 		Action: &types.Action_Move{
 			Move: &types.Action_MoveAction{
-				WhereTo: &types.AbsolutePoint{CHUNK_POINT, VOXEL_POINT},
+				WhereTo: &types.AbsolutePoint{Chunk: CHUNK_POINT, Voxel: VOXEL_POINT},
 			}}})
 
 	if err := h.Tick(); err != nil {
