@@ -16,7 +16,7 @@ func newAbsolutePoint(cX, cY, cZ, vX, vY, vZ int64) *types.AbsolutePoint {
 }
 
 func newPoint(x, y, z int64) *types.Point {
-	return &types.Point{x, y, z}
+	return &types.Point{X: x, Y: y, Z: z}
 }
 
 func clonePoint(p *types.Point) *types.Point {

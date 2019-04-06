@@ -26,6 +26,7 @@ deps:
 		github.com/golang/protobuf/proto \
 		github.com/gogo/protobuf/jsonpb \
 		github.com/gogo/protobuf/proto \
+		github.com/gogo/protobuf/protoc-gen-gofast \
 		github.com/spf13/cobra \
 		github.com/pkg/errors \
 		github.com/dgrijalva/jwt-go \
@@ -33,11 +34,8 @@ deps:
 		github.com/peterbourgon/diskv \
 		github.com/satori/go.uuid \
 		golang.org/x/crypto/bcrypt \
-		github.com/ethereum/go-ethereum/crypto/secp256k1 \
 		github.com/grpc-ecosystem/go-grpc-prometheus \
 		github.com/hashicorp/go-plugin \
-		github.com/loomnetwork/yubihsm-go \
-		github.com/loomnetwork/go-loom \
 		github.com/felzix/go-curses-react \
 
 

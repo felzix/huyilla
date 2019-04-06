@@ -96,14 +96,16 @@ func (world *World) GenerateChunk(p *types.Point) (*types.Chunk, error) {
 				index := (x * C.CHUNK_SIZE * C.CHUNK_SIZE) + (y * C.CHUNK_SIZE) + z
 				location := &types.AbsolutePoint{
 					Chunk: p,
-					Voxel: &types.Point{x, y, z},
+					Voxel: &types.Point{X: x, Y: y, Z: z},
 				}
 				chunk.Voxels[index] = genVoxel(location)
 			}
 		}
 	}
 
-	world.SetChunk(p, &chunk)
+	if err := world.SetChunk(p, &chunk); err != nil {
+		return nil, err
+	}
 	return &chunk, nil
 }
 

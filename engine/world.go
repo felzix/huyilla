@@ -23,9 +23,11 @@ func (world *World) Init(saveDir string, cacheSize uint64) error {
 	}
 
 	if !world.DB.Has(KEY_AGE) {
-		defaultAge := types.Age{1}
+		defaultAge := types.Age{Ticks: 1}
 		if blob, err := proto.Marshal(&defaultAge); err == nil {
-			world.DB.Write(KEY_AGE, blob)
+			if err := world.DB.Write(KEY_AGE, blob); err != nil {
+				return err
+			}
 		} else {
 			return err
 		}

@@ -13,8 +13,8 @@ message Player {
     int64 entityId = 1;
     string name = 2;
     bytes password = 3;
-    bool loggedIn = 4;
-    AbsolutePoint spawn = 5;
+    string token = 4;
+    AbsolutePoint spawn = 6;
 }
 
 message Players {

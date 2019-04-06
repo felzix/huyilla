@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/pkg/errors"
+	"github.com/satori/go.uuid"
 	"golang.org/x/crypto/bcrypt"
 	"time"
 )
@@ -28,9 +29,7 @@ func (engine *Engine) SignUp(name string, password string) error {
 		return err
 	}
 
-	engine.World.CreatePlayer(name, hashedPassword, entity.Id, defaultLocation)
-
-	return nil
+	return engine.World.CreatePlayer(name, hashedPassword, entity.Id, defaultLocation)
 }
 
 func (engine *Engine) LogIn(name, password string) (string, error) {
@@ -45,10 +44,16 @@ func (engine *Engine) LogIn(name, password string) (string, error) {
 		return "", errors.New("Incorrect password")
 	}
 
-	if player.LoggedIn {
-		return "", errors.New("You are already logged in.")
+	if token, err := makeToken(engine.Secret, name, time.Now().Add(time.Hour * 24).Unix()); err == nil {
+		originalToken := player.Token
+		player.Token = token
+		if len(originalToken) > 0 {
+			return token, nil  // player is already logged in; they just needed a new token
+		}
+	} else {
+		return "", err
 	}
-	player.LoggedIn = true
+
 	if err := engine.World.SetPlayer(player); err != nil {
 		return "", err
 	}
@@ -74,10 +79,10 @@ func (engine *Engine) LogOut(name string) error {
 		return err
 	}
 
-	if !player.LoggedIn {
+	if len(player.Token) == 0 {
 		return errors.New("You are already logged out")
 	}
-	player.LoggedIn = false
+	player.Token = ""
 	if err := engine.World.SetPlayer(player); err != nil {
 		return err
 	}
@@ -95,6 +100,14 @@ func (engine *Engine) LogOut(name string) error {
 	return nil
 }
 
+func (engine *Engine) UserExists(name string) (bool, error) {
+	if player, err := engine.World.Player(name); err == nil {
+		return player != nil, nil
+	} else {
+		return false, err
+	}
+}
+
 func hashPassword(password string) ([]byte, error) {
 	if hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), 14); err == nil {
 		return hashedPassword, nil
@@ -109,6 +122,11 @@ func makeToken(secret []byte, name string, expiry int64) (string, error) {
 	claims := token.Claims.(jwt.MapClaims)
 	claims["name"] = name
 	claims["exp"] = expiry
+	if id, err := uuid.NewV4(); err == nil {
+		claims["tokenId"] = id
+	} else {
+		return "", err
+	}
 
 	if tokenString, err := token.SignedString(secret); err == nil {
 		return tokenString, nil
@@ -117,7 +135,7 @@ func makeToken(secret []byte, name string, expiry int64) (string, error) {
 	}
 }
 
-func readToken(secret []byte, tokenString string) (string, int64, error) {
+func readToken(secret []byte, tokenString string) (string, string, int64, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
@@ -126,15 +144,16 @@ func readToken(secret []byte, tokenString string) (string, int64, error) {
 	})
 
 	if err != nil {
-		return "", 0, err
+		return "", "", 0, err
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		name := claims["name"].(string)
 		exp := int64(claims["exp"].(float64))
-		return name, exp, nil
+		tokenId := claims["tokenId"].(string)
+		return name, tokenId, exp, nil
 	} else {
-		return "", 0, err
+		return "", "", 0, err
 	}
 
 }

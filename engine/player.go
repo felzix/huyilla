@@ -32,7 +32,7 @@ func (world *World) CreatePlayer(name string, password []byte, entityId int64, s
 		Password: password,
 		EntityId: entityId,
 		Spawn:    spawn,
-		LoggedIn: false,
+		Token:    "",
 	}
 	return settum(world, playerKey(player.Name), &player)
 }
@@ -51,7 +51,7 @@ func (world *World) GetActivePlayers() ([]*types.PlayerDetails, error) {
 	for key := range world.DB.KeysPrefix("Player.", nil) {
 		name := playerNameFromKey(key)
 		if player, err := world.Player(name); player != nil {
-			if player.LoggedIn {
+			if len(player.Token) > 0 {
 				if entity, err := world.Entity(player.EntityId); err == nil {
 					activePlayers = append(activePlayers, &types.PlayerDetails{Player: player, Entity: entity})
 				} else {

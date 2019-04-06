@@ -37,7 +37,7 @@ func (engine *Engine) Tick() error {
 		return errors.Wrap(err, "get active players")
 	}
 
-	activeChunks := make(map[types.Point]*types.Chunk, len(players)*C.ACTIVE_CHUNK_CUBE)
+	activeChunks := make(map[types.ComparablePoint]*types.Chunk, len(players)*C.ACTIVE_CHUNK_CUBE)
 	for i := 0; i < len(players); i++ {
 		player := players[i]
 		loc := player.Entity.Location.Chunk
@@ -46,7 +46,7 @@ func (engine *Engine) Tick() error {
 				for z := loc.Z - C.ACTIVE_CHUNK_RADIUS; z < 1+loc.Z+C.ACTIVE_CHUNK_RADIUS; z++ {
 					point := newPoint(x, y, z)
 					if chunk, err := engine.World.Chunk(point); err == nil {
-						activeChunks[*point] = chunk
+						activeChunks[*types.NewComparablePoint(point)] = chunk
 					} else {
 						return errors.Wrap(err, "failed to get/gen chunk")
 					}
@@ -60,7 +60,8 @@ func (engine *Engine) Tick() error {
 		vitalizedVoxels[i] = *randomPoint()
 	}
 
-	for p, chunk := range activeChunks {
+	for cp, chunk := range activeChunks {
+		p := types.Point{X: cp.X, Y: cp.Y, Z: cp.Z}
 		for i := 0; i < len(chunk.ActiveVoxels); i++ {
 			point := types.AbsolutePoint{Chunk: &p, Voxel: chunk.ActiveVoxels[i]}
 			if err := engine.voxelPhysics(chunk, &point); err != nil {
@@ -112,7 +113,8 @@ func (engine *Engine) Tick() error {
 	engine.Actions = make([]*types.Action, 0)
 
 	// save chunks
-	for p, chunk := range activeChunks {
+	for cp, chunk := range activeChunks {
+		p := types.Point{X: cp.X, Y: cp.Y, Z: cp.Z}
 		if err := engine.World.SetChunk(&p, chunk); err != nil {
 			return err
 		}

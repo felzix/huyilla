@@ -2,8 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
-	"net/http"
 	"sync"
 	"time"
 
@@ -20,6 +18,7 @@ type Client struct {
 	world    *WorldCache
 	player   *types.PlayerDetails
 	username string
+	authToken []byte
 
 	screen *react.Screen
 
@@ -168,41 +167,56 @@ func (client *Client) Quit(err error) {
 }
 
 func (client *Client) Auth() error {
-	base := "http://localhost:8080"
-	res, err := http.Get(base + "/ping")
+	api := NewAPI("http://localhost:8080", client.username, "murakami")
 
-	fmt.Println(res)
-	fmt.Println(err)
-
-	body, err := ioutil.ReadAll(res.Body)
-
-	fmt.Println(body)
-	fmt.Println(err)
-
-	// TODO this is blocked by there not yet being a way for client and engine to communicate
-
-	/*
-		err := signUp(client.username)
-		if err != nil {
-			if err.Error() != "rpc error: code = Unknown desc = You are already signed up." {
-				return errors.Wrap(err, "Signup error")
+	if exists, err := api.UserExists(); err == nil {
+		if !exists {
+			if err := api.Signup(); err != nil {
+				return err
 			}
 		}
+	} else {
+		return err
+	}
 
-		if player, err := logIn(); err == nil {
-			client.player = player
-		} else if err.Error() == "rpc error: code = Unknown desc = You are already logged in." {
-			if addr, err := myAddress(); err != nil {
-				return errors.Wrap(err, "MyAddress error")
-			} else if player, err := getPlayer(addr); err != nil {
-				return errors.Wrap(err, "GetPlayer error")
-			} else {
-				client.player = player
-			}
-		} else {
-			return errors.Wrap(err, "Login error")
-		}
-	*/
+	if token, err := api.Login(); err == nil {
+		client.authToken = token
+	} else {
+		return err
+	}
+
+
+	// res, err := http.Get(base + "/ping")
+	// if err != nil {
+	// 	return err
+	// }
+	//
+	// body, err := ioutil.ReadAll(res.Body)
+	// if err != nil {
+	// 	return err
+	// }
+	//
+	// res, err = http.Get(base + "/")
+	// err := signUp(client.username)
+	// if err != nil {
+	// 	if err.Error() != "rpc error: code = Unknown desc = You are already signed up." {
+	// 		return errors.Wrap(err, "Signup error")
+	// 	}
+	// }
+	//
+	// if player, err := logIn(); err == nil {
+	// 	client.player = player
+	// } else if err.Error() == "rpc error: code = Unknown desc = You are already logged in." {
+	// 	if addr, err := myAddress(); err != nil {
+	// 		return errors.Wrap(err, "MyAddress error")
+	// 	} else if player, err := getPlayer(addr); err != nil {
+	// 		return errors.Wrap(err, "GetPlayer error")
+	// 	} else {
+	// 		client.player = player
+	// 	}
+	// } else {
+	// 	return errors.Wrap(err, "Login error")
+	// }
 	return nil
 }
 
@@ -263,6 +277,11 @@ func Intro() *react.ReactElement {
 						"label": "Enter username",
 						"whenFinished": func(username string) error {
 							client.username = username
+
+							if err := client.Auth(); err != nil {
+								return err
+							}
+
 							nextMode()
 							return nil
 						},
@@ -324,7 +343,7 @@ func Tiles() *react.ReactElement {
 			client := r.Props["client"].(*Client)
 			absPoint := r.Props["absPoint"].(*types.AbsolutePoint)
 
-			chunk := client.world.chunks[*absPoint.Chunk]
+			chunk := client.world.chunks[*types.NewComparablePoint(absPoint.Chunk)]
 			zLevel := int(absPoint.Voxel.Z)
 
 			width := C.CHUNK_SIZE
