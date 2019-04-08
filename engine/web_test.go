@@ -4,164 +4,139 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/felzix/huyilla/types"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	. "github.com/felzix/goblin"
 )
 
-func TestHuyilla_Web_Ping(t *testing.T) {
-	defer func() { http.DefaultServeMux = new(http.ServeMux) }()
-	h := &Engine{}
-	if err := h.Init(); err != nil {
-		t.Fatal(err)
-	}
-	defer func() {
-		if err := h.World.WipeDatabase(); err != nil {
-			t.Fatal(err)
-		}
-	}()
-	web := httptest.NewServer(pingHandler(h))
-	defer web.Close()
+func TestWeb(t *testing.T) {
+	g := Goblin(t)
 
-	res, err := http.Get(web.URL + "/ping")
-	if err != nil {
-		t.Fatal(err)
-	} else if res.StatusCode != http.StatusOK {
-		t.Fatal(fmt.Sprintf(`Expected status 200 but got %d`, res.StatusCode))
-	}
+	g.Describe("http api", func() {
+		NAME := "arana"
+		PASS := "murakami"
 
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		t.Fatal(err)
-	}
+		auth, _ := (&types.Auth{Name: NAME, Password: []byte(PASS)}).Marshal()
 
-	if string(body) != "pong" {
-		t.Errorf(`Expected "pong" but got "%s"`, string(body))
-	}
+		var engine *Engine
+		var token string
+
+		g.Before(func() {
+			engine = &Engine{}
+			if err := engine.Init(); err != nil {
+				t.Fatal(err)
+			}
+		})
+
+		g.After(func() {
+			if err := engine.World.WipeDatabase(); err != nil {
+				t.Fatal(err)
+			}
+		})
+
+		g.Describe("ping", func() {
+			g.It("ping returns pong", func() {
+				res := requesty("GET", "/ping", nil, engine, nil)
+
+				g.Assert(res.Code).Equal(http.StatusOK)
+				body, err := ioutil.ReadAll(res.Body)
+				g.Assert(err).Equal(nil)
+				g.Assert(body).Equal([]byte("pong"))
+			})
+		})
+
+		g.Describe("signup flow", func() {
+			g.It("Signs up", func() {
+				res := requesty("POST", "/auth/signup", bytes.NewReader(auth), engine, map[string]string{
+					"contentType": "application/protobuf",
+				})
+
+				body, err := ioutil.ReadAll(res.Body)
+				g.Assert(err).Equal(nil)
+				g.Assert(body).Equal([]byte("Signup successful!"))
+				g.Assert(res.Code).Equal(http.StatusOK)
+
+				player, err := engine.World.Player(NAME)
+				g.Assert(err).Equal(nil)
+				g.Assert(player).NotEqual(nil)
+				g.Assert(len(player.Token)).Equal(0)
+				g.Assert(player.Name).Equal(NAME)
+			})
+
+			g.It("Logs in", func() {
+				res := requesty("POST", "/auth/login", bytes.NewReader(auth), engine, map[string]string{
+					"contentType": "application/protobuf",
+				})
+
+				body, err := ioutil.ReadAll(res.Body)
+				g.Assert(err).Equal(nil)
+				g.Assert(len(body) > 100).IsTrue(fmt.Sprintf(`Body was too short: "%s"`, body))
+				g.Assert(body[0]).Equal(byte('e'))
+				g.Assert(res.Code).Equal(http.StatusOK)
+
+				token = string(body)
+
+				player, err := engine.World.Player(NAME)
+				g.Assert(err).Equal(nil)
+				g.Assert(player).NotEqual(nil)
+				g.Assert(len(player.Token) > 0).IsTrue("Player token is not set")
+				g.Assert(player.Name).Equal(NAME)
+			})
+
+			g.It("Logs out", func() {
+				res := requesty("POST", "/auth/logout", nil, engine, map[string]string{
+					"contentType": "application/protobuf",
+					"token": token,
+				})
+
+				g.Assert(res.Code).Equal(http.StatusOK)
+				body, err := ioutil.ReadAll(res.Body)
+				g.Assert(err).Equal(nil)
+				g.Assert(body).Equal([]byte("Logout successful!"))
+
+				player, err := engine.World.Player(NAME)
+				g.Assert(err).Equal(nil)
+				g.Assert(player).NotEqual(nil)
+				g.Assert(len(player.Token)).Equal(0)
+			})
+		})
+
+		g.Describe("get player", func() {
+			g.It("Gets player info", func() {
+				res := requesty("GET", "/world/player/"+NAME, nil, engine, map[string]string{
+					"contentType": "application/protobuf",
+					"token": token,
+				})
+
+				g.Assert(res.Code).Equal(http.StatusOK)
+				body, err := ioutil.ReadAll(res.Body)
+				g.Assert(err).Equal(nil)
+				var player types.Player
+				if err := player.Unmarshal(body); err != nil {
+					t.Fatal(err)
+				}
+				g.Assert(player.Name).Equal(NAME)
+				g.Assert(player.EntityId).NotEqual(0)
+				g.Assert(player.Password).Equal([]byte(nil))
+				g.Assert(player.Token).Equal("")
+				g.Assert(player.Spawn).Equal((*types.AbsolutePoint)(nil))
+			})
+
+		})
+	})
 }
 
-func TestHuyilla_Web_Signup_flow(t *testing.T) {
-	defer func() { http.DefaultServeMux = new(http.ServeMux) }()
-	h := &Engine{}
-	if err := h.Init(); err != nil {
-		t.Fatal(err)
+func requesty (method, url string, body io.Reader, engine *Engine, headers map[string]string) *httptest.ResponseRecorder {
+	req, _ := http.NewRequest(method, url, body)
+
+	for key, value := range headers {
+		req.Header.Add(key, value)
 	}
-	defer func() {
-		if err := h.World.WipeDatabase(); err != nil {
-			t.Fatal(err)
-		}
-	}()
+	res := httptest.NewRecorder()
+	Router(engine).ServeHTTP(res, req)
 
-	NAME := "arana"
-	PASS := "murakami"
-
-	auth, err := (&types.Auth{Name: NAME, Password: []byte(PASS)}).Marshal()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// Signup
-
-	web_signup := httptest.NewServer(signupHandler(h))
-	defer web_signup.Close()
-
-
-	res, err := http.Post(web_signup.URL+"/auth/signup", "application/protobuf", bytes.NewReader(auth))
-	if err != nil {
-		t.Fatal(err)
-	} else if res.StatusCode != http.StatusOK {
-		t.Fatal(fmt.Sprintf(`Expected status 200 but got %d`, res.StatusCode))
-	}
-
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if string(body) != "Signup successful!" {
-		t.Errorf(`Expected "Signup successful!" but got "%s"`, string(body))
-	}
-
-	// Verify database
-
-	player, err := h.World.Player(NAME)
-	if player == nil {
-		t.Fatalf("Player does not exist")
-	} else if err != nil {
-		t.Fatalf("Error: %v", err)
-	}
-
-	if len(player.Token) > 0 {
-		t.Error("Player should not be logged-in just because they signed up")
-	}
-
-	if player.Name != NAME {
-		t.Errorf(`Player name was "%v" instead of "%s"`, player.Name, NAME)
-	}
-
-	// Login
-
-	web_login := httptest.NewServer(loginHandler(h))
-	defer web_login.Close()
-
-	res, err = http.Post(web_login.URL+"/auth/login", "application/protobuf", bytes.NewReader(auth))
-	if err != nil {
-		t.Fatal(err)
-	} else if res.StatusCode != http.StatusOK {
-		t.Fatal(fmt.Sprintf(`Expected status 200 but got %d`, res.StatusCode))
-	}
-
-	token, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if len(token) < 100 || token[0] != 'e' {
-		t.Errorf(`Bad token. Token="%s"`, token)
-	}
-
-	// Verify Database
-
-	player, err = h.World.Player(NAME)
-	if player == nil {
-		t.Fatalf("Player does not exist")
-	} else if err != nil {
-		t.Fatalf("Error: %v", err)
-	}
-
-	if len(player.Token) == 0 {
-		t.Error("Player should be logged-in")
-	}
-
-	// Logout
-
-	web_logout := httptest.NewServer(logoutHandler(h))
-	defer web_logout.Close()
-
-	req, err := http.NewRequest("POST", web_logout.URL+"/auth/logout", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	req.Header.Add("token", string(token))
-	req.Header.Add("content-type", "application/protobuf")
-	client := http.Client{}
-	res, err = client.Do(req)
-	if err != nil {
-		t.Fatal(err)
-	} else if res.StatusCode != http.StatusOK {
-		t.Errorf(`Expected status 200 but got %d`, res.StatusCode)
-	}
-
-	// Verify Database
-
-	player, err = h.World.Player(NAME)
-	if player == nil {
-		t.Fatalf("Player does not exist")
-	} else if err != nil {
-		t.Fatalf("Error: %v", err)
-	}
-
-	if len(player.Token) > 0 {
-		t.Error("Player should be logged-out")
-	}
+	return res
 }

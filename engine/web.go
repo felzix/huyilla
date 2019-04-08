@@ -18,6 +18,11 @@ func pingHandler(_ *Engine) http.HandlerFunc {
 
 func signupHandler(engine *Engine) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Body == nil {
+			http.Error(w, "Must supply body", http.StatusBadRequest)
+			return
+		}
+
 		blob, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -26,7 +31,7 @@ func signupHandler(engine *Engine) http.HandlerFunc {
 
 		var auth types.Auth
 		if err := auth.Unmarshal(blob); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
@@ -42,6 +47,11 @@ func signupHandler(engine *Engine) http.HandlerFunc {
 
 func loginHandler(engine *Engine) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Body == nil {
+			http.Error(w, "Must supply body", http.StatusBadRequest)
+			return
+		}
+
 		blob, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -123,13 +133,30 @@ func userExistsHandler(engine *Engine) http.HandlerFunc {
 func playerHandler(engine *Engine) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
+		name := vars["name"]
 
-		if player, err := engine.World.Player(vars["name"]); err == nil {
-			if blob, err := player.Marshal(); err == nil {
-				if _, err := fmt.Fprint(w, blob); err != nil {
-					http.Error(w, err.Error(), http.StatusInternalServerError)
-				}
-			} else {
+		if name == "" {
+			http.Error(w, "", http.StatusNotFound)
+			return
+		}
+
+		player, err := engine.World.Player(name)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		} else if player == nil {
+			http.Error(w, fmt.Sprintf(`No such player "%s"`, name), http.StatusNotFound)
+			return
+		}
+
+		sentPlayer := types.Player{
+			EntityId: player.EntityId,
+			Name: player.Name,
+		}
+
+		if blob, err := sentPlayer.Marshal(); err == nil {
+			w.Header().Set("Content-Type", "application/protobuf")
+			if _, err := w.Write(blob); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 		} else {
@@ -138,22 +165,24 @@ func playerHandler(engine *Engine) http.HandlerFunc {
 	}
 }
 
-func (engine *Engine) Serve(errChan chan error) {
+func Router(engine *Engine) *mux.Router {
 	r := mux.NewRouter()
-	r.HandleFunc("/ping", pingHandler(engine))
+	r.HandleFunc("/ping", pingHandler(engine)).Methods("GET")
 
-	r = mux.NewRouter()
-	r.PathPrefix("/auth/")
-	r.HandleFunc("signup", signupHandler(engine))
-	r.HandleFunc("login", loginHandler(engine))
-	r.HandleFunc("logout", logoutHandler(engine))
-	r.HandleFunc("exists", userExistsHandler(engine))
+	r.HandleFunc("/auth/signup", signupHandler(engine)).Methods("POST")
+	r.HandleFunc("/auth/login", loginHandler(engine)).Methods("POST")
+	r.HandleFunc("/auth/logout", logoutHandler(engine)).Methods("POST")
+	r.HandleFunc("/auth/exists", userExistsHandler(engine)).Methods("GET")
 
-	r = mux.NewRouter()
-	r.PathPrefix("/world/")
-	r.HandleFunc("player/{name}", playerHandler(engine))
+	r.HandleFunc("/world/player/{name}", playerHandler(engine)).Methods("GET")
 	// http.HandleFunc("/chunk/", chunkHandler)
 	// http.HandleFunc("/stats", statsHandler)
 
+	return r
+}
+
+
+func (engine *Engine) Serve(errChan chan error) {
+	Router(engine)
 	errChan <- http.ListenAndServe(":8080", nil)
 }

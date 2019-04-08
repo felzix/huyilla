@@ -19,12 +19,28 @@ func NewAPI(base, username, password string) *API {
 	return &API{Base: base, Username: username, password: []byte(password)}
 }
 
-func (api *API) Auth() ([]byte, error) {
+func (api *API) MakeAuth() ([]byte, error) {
 	return (&types.Auth{Name: api.Username, Password: api.password}).Marshal()
 }
 
+func (api *API) Ping() (string, error) {
+	res, err := http.Post(api.Base + "/ping", "application/protobuf", nil)
+	if err != nil {
+		return "", errors.New(fmt.Sprintf("Ping failure: %v", err))
+	}
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return "", errors.New(fmt.Sprintf("Ping failure: %v", err))
+	} else if res.StatusCode != http.StatusOK {
+		return "", errors.New(fmt.Sprintf(`Ping failure: Expected status 200 but got %d. %s`, res.StatusCode, body))
+	}
+
+	return string(body), nil
+}
+
 func (api *API) Signup() error {
-	auth, err := api.Auth()
+	auth, err := api.MakeAuth()
 	if err != nil {
 		return err
 	}
@@ -44,7 +60,7 @@ func (api *API) Signup() error {
 }
 
 func (api *API) Login() ([]byte, error) {
-	auth, err := api.Auth()
+	auth, err := api.MakeAuth()
 	if err != nil {
 		return nil, err
 	}

@@ -36,8 +36,9 @@ deps:
 		golang.org/x/crypto/bcrypt \
 		github.com/grpc-ecosystem/go-grpc-prometheus \
 		github.com/hashicorp/go-plugin \
-		github.com/felzix/go-curses-react \
 		github.com/gorilla/mux \
+		github.com/felzix/go-curses-react \
+		github.com/felzix/goblin \
 
 
 clean:
