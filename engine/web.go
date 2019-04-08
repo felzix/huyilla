@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/felzix/huyilla/constants"
 	"github.com/felzix/huyilla/types"
 	"github.com/gorilla/mux"
 	"io/ioutil"
@@ -76,10 +77,8 @@ func loginHandler(engine *Engine) http.HandlerFunc {
 
 func logoutHandler(engine *Engine) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		token := r.Header.Get("token")
-		name, tokenId, _, err := readToken(engine.Secret, token)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+		name, tokenId, _ := authenticate(engine, w, r)
+		if tokenId == "" {
 			return
 		}
 
@@ -165,6 +164,60 @@ func playerHandler(engine *Engine) http.HandlerFunc {
 	}
 }
 
+func chunkHandler(engine *Engine) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		name, tokenId, _ := authenticate(engine, w, r)
+		if tokenId == "" {
+			return
+		}
+
+		vars := mux.Vars(r)
+		chunkPoint, err := stringToPoint(vars["x"], vars["y"], vars["z"])
+		if err != nil {
+			http.Error(w, "bad url; must be /world/chunk/{x}/{y}/{z}", http.StatusBadRequest)
+			return
+		}
+
+		player, err := engine.World.Player(name)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		} else if player == nil {
+			http.Error(w, fmt.Sprintf(`No such player "%s"`, name), http.StatusNotFound)
+			return
+		}
+
+		playerEntity, err := engine.World.Entity(player.EntityId)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		if gridDistance(playerEntity.Location.Chunk, chunkPoint) > constants.ACTIVE_CHUNK_RADIUS {
+			http.Error(w, "can only load nearby chunks", http.StatusForbidden)
+			return
+		}
+
+		chunk, err := engine.World.Chunk(chunkPoint)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		} else if chunk == nil {
+			http.Error(w, fmt.Sprintf(`No such Chunk "%s"`, pointToString(chunkPoint)), http.StatusNotFound)
+			return
+		}
+
+		if blob, err := chunk.Marshal(); err == nil {
+			w.Header().Set("Content-Type", "application/protobuf")
+			if _, err := w.Write(blob); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	}
+}
+
 func Router(engine *Engine) *mux.Router {
 	r := mux.NewRouter()
 	r.HandleFunc("/ping", pingHandler(engine)).Methods("GET")
@@ -175,7 +228,7 @@ func Router(engine *Engine) *mux.Router {
 	r.HandleFunc("/auth/exists", userExistsHandler(engine)).Methods("GET")
 
 	r.HandleFunc("/world/player/{name}", playerHandler(engine)).Methods("GET")
-	// http.HandleFunc("/chunk/", chunkHandler)
+	r.HandleFunc("/world/chunk/{x}/{y}/{z}", chunkHandler(engine)).Methods("GET")
 	// http.HandleFunc("/stats", statsHandler)
 
 	return r
@@ -185,4 +238,17 @@ func Router(engine *Engine) *mux.Router {
 func (engine *Engine) Serve(errChan chan error) {
 	Router(engine)
 	errChan <- http.ListenAndServe(":8080", nil)
+}
+
+func authenticate(engine *Engine, w http.ResponseWriter, r *http.Request) (string, string, int64) {
+	token := r.Header.Get("token")
+	if token == "" {
+		http.Error(w, "must specify token", http.StatusForbidden)
+	}
+	if name, tokenId, expiry, err := readToken(engine.Secret, token); err == nil {
+		return name, tokenId, expiry
+	} else {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return "", "", 0
+	}
 }

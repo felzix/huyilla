@@ -61,16 +61,16 @@ func (engine *Engine) Tick() error {
 	}
 
 	for cp, chunk := range activeChunks {
-		p := types.Point{X: cp.X, Y: cp.Y, Z: cp.Z}
+		p := newPoint(cp.X, cp.Y, cp.Z)
 		for i := 0; i < len(chunk.ActiveVoxels); i++ {
-			point := types.AbsolutePoint{Chunk: &p, Voxel: chunk.ActiveVoxels[i]}
+			point := types.AbsolutePoint{Chunk: p, Voxel: chunk.ActiveVoxels[i]}
 			if err := engine.voxelPhysics(chunk, &point); err != nil {
 				return errors.Wrap(err, "voxel physics of active voxels")
 			}
 		}
 
 		for i := 0; i < C.PASSIVE_VITALITY; i++ {
-			point := types.AbsolutePoint{Chunk: &p, Voxel: &vitalizedVoxels[i]}
+			point := types.AbsolutePoint{Chunk: p, Voxel: &vitalizedVoxels[i]}
 			if err := engine.voxelPhysics(chunk, &point); err != nil {
 				return errors.Wrap(err, "voxel physics of random voxels")
 			}
@@ -114,8 +114,8 @@ func (engine *Engine) Tick() error {
 
 	// save chunks
 	for cp, chunk := range activeChunks {
-		p := types.Point{X: cp.X, Y: cp.Y, Z: cp.Z}
-		if err := engine.World.SetChunk(&p, chunk); err != nil {
+		p := newPoint(cp.X, cp.Y, cp.Z)
+		if err := engine.World.SetChunk(p, chunk); err != nil {
 			return err
 		}
 	}

@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"github.com/felzix/huyilla/constants"
 	"github.com/felzix/huyilla/types"
 	"io"
 	"io/ioutil"
@@ -124,7 +125,36 @@ func TestWeb(t *testing.T) {
 				g.Assert(player.Token).Equal("")
 				g.Assert(player.Spawn).Equal((*types.AbsolutePoint)(nil))
 			})
+		})
 
+		g.Describe("get chunk", func() {
+			g.It("in range", func() {
+				res := requesty("GET", fmt.Sprintf("/world/chunk/%d/%d/%d", 0, 0, constants.ACTIVE_CHUNK_RADIUS), nil, engine, map[string]string{
+					"contentType": "application/protobuf",
+					"token": token,
+				})
+
+				g.Assert(res.Code).Equal(http.StatusOK)
+				body, err := ioutil.ReadAll(res.Body)
+				g.Assert(err).Equal(nil)
+				var chunk types.Chunk
+				if err := chunk.Unmarshal(body); err != nil {
+					t.Fatal(err)
+				}
+				g.Assert(len(chunk.Voxels)).Equal(constants.CHUNK_LENGTH)
+			})
+
+			g.It("out of range", func() {
+				res := requesty("GET", fmt.Sprintf("/world/chunk/%d/%d/%d", 0, constants.ACTIVE_CHUNK_RADIUS + 1, 0), nil, engine, map[string]string{
+					"contentType": "application/protobuf",
+					"token": token,
+				})
+
+				g.Assert(res.Code).Equal(http.StatusForbidden)
+				body, err := ioutil.ReadAll(res.Body)
+				g.Assert(err).Equal(nil)
+				g.Assert(string(body)).Equal("can only load nearby chunks\n")
+			})
 		})
 	})
 }
