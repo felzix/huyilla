@@ -1,26 +1,49 @@
 package engine
 
 import (
+	uuid "github.com/satori/go.uuid"
 	"testing"
+	. "github.com/felzix/goblin"
 )
 
-func TestHuyilla_Players(t *testing.T) {
-	h := &Engine{}
-	h.Init("/tmp/huyilla")
-	defer h.World.WipeDatabase()
+func Test(t *testing.T) {
+	g := Goblin(t)
+	g.Describe("Content Test", func() {
+		NAME := "felzix"
+		PASS := "murakami"
+		var h *Engine
 
-	NAME := "felzix"
-	PASS := "murakami"
+		g.BeforeEach(func() {
+			unique, err := uuid.NewV4()
+			if err != nil {
+				t.Fatal(err)
+			}
 
-	h.SignUp(NAME, PASS)
-	h.LogIn(NAME, PASS)
+			h = &Engine{}
+			if err := h.Init("/tmp/savedir-huyilla-" + unique.String()); err != nil {
+				t.Fatal(err)
+			}
+		})
 
-	player, err := h.World.Player(NAME)
-	if err != nil {
-		t.Fatalf("Error: %v", err)
-	}
+		g.AfterEach(func() {
+			if h == nil || h.World == nil {
+				return
+			}
+			if err := h.World.WipeDatabase(); err != nil {
+				t.Fatal(err)
+			}
+		})
 
-	if player.Name != "felzix" {
-		t.Errorf(`Player name was "%v" instead of "felzix"`, player.Name)
-	}
+		g.It("loads human type", func() {
+			err := h.SignUp(NAME, PASS)
+			g.Assert(err).IsNil()
+			_, err = h.LogIn(NAME, PASS)
+			g.Assert(err).IsNil()
+
+			player, err := h.World.Player(NAME)
+			g.Assert(err).IsNil()
+			g.Assert(player).IsNotNil()
+			g.Assert(player.Name).Equal(NAME)
+		})
+	})
 }

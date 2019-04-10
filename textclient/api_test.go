@@ -46,7 +46,7 @@ func TestAPI(t *testing.T) {
 		g.Describe("ping", func() {
 			g.It("ping returns pong", func() {
 				response, err := api.Ping()
-				g.Assert(err).Equal(nil)
+				g.Assert(err).IsNil()
 				g.Assert(response).Equal("pong")
 			})
 		})
@@ -54,17 +54,17 @@ func TestAPI(t *testing.T) {
 		g.Describe("signup flow", func() {
 			g.It("checks if user already exists", func() {
 				exists, err := api.UserExists()
-				g.Assert(err).Equal(nil)
+				g.Assert(err).IsNil()
 				g.Assert(exists).Equal(false)
 			})
 
 			g.It("signs up", func() {
 				err := api.Signup()
-				g.Assert(err).Equal(nil)
+				g.Assert(err).IsNil()
 
 				g.Poll(5, 200, func() bool {
 					player, err := engine.World.Player(api.Username)
-					g.Assert(err).Equal(nil)
+					g.Assert(err).IsNil()
 
 					if player == nil {
 						return false
@@ -74,8 +74,8 @@ func TestAPI(t *testing.T) {
 					g.Assert(player.Name).Equal(api.Username)
 
 					entity, err := engine.World.Entity(player.EntityId)
-					g.Assert(err).Equal(nil)
-					g.Assert(entity).NotEqual(nil)
+					g.Assert(err).IsNil()
+					g.Assert(entity).IsNotNil()
 
 					return true
 				})
@@ -83,17 +83,17 @@ func TestAPI(t *testing.T) {
 
 			g.It("checks if user now exists", func() {
 				exists, err := api.UserExists()
-				g.Assert(err).Equal(nil)
+				g.Assert(err).IsNil()
 				g.Assert(exists).Equal(true)
 			})
 
 			g.It("logs in", func() {
 				err := api.Login()
-				g.Assert(err).Equal(nil)
+				g.Assert(err).IsNil()
 
 				g.Poll(5, 200, func() bool {
 					player, err := engine.World.Player(api.Username)
-					g.Assert(err).Equal(nil)
+					g.Assert(err).IsNil()
 
 					if player == nil {
 						return false
@@ -108,7 +108,7 @@ func TestAPI(t *testing.T) {
 
 			g.It("logs out", func() {
 				err := api.Logout()
-				g.Assert(err).Equal(nil)
+				g.Assert(err).IsNil()
 
 				var player *types.Player
 				g.Poll(5, 200, func() bool {
@@ -123,11 +123,11 @@ func TestAPI(t *testing.T) {
 
 				// Can log back in
 				err = api.Login()
-				g.Assert(err).Equal(nil)
+				g.Assert(err).IsNil()
 
 				g.Poll(5, 200, func() bool {
 					player, err = engine.World.Player(api.Username)
-					g.Assert(err).Equal(nil)
+					g.Assert(err).IsNil()
 
 					if player == nil {
 						return false
@@ -144,8 +144,8 @@ func TestAPI(t *testing.T) {
 		g.Describe("world getting", func() {
 			g.It("gets player", func() {
 				player, err := api.GetPlayer(api.Username)
-				g.Assert(err).Equal(nil)
-				g.Assert(player).NotEqual(nil)
+				g.Assert(err).IsNil()
+				g.Assert(player).IsNotNil()
 				g.Assert(player.Name).Equal(api.Username)
 				g.Assert(player.EntityId).NotEqual(0)
 				g.Assert(player.Password).Equal([]byte(nil))              // don't transmit password
@@ -154,13 +154,13 @@ func TestAPI(t *testing.T) {
 
 			g.It("gets chunk", func() {
 				chunk, err := api.GetChunk(engine2.NewPoint(0, 0, constants.ACTIVE_CHUNK_RADIUS))
-				g.Assert(err).Equal(nil)
+				g.Assert(err).IsNil()
 				g.Assert(len(chunk.Voxels)).Equal(constants.CHUNK_LENGTH)
 			})
 
 			g.It("cannot get chunk out of range", func() {
 				_, err := api.GetChunk(engine2.NewPoint(0, 0, constants.ACTIVE_CHUNK_RADIUS+1))
-				g.Assert(err).NotEqual(nil)
+				g.Assert(err).IsNotNil()
 				g.Assert(err.Error()).Equal("GetChunk failure: Expected status 200 but got 403. can only load nearby chunks\n")
 			})
 		})

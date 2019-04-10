@@ -50,7 +50,7 @@ func TestWeb(t *testing.T) {
 
 				g.Assert(res.Code).Equal(http.StatusOK)
 				body, err := ioutil.ReadAll(res.Body)
-				g.Assert(err).Equal(nil)
+				g.Assert(err).IsNil()
 				g.Assert(body).Equal([]byte("pong"))
 			})
 		})
@@ -62,13 +62,13 @@ func TestWeb(t *testing.T) {
 				})
 
 				body, err := ioutil.ReadAll(res.Body)
-				g.Assert(err).Equal(nil)
+				g.Assert(err).IsNil()
 				g.Assert(body).Equal([]byte("Signup successful!"))
 				g.Assert(res.Code).Equal(http.StatusOK)
 
 				player, err := engine.World.Player(NAME)
-				g.Assert(err).Equal(nil)
-				g.Assert(player).NotEqual(nil)
+				g.Assert(err).IsNil()
+				g.Assert(player).IsNotNil()
 				g.Assert(len(player.Token)).Equal(0)
 				g.Assert(player.Name).Equal(NAME)
 			})
@@ -79,7 +79,7 @@ func TestWeb(t *testing.T) {
 				})
 
 				body, err := ioutil.ReadAll(res.Body)
-				g.Assert(err).Equal(nil)
+				g.Assert(err).IsNil()
 				g.Assert(len(body) > 100).IsTrue(fmt.Sprintf(`Body was too short: "%s"`, body))
 				g.Assert(body[0]).Equal(byte('e'))
 				g.Assert(res.Code).Equal(http.StatusOK)
@@ -87,8 +87,8 @@ func TestWeb(t *testing.T) {
 				token = string(body)
 
 				player, err := engine.World.Player(NAME)
-				g.Assert(err).Equal(nil)
-				g.Assert(player).NotEqual(nil)
+				g.Assert(err).IsNil()
+				g.Assert(player).IsNotNil()
 				g.Assert(len(player.Token) > 0).IsTrue("Player token is not set")
 				g.Assert(player.Name).Equal(NAME)
 			})
@@ -101,12 +101,12 @@ func TestWeb(t *testing.T) {
 
 				g.Assert(res.Code).Equal(http.StatusOK)
 				body, err := ioutil.ReadAll(res.Body)
-				g.Assert(err).Equal(nil)
+				g.Assert(err).IsNil()
 				g.Assert(body).Equal([]byte("Logout successful!"))
 
 				player, err := engine.World.Player(NAME)
-				g.Assert(err).Equal(nil)
-				g.Assert(player).NotEqual(nil)
+				g.Assert(err).IsNil()
+				g.Assert(player).IsNotNil()
 				g.Assert(len(player.Token)).Equal(0)
 			})
 		})
@@ -120,7 +120,7 @@ func TestWeb(t *testing.T) {
 
 				g.Assert(res.Code).Equal(http.StatusOK)
 				body, err := ioutil.ReadAll(res.Body)
-				g.Assert(err).Equal(nil)
+				g.Assert(err).IsNil()
 				var player types.Player
 				if err := player.Unmarshal(body); err != nil {
 					t.Fatal(err)
@@ -142,7 +142,7 @@ func TestWeb(t *testing.T) {
 
 				g.Assert(res.Code).Equal(http.StatusOK)
 				body, err := ioutil.ReadAll(res.Body)
-				g.Assert(err).Equal(nil)
+				g.Assert(err).IsNil()
 				var chunk types.Chunk
 				if err := chunk.Unmarshal(body); err != nil {
 					t.Fatal(err)
@@ -158,7 +158,7 @@ func TestWeb(t *testing.T) {
 
 				g.Assert(res.Code).Equal(http.StatusForbidden)
 				body, err := ioutil.ReadAll(res.Body)
-				g.Assert(err).Equal(nil)
+				g.Assert(err).IsNil()
 				g.Assert(string(body)).Equal("can only load nearby chunks\n")
 			})
 		})

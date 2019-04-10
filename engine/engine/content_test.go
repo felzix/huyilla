@@ -1,17 +1,40 @@
 package engine
 
 import (
+	. "github.com/felzix/goblin"
+	uuid "github.com/satori/go.uuid"
 	"testing"
 )
 
-func TestHuyilla_Content(t *testing.T) {
-	h := &Engine{}
-	h.Init("/tmp/huyilla")
-	defer h.World.WipeDatabase()
+func TestContent(t *testing.T) {
+	g := Goblin(t)
+	g.Describe("Content Test", func() {
+		var h *Engine
 
-	content := h.GetContent()
+		g.BeforeEach(func() {
+			unique, err := uuid.NewV4()
+			if err != nil {
+				t.Fatal(err)
+			}
 
-	if content.E[0].Name != "human" {
-		t.Errorf(`Expected first entity to be called "human" but it's "%v"`, content.E[0].Name)
-	}
+			h = &Engine{}
+			if err := h.Init("/tmp/savedir-huyilla-" + unique.String()); err != nil {
+				t.Fatal(err)
+			}
+		})
+
+		g.AfterEach(func() {
+			if h == nil || h.World == nil {
+				return
+			}
+			if err := h.World.WipeDatabase(); err != nil {
+				t.Fatal(err)
+			}
+		})
+
+		g.It("loads human type", func() {
+			content := h.GetContent()
+			g.Assert(content.E[0].Name).Equal("human")
+		})
+	})
 }

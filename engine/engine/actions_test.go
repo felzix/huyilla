@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"fmt"
 	. "github.com/felzix/goblin"
 	"github.com/felzix/huyilla/types"
 	uuid "github.com/satori/go.uuid"
@@ -50,9 +51,7 @@ func TestAction(t *testing.T) {
 			g.It("moves correctly", func() {
 				whereTo := NewAbsolutePoint(0, 0, 0, 2, 4, 8)
 
-				if len(h.Actions) != 0 {
-					t.Errorf(`Expected 0 action but found %d`, len(h.Actions))
-				}
+				g.Assert(len(h.Actions)).Equal(0)
 
 				h.RegisterAction(&types.Action{
 					PlayerName: NAME,
@@ -61,45 +60,29 @@ func TestAction(t *testing.T) {
 							WhereTo: whereTo,
 						}}})
 
-				if len(h.Actions) != 1 {
-					t.Errorf(`Expected 1 action but found %d`, len(h.Actions))
-				}
+				g.Assert(len(h.Actions)).Equal(1)
 
-				if err := h.Tick(); err != nil {
-					t.Fatal(err)
-				}
+				err := h.Tick()
+				g.Assert(err).IsNil()
 
-				if len(h.Actions) != 0 {
-					t.Errorf(`Expected 0 action but found %d`, len(h.Actions))
-				}
+				g.Assert(len(h.Actions)).Equal(0)
 
 				player, err := h.World.Player(NAME)
-				if err != nil {
-					t.Fatal("Error:", err)
-				} else if player == nil {
-					t.Fatal("The player doesn't exist")
-				}
-				if player.EntityId == 0 {
-					t.Fatal("The player doesn't have an entity id")
-				}
+				g.Assert(err).IsNil()
+				g.Assert(player).IsNotNil()
+				g.Assert(player.EntityId).NotEqual(0)
 
 				entity, err := h.World.Entity(player.EntityId)
-				if entity == nil {
-					t.Fatal("Entity should exist but doesn't")
-				} else if err != nil {
-					t.Fatal(err)
-				}
-
-				if !(absolutePointEquals(entity.Location, whereTo)) {
-					t.Errorf(`Player should be at "%s" but is at "%s"`,
+				g.Assert(err).IsNil()
+				g.Assert(entity).IsNotNil()
+				g.Assert(absolutePointEquals(entity.Location, whereTo)).IsTrue(fmt.Sprintf(
+					`Player should be at "%s" but is at "%s"`,
 						absolutePointToString(whereTo),
-						absolutePointToString(entity.Location))
-				}
+						absolutePointToString(entity.Location),
+				))
 
 				chunk, err := h.World.Chunk(entity.Location.Chunk)
-				if err != nil {
-					t.Fatal(err)
-				}
+				g.Assert(err).IsNil()
 
 				entityPresent := false
 				for _, e := range chunk.Entities {
@@ -107,9 +90,7 @@ func TestAction(t *testing.T) {
 						entityPresent = true
 					}
 				}
-				if !entityPresent {
-					t.Error("Entity is not actually present in the chunk")
-				}
+				g.Assert(entityPresent).IsTrue("Entity is not actually present in the chunk")
 			})
 		})
 	})

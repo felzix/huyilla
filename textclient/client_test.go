@@ -1,18 +1,25 @@
 package main
 
 import (
+	. "github.com/felzix/goblin"
 	"github.com/felzix/huyilla/content"
 	"testing"
 )
 
-func TestClient_voxelToRune(t *testing.T) {
-	content.PopulateContentNameMaps()
+func TestClient(t *testing.T) {
+	g := Goblin(t)
 
-	if runic := voxelToRune(uint64(0)); runic != ' ' {
-		t.Errorf(`Air voxel should have rune ' ' but has '%v'`, runic)
-	}
+	g.Describe("Client Test", func() {
+		g.Before(func() {
+			content.PopulateContentNameMaps()
+		})
 
-	if runic := voxelToRune(uint64(1)); runic != '.' {
-		t.Errorf(`Barren earth voxel should have rune ' ' but has '%v'`, runic)
-	}
+		g.It("air voxel", func() {
+			g.Assert(voxelToRune(uint64(0))).Equal(' ')
+		})
+
+		g.It("barren earth voxel", func() {
+			g.Assert(voxelToRune(uint64(1))).Equal('.')
+		})
+	})
 }

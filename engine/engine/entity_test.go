@@ -1,31 +1,50 @@
 package engine
 
 import (
+	. "github.com/felzix/goblin"
+	uuid "github.com/satori/go.uuid"
 	"testing"
 )
 
-func TestHuyilla_Entity(t *testing.T) {
-	h := &Engine{}
-	h.Init("/tmp/huyilla")
-	defer h.World.WipeDatabase()
+func TestEntity(t *testing.T) {
+	g := Goblin(t)
+	g.Describe("Content Test", func() {
+		var h *Engine
 
-	if err := h.SignUp("felzix", "PASS"); err != nil {
-		t.Fatal(err)
-	}
+		g.BeforeEach(func() {
+			unique, err := uuid.NewV4()
+			if err != nil {
+				t.Fatal(err)
+			}
 
-	player, err := h.World.Player("felzix")
-	if err != nil {
-		t.Fatal(err)
-	}
+			h = &Engine{}
+			if err := h.Init("/tmp/savedir-huyilla-" + unique.String()); err != nil {
+				t.Fatal(err)
+			}
+		})
 
-	entity, err := h.World.Entity(player.EntityId)
-	if entity == nil {
-		t.Fatalf("Entity %d should exist but doesn't", player.EntityId)
-	} else if err != nil {
-		t.Fatal(err)
-	}
+		g.AfterEach(func() {
+			if h == nil || h.World == nil {
+				return
+			}
+			if err := h.World.WipeDatabase(); err != nil {
+				t.Fatal(err)
+			}
+		})
 
-	if entity.Type != entity.Type {
-		t.Errorf(`GetPlayer and GetEntity returned different entities: "%v" != "%v"`, entity, entity)
-	}
+		g.It("loads human type", func() {
+			err := h.SignUp("felzix", "PASS")
+			g.Assert(err).IsNil()
+			_, err = h.LogIn("felzix", "PASS")
+			g.Assert(err).IsNil()
+
+			player, err := h.World.Player("felzix")
+			g.Assert(err).IsNil()
+			g.Assert(player).IsNotNil()
+
+			entity, err := h.World.Entity(player.EntityId)
+			g.Assert(err).IsNil()
+			g.Assert(entity).IsNotNil()
+		})
+	})
 }
