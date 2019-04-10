@@ -44,11 +44,11 @@ func (engine *Engine) LogIn(name, password string) (string, error) {
 		return "", errors.New("Incorrect password")
 	}
 
-	if token, err := makeToken(engine.Secret, name, time.Now().Add(time.Hour * 24).Unix()); err == nil {
+	if token, err := makeToken(engine.Secret, name, time.Now().Add(time.Hour*24).Unix()); err == nil {
 		originalToken := player.Token
 		player.Token = token
 		if len(originalToken) > 0 {
-			return token, nil  // player is already logged in; they just needed a new token
+			return token, nil // player is already logged in; they just needed a new token
 		}
 	} else {
 		return "", err

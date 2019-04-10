@@ -11,10 +11,10 @@ import (
 )
 
 type API struct {
-	Base string
+	Base     string
 	Username string
 	password []byte // made private for the meager security that offers
-	token [] byte // same
+	token    []byte // same
 }
 
 func NewAPI(base, username, password string) *API {
@@ -25,7 +25,7 @@ func (api *API) MakeAuth() ([]byte, error) {
 	return (&types.Auth{Name: api.Username, Password: api.password}).Marshal()
 }
 
-func (api *API) Request (method, url string, body io.Reader, headers map[string]string) (*http.Response, error) {
+func (api *API) Request(method, url string, body io.Reader, headers map[string]string) (*http.Response, error) {
 	fullUrl := api.Base + url
 	req, _ := http.NewRequest(method, fullUrl, body)
 
@@ -139,9 +139,9 @@ func (api *API) UserExists() (bool, error) {
 }
 
 func (api *API) GetPlayer(name string) (*types.Player, error) {
-	res, err := api.Request("GET", "/world/player/" + name, nil, map[string]string{
+	res, err := api.Request("GET", "/world/player/"+name, nil, map[string]string{
 		"Content-Type": "application/protobuf",
-		"token": string(api.token),
+		"token":        string(api.token),
 	})
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("GetPlayer failure: %v", err))
@@ -165,7 +165,7 @@ func (api *API) GetPlayer(name string) (*types.Player, error) {
 func (api *API) GetChunk(point *types.Point) (*types.Chunk, error) {
 	res, err := api.Request("GET", fmt.Sprintf("/world/chunk/%d/%d/%d", point.X, point.Y, point.Z), nil, map[string]string{
 		"Content-Type": "application/protobuf",
-		"token": string(api.token),
+		"token":        string(api.token),
 	})
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("GetChunk failure: %v", err))

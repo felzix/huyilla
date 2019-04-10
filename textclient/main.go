@@ -11,23 +11,23 @@ func main() {
 	initialized := false
 
 	defer func() {
-        if initialized {
-            client.Deinit() // resets terminal changes
-        }
+		if initialized {
+			client.Deinit() // resets terminal changes
+		}
 
 		if r := recover(); r == nil {
-            fmt.Println("Thanks for playing :)")
-            os.Exit(0)
-        } else {
-            _, _ = fmt.Fprintln(os.Stderr, r)
+			fmt.Println("Thanks for playing :)")
+			os.Exit(0)
+		} else {
+			_, _ = fmt.Fprintln(os.Stderr, r)
 			debug.PrintStack()
 			os.Exit(2)
 		}
 	}()
 
 	if err := client.Init(); err == nil {
-        initialized = true
-    } else {
+		initialized = true
+	} else {
 		_, _ = fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(1)
 	}

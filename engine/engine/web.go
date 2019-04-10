@@ -149,7 +149,7 @@ func playerHandler(engine *Engine) http.HandlerFunc {
 
 		sentPlayer := types.Player{
 			EntityId: player.EntityId,
-			Name: player.Name,
+			Name:     player.Name,
 		}
 
 		if blob, err := sentPlayer.Marshal(); err == nil {

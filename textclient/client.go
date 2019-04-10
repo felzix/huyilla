@@ -18,7 +18,7 @@ type Client struct {
 	world    *WorldCache
 	player   *types.PlayerDetails
 	username string
-	api *API
+	api      *API
 
 	screen *react.Screen
 

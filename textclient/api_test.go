@@ -87,7 +87,6 @@ func TestAPI(t *testing.T) {
 				g.Assert(exists).Equal(true)
 			})
 
-
 			g.It("logs in", func() {
 				err := api.Login()
 				g.Assert(err).Equal(nil)
@@ -149,7 +148,7 @@ func TestAPI(t *testing.T) {
 				g.Assert(player).NotEqual(nil)
 				g.Assert(player.Name).Equal(api.Username)
 				g.Assert(player.EntityId).NotEqual(0)
-				g.Assert(player.Password).Equal([]byte(nil)) // don't transmit password
+				g.Assert(player.Password).Equal([]byte(nil))              // don't transmit password
 				g.Assert(player.Spawn).Equal((*types.AbsolutePoint)(nil)) // don't transmit spawn point
 			})
 
@@ -160,7 +159,7 @@ func TestAPI(t *testing.T) {
 			})
 
 			g.It("cannot get chunk out of range", func() {
-				_, err := api.GetChunk(engine2.NewPoint(0, 0, constants.ACTIVE_CHUNK_RADIUS + 1))
+				_, err := api.GetChunk(engine2.NewPoint(0, 0, constants.ACTIVE_CHUNK_RADIUS+1))
 				g.Assert(err).NotEqual(nil)
 				g.Assert(err.Error()).Equal("GetChunk failure: Expected status 200 but got 403. can only load nearby chunks\n")
 			})

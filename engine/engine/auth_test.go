@@ -100,7 +100,6 @@ func TestHuyilla_LoginNegative(t *testing.T) {
 	}
 }
 
-
 func TestHuyilla_Logout(t *testing.T) {
 	h := &Engine{}
 	h.Init("/tmp/huyilla")

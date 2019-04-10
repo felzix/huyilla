@@ -18,6 +18,9 @@ rundir:
 
 proto: types/types.pb.go
 
+fmt:
+	go fmt $(PKG)/...
+
 test: proto
 	go test -gcflags=-l $(PKG)/...
 

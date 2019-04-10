@@ -96,7 +96,7 @@ func TestWeb(t *testing.T) {
 			g.It("Logs out", func() {
 				res := requesty("POST", "/auth/logout", nil, engine, map[string]string{
 					"contentType": "application/protobuf",
-					"token": token,
+					"token":       token,
 				})
 
 				g.Assert(res.Code).Equal(http.StatusOK)
@@ -115,7 +115,7 @@ func TestWeb(t *testing.T) {
 			g.It("Gets player info", func() {
 				res := requesty("GET", "/world/player/"+NAME, nil, engine, map[string]string{
 					"contentType": "application/protobuf",
-					"token": token,
+					"token":       token,
 				})
 
 				g.Assert(res.Code).Equal(http.StatusOK)
@@ -137,7 +137,7 @@ func TestWeb(t *testing.T) {
 			g.It("in range", func() {
 				res := requesty("GET", fmt.Sprintf("/world/chunk/%d/%d/%d", 0, 0, constants.ACTIVE_CHUNK_RADIUS), nil, engine, map[string]string{
 					"contentType": "application/protobuf",
-					"token": token,
+					"token":       token,
 				})
 
 				g.Assert(res.Code).Equal(http.StatusOK)
@@ -151,9 +151,9 @@ func TestWeb(t *testing.T) {
 			})
 
 			g.It("out of range", func() {
-				res := requesty("GET", fmt.Sprintf("/world/chunk/%d/%d/%d", 0, constants.ACTIVE_CHUNK_RADIUS + 1, 0), nil, engine, map[string]string{
+				res := requesty("GET", fmt.Sprintf("/world/chunk/%d/%d/%d", 0, constants.ACTIVE_CHUNK_RADIUS+1, 0), nil, engine, map[string]string{
 					"contentType": "application/protobuf",
-					"token": token,
+					"token":       token,
 				})
 
 				g.Assert(res.Code).Equal(http.StatusForbidden)
@@ -165,7 +165,7 @@ func TestWeb(t *testing.T) {
 	})
 }
 
-func requesty (method, url string, body io.Reader, engine *Engine, headers map[string]string) *httptest.ResponseRecorder {
+func requesty(method, url string, body io.Reader, engine *Engine, headers map[string]string) *httptest.ResponseRecorder {
 	req, _ := http.NewRequest(method, url, body)
 
 	for key, value := range headers {
