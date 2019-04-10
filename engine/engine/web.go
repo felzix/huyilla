@@ -115,13 +115,10 @@ func logoutHandler(engine *Engine) http.HandlerFunc {
 
 func userExistsHandler(engine *Engine) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		username, err := ioutil.ReadAll(r.Body)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+		vars := mux.Vars(r)
+		username := vars["name"]
 
-		if exists, err := engine.UserExists(string(username)); err == nil {
+		if exists, err := engine.UserExists(username); err == nil {
 			if _, err := fmt.Fprint(w, exists); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
@@ -228,7 +225,7 @@ func Router(engine *Engine) *mux.Router {
 	r.HandleFunc("/auth/signup", signupHandler(engine)).Methods("POST")
 	r.HandleFunc("/auth/login", loginHandler(engine)).Methods("POST")
 	r.HandleFunc("/auth/logout", logoutHandler(engine)).Methods("POST")
-	r.HandleFunc("/auth/exists", userExistsHandler(engine)).Methods("GET")
+	r.HandleFunc("/auth/exists/{name}", userExistsHandler(engine)).Methods("GET")
 
 	r.HandleFunc("/world/player/{name}", playerHandler(engine)).Methods("GET")
 	r.HandleFunc("/world/chunk/{x}/{y}/{z}", chunkHandler(engine)).Methods("GET")

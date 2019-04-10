@@ -117,7 +117,7 @@ func (api *API) Logout() error {
 }
 
 func (api *API) UserExists() (bool, error) {
-	res, err := api.Request("POST", "/auth/exists", bytes.NewReader([]byte(api.Username)), nil)
+	res, err := api.Request("GET", "/auth/exists/"+api.Username, nil, nil)
 	if err != nil {
 		return false, errors.New(fmt.Sprintf("UserExists failure: %v", err))
 	}

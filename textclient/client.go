@@ -183,28 +183,13 @@ func (client *Client) Auth() error {
 		return err
 	}
 
+	player, err := client.api.GetPlayer(client.username)
+	if err != nil {
+		return err
+	}
 
-	// res, err = http.Get(base + "/")
-	// err := signUp(client.username)
-	// if err != nil {
-	// 	if err.Error() != "rpc error: code = Unknown desc = You are already signed up." {
-	// 		return errors.Wrap(err, "Signup error")
-	// 	}
-	// }
-	//
-	// if player, err := logIn(); err == nil {
-	// 	client.player = player
-	// } else if err.Error() == "rpc error: code = Unknown desc = You are already logged in." {
-	// 	if addr, err := myAddress(); err != nil {
-	// 		return errors.Wrap(err, "MyAddress error")
-	// 	} else if player, err := getPlayer(addr); err != nil {
-	// 		return errors.Wrap(err, "GetPlayer error")
-	// 	} else {
-	// 		client.player = player
-	// 	}
-	// } else {
-	// 	return errors.Wrap(err, "Login error")
-	// }
+	client.player = &types.PlayerDetails{Player: player}
+
 	return nil
 }
 

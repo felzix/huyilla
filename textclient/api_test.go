@@ -52,6 +52,12 @@ func TestAPI(t *testing.T) {
 		})
 
 		g.Describe("signup flow", func() {
+			g.It("checks if user already exists", func() {
+				exists, err := api.UserExists()
+				g.Assert(err).Equal(nil)
+				g.Assert(exists).Equal(false)
+			})
+
 			g.It("signs up", func() {
 				err := api.Signup()
 				g.Assert(err).Equal(nil)
@@ -74,6 +80,13 @@ func TestAPI(t *testing.T) {
 					return true
 				})
 			})
+
+			g.It("checks if user now exists", func() {
+				exists, err := api.UserExists()
+				g.Assert(err).Equal(nil)
+				g.Assert(exists).Equal(true)
+			})
+
 
 			g.It("logs in", func() {
 				err := api.Login()
