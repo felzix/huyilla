@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/felzix/huyilla/types"
 	"github.com/pkg/errors"
+	"io"
 	"io/ioutil"
 	"net/http"
 )
@@ -13,6 +14,7 @@ type API struct {
 	Base string
 	Username string
 	password []byte // made private for the meager security that offers
+	token [] byte // same
 }
 
 func NewAPI(base, username, password string) *API {
@@ -23,8 +25,25 @@ func (api *API) MakeAuth() ([]byte, error) {
 	return (&types.Auth{Name: api.Username, Password: api.password}).Marshal()
 }
 
+func (api *API) Request (method, url string, body io.Reader, headers map[string]string) (*http.Response, error) {
+	fullUrl := api.Base + url
+	req, _ := http.NewRequest(method, fullUrl, body)
+
+	for key, value := range headers {
+		req.Header.Add(key, value)
+	}
+
+	client := &http.Client{}
+	res, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
 func (api *API) Ping() (string, error) {
-	res, err := http.Post(api.Base + "/ping", "application/protobuf", nil)
+	res, err := api.Request("GET", "/ping", nil, nil)
 	if err != nil {
 		return "", errors.New(fmt.Sprintf("Ping failure: %v", err))
 	}
@@ -44,7 +63,10 @@ func (api *API) Signup() error {
 	if err != nil {
 		return err
 	}
-	res, err := http.Post(api.Base + "/auth/signup", "application/protobuf", bytes.NewReader(auth))
+
+	res, err := api.Request("POST", "/auth/signup", bytes.NewReader(auth), map[string]string{
+		"Content-Type": "application/protobuf",
+	})
 	if err != nil {
 		return errors.New(fmt.Sprintf("Signup failure: %v", err))
 	}
@@ -59,28 +81,43 @@ func (api *API) Signup() error {
 	return nil
 }
 
-func (api *API) Login() ([]byte, error) {
+func (api *API) Login() error {
 	auth, err := api.MakeAuth()
 	if err != nil {
-		return nil, err
+		return err
 	}
-	res, err := http.Post(api.Base + "/auth/login", "application/protobuf", bytes.NewReader(auth))
+
+	res, err := api.Request("POST", "/auth/login", bytes.NewReader(auth), map[string]string{
+		"Content-Type": "application/protobuf",
+	})
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("Login failure: %v", err))
+		return errors.New(fmt.Sprintf("Login failure: %v", err))
 	}
 
 	token, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("Login failure: %v", err))
+		return errors.New(fmt.Sprintf("Login failure: %v", err))
 	} else if res.StatusCode != http.StatusOK {
-		return nil, errors.New(fmt.Sprintf(`Login failure: Expected status 200 but got %d. %s`, res.StatusCode, token))
+		return errors.New(fmt.Sprintf(`Login failure: Expected status 200 but got %d. %s`, res.StatusCode, token))
 	}
 
-	return token, nil
+	api.token = token
+	return nil
+}
+
+func (api *API) Logout() error {
+	if _, err := api.Request("POST", "/auth/logout", nil, map[string]string{
+		"token": string(api.token),
+	}); err != nil {
+		return errors.New(fmt.Sprintf("Logout failure: %v", err))
+	}
+
+	api.token = nil
+	return nil
 }
 
 func (api *API) UserExists() (bool, error) {
-	res, err := http.Post(api.Base + "/auth/exists", "application/protobuf", bytes.NewReader([]byte(api.Username)))
+	res, err := api.Request("POST", "/auth/exists", bytes.NewReader([]byte(api.Username)), nil)
 	if err != nil {
 		return false, errors.New(fmt.Sprintf("UserExists failure: %v", err))
 	}
@@ -102,7 +139,10 @@ func (api *API) UserExists() (bool, error) {
 }
 
 func (api *API) GetPlayer(name string) (*types.Player, error) {
-	res, err := http.Get(api.Base + "/player/" + name)
+	res, err := api.Request("GET", "/world/player/" + name, nil, map[string]string{
+		"Content-Type": "application/protobuf",
+		"token": string(api.token),
+	})
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("GetPlayer failure: %v", err))
 	}
@@ -120,4 +160,28 @@ func (api *API) GetPlayer(name string) (*types.Player, error) {
 	}
 
 	return &player, nil
+}
+
+func (api *API) GetChunk(point *types.Point) (*types.Chunk, error) {
+	res, err := api.Request("GET", fmt.Sprintf("/world/chunk/%d/%d/%d", point.X, point.Y, point.Z), nil, map[string]string{
+		"Content-Type": "application/protobuf",
+		"token": string(api.token),
+	})
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("GetChunk failure: %v", err))
+	}
+
+	blob, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("GetChunk failure: %v", err))
+	} else if res.StatusCode != http.StatusOK {
+		return nil, errors.New(fmt.Sprintf(`GetChunk failure: Expected status 200 but got %d. %s`, res.StatusCode, blob))
+	}
+
+	var chunk types.Chunk
+	if err := chunk.Unmarshal(blob); err != nil {
+		return nil, errors.New(fmt.Sprintf(`GetChunk failure: Malformed protobuf blob: %v`, err))
+	}
+
+	return &chunk, nil
 }

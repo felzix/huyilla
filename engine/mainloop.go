@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/felzix/huyilla/engine/engine"
 	"os"
 	"os/signal"
 	"syscall"
@@ -11,8 +12,10 @@ import (
 func main() {
 	fmt.Println("Starting engine...")
 
-	engine := &Engine{}
-	engine.Init()
+	huyilla := &engine.Engine{}
+	if err := huyilla.Init("/tmp/huyilla"); err != nil {
+
+	}
 
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
@@ -20,7 +23,8 @@ func main() {
 	fmt.Println("Engine started!")
 
 	var webServerError chan error
-	go engine.Serve(webServerError)
+	huyilla.Serve(webServerError)
+
 mainloop:
 	for {
 		select {
@@ -29,7 +33,7 @@ mainloop:
 		case err := <-webServerError:
 			fail(err)
 		case <-time.After(time.Millisecond * 500):
-			if err := engine.Tick(); err != nil {
+			if err := huyilla.Tick(); err != nil {
 				fail(err)
 			}
 		}

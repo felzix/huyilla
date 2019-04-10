@@ -1,10 +1,11 @@
-package main
+package engine
 
 import (
 	"fmt"
 	"github.com/felzix/huyilla/constants"
 	"github.com/felzix/huyilla/types"
 	"github.com/gorilla/mux"
+	"github.com/pkg/errors"
 	"io/ioutil"
 	"net/http"
 )
@@ -66,7 +67,7 @@ func loginHandler(engine *Engine) http.HandlerFunc {
 		}
 
 		if token, err := engine.LogIn(auth.Name, string(auth.Password)); err == nil {
-			if _, err := fmt.Fprint(w, token); err != nil {
+			if _, err := w.Write([]byte(token)); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 		} else {
@@ -77,8 +78,9 @@ func loginHandler(engine *Engine) http.HandlerFunc {
 
 func logoutHandler(engine *Engine) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		name, tokenId, _ := authenticate(engine, w, r)
-		if tokenId == "" {
+		name, tokenId, _, err := authenticate(engine, w, r)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
@@ -166,8 +168,9 @@ func playerHandler(engine *Engine) http.HandlerFunc {
 
 func chunkHandler(engine *Engine) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		name, tokenId, _ := authenticate(engine, w, r)
-		if tokenId == "" {
+		name, _, _, err := authenticate(engine, w, r)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
@@ -234,21 +237,27 @@ func Router(engine *Engine) *mux.Router {
 	return r
 }
 
+func (engine *Engine) Serve(errChan chan error) *http.Server {
+	r := Router(engine)
+	srv := &http.Server{Addr: ":8080", Handler: r}
 
-func (engine *Engine) Serve(errChan chan error) {
-	Router(engine)
-	errChan <- http.ListenAndServe(":8080", nil)
+	go func() {
+		// returns ErrServerClosed on graceful close
+
+		errChan <- srv.ListenAndServe()
+	}()
+
+	return srv
 }
 
-func authenticate(engine *Engine, w http.ResponseWriter, r *http.Request) (string, string, int64) {
+func authenticate(engine *Engine, w http.ResponseWriter, r *http.Request) (string, string, int64, error) {
 	token := r.Header.Get("token")
 	if token == "" {
-		http.Error(w, "must specify token", http.StatusForbidden)
+		return "", "", 0, errors.New("must specify token")
 	}
 	if name, tokenId, expiry, err := readToken(engine.Secret, token); err == nil {
-		return name, tokenId, expiry
+		return name, tokenId, expiry, nil
 	} else {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return "", "", 0
+		return "", "", 0, err
 	}
 }

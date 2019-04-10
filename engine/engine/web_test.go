@@ -1,16 +1,17 @@
-package main
+package engine
 
 import (
 	"bytes"
 	"fmt"
+	. "github.com/felzix/goblin"
 	"github.com/felzix/huyilla/constants"
 	"github.com/felzix/huyilla/types"
+	uuid "github.com/satori/go.uuid"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	. "github.com/felzix/goblin"
 )
 
 func TestWeb(t *testing.T) {
@@ -26,8 +27,13 @@ func TestWeb(t *testing.T) {
 		var token string
 
 		g.Before(func() {
+			unique, err := uuid.NewV4()
+			if err != nil {
+				t.Fatal(err)
+			}
+
 			engine = &Engine{}
-			if err := engine.Init(); err != nil {
+			if err := engine.Init("/tmp/savedir-huyilla-" + unique.String()); err != nil {
 				t.Fatal(err)
 			}
 		})

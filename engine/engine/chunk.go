@@ -1,4 +1,4 @@
-package main
+package engine
 
 import (
 	"fmt"
@@ -94,7 +94,7 @@ func (world *World) GenerateChunk(p *types.Point) (*types.Chunk, error) {
 			for z = 0; z < C.CHUNK_SIZE; z++ {
 				rand.Seed(seed) // so voxels can use randomness
 				index := (x * C.CHUNK_SIZE * C.CHUNK_SIZE) + (y * C.CHUNK_SIZE) + z
-				location := newAbsolutePoint(p.X, p.Y, p.Z, x, y, z)
+				location := NewAbsolutePoint(p.X, p.Y, p.Z, x, y, z)
 				chunk.Voxels[index] = genVoxel(location)
 			}
 		}

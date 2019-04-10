@@ -1,4 +1,4 @@
-package main
+package engine
 
 import (
 	"fmt"
@@ -9,19 +9,19 @@ import (
 	"strconv"
 )
 
-func newAbsolutePoint(cX, cY, cZ, vX, vY, vZ int64) *types.AbsolutePoint {
+func NewAbsolutePoint(cX, cY, cZ, vX, vY, vZ int64) *types.AbsolutePoint {
 	return &types.AbsolutePoint{
-		Chunk: newPoint(cX, cY, cZ),
-		Voxel: newPoint(vX, vY, vZ),
+		Chunk: NewPoint(cX, cY, cZ),
+		Voxel: NewPoint(vX, vY, vZ),
 	}
 }
 
-func newPoint(x, y, z int64) *types.Point {
+func NewPoint(x, y, z int64) *types.Point {
 	return &types.Point{X: x, Y: y, Z: z}
 }
 
 func clonePoint(p *types.Point) *types.Point {
-	return newPoint(p.X, p.Y, p.Z)
+	return NewPoint(p.X, p.Y, p.Z)
 }
 
 func pointEquals(p0, p1 *types.Point) bool {
@@ -30,11 +30,16 @@ func pointEquals(p0, p1 *types.Point) bool {
 		p0.Z == p1.Z
 }
 
+func absolutePointEquals(p0, p1 *types.AbsolutePoint) bool {
+	return pointEquals(p0.Chunk, p1.Chunk) &&
+		pointEquals(p0.Voxel, p1.Voxel)
+}
+
 func randomPoint() *types.Point {
 	x := rand.Int63n(C.CHUNK_SIZE)
 	y := rand.Int63n(C.CHUNK_SIZE)
 	z := rand.Int63n(C.CHUNK_SIZE)
-	return newPoint(x, y, z)
+	return NewPoint(x, y, z)
 }
 
 func distance(p0, p1 *types.Point) float64 {
@@ -100,7 +105,7 @@ func stringToPoint(x, y, z string) (*types.Point, error) {
 		return nil, err
 	}
 
-	return newPoint(X, Y, Z), nil
+	return NewPoint(X, Y, Z), nil
 }
 
 func absolutePointToString(p *types.AbsolutePoint) string {

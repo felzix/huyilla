@@ -1,4 +1,4 @@
-package main
+package engine
 
 import (
 	C "github.com/felzix/huyilla/constants"
@@ -8,7 +8,7 @@ import (
 
 func TestHuyilla_Chunk(t *testing.T) {
 	h := &Engine{}
-	h.Init()
+	h.Init("/tmp/huyilla")
 	defer h.World.WipeDatabase()
 
 	if _, err := h.World.Chunk(&types.Point{X: 0, Y: 0, Z: 0}); err != nil {

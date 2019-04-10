@@ -1,4 +1,4 @@
-package main
+package engine
 
 import (
 	. "github.com/felzix/goblin"
@@ -16,14 +16,14 @@ func TestSpace(t *testing.T) {
 		})
 
 		g.It("creates an absolute point", func() {
-			p := newAbsolutePoint(-1, 1, 2, 3, 4, 5)
+			p := NewAbsolutePoint(-1, 1, 2, 3, 4, 5)
 
 			g.Assert(pointEquals(p.Chunk, &types.Point{X: -1, Y: 1, Z: 2})).IsTrue()
 			g.Assert(pointEquals(p.Voxel, &types.Point{X: 3, Y: 4, Z: 5})).IsTrue()
 		})
 
 		g.It("creates a point", func() {
-			p := newPoint(-1, 1, 2)
+			p := NewPoint(-1, 1, 2)
 
 			g.Assert(pointEquals(p, &types.Point{X: -1, Y: 1, Z: 2})).IsTrue()
 		})
@@ -47,12 +47,12 @@ func TestSpace(t *testing.T) {
 		})
 
 		g.It("grid distance", func() {
-			g.Assert(gridDistance(newPoint(0, 0, 0), newPoint(0, 0, 1))).Equal(int64(1))
-			g.Assert(gridDistance(newPoint(0, 0, 0), newPoint(0, 1, 1))).Equal(int64(1))
-			g.Assert(gridDistance(newPoint(0, 0, 0), newPoint(1, 1, 1))).Equal(int64(1))
-			g.Assert(gridDistance(newPoint(0, 1, 0), newPoint(0, 2, 1))).Equal(int64(1))
-			g.Assert(gridDistance(newPoint(0, 0, 0), newPoint(0, 1, 2))).Equal(int64(2))
-			g.Assert(gridDistance(newPoint(-1, 0, 0), newPoint(4, 1, 1))).Equal(int64(5))
+			g.Assert(gridDistance(NewPoint(0, 0, 0), NewPoint(0, 0, 1))).Equal(int64(1))
+			g.Assert(gridDistance(NewPoint(0, 0, 0), NewPoint(0, 1, 1))).Equal(int64(1))
+			g.Assert(gridDistance(NewPoint(0, 0, 0), NewPoint(1, 1, 1))).Equal(int64(1))
+			g.Assert(gridDistance(NewPoint(0, 1, 0), NewPoint(0, 2, 1))).Equal(int64(1))
+			g.Assert(gridDistance(NewPoint(0, 0, 0), NewPoint(0, 1, 2))).Equal(int64(2))
+			g.Assert(gridDistance(NewPoint(-1, 0, 0), NewPoint(4, 1, 1))).Equal(int64(5))
 		})
 	})
 }

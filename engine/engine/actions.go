@@ -1,6 +1,7 @@
-package main
+package engine
 
 import (
+	"fmt"
 	"github.com/felzix/huyilla/types"
 	"github.com/pkg/errors"
 )
@@ -23,18 +24,20 @@ func (engine *Engine) move(action *types.Action) (bool, error) {
 	entity, err := engine.World.Entity(player.EntityId)
 	if err != nil {
 		return false, err
+	} else if entity == nil {
+		return false, errors.New(fmt.Sprintf(`Entity "%d" does not exist`, player.EntityId))
 	}
 
-	err = engine.World.RemoveEntityFromChunk(player.EntityId, entity.Location.Chunk)
-	if err != nil {
+	if err := engine.World.RemoveEntityFromChunk(player.EntityId, entity.Location.Chunk); err != nil {
 		return false, err
 	}
 
 	entity.Location = action.GetMove().WhereTo
-	engine.World.SetEntity(entity.Id, entity)
+	if err := engine.World.SetEntity(entity.Id, entity); err != nil {
+		return false, err
+	}
 
-	err = engine.World.AddEntityToChunk(entity)
-	if err != nil {
+	if err := engine.World.AddEntityToChunk(entity); err != nil {
 		return false, err
 	}
 

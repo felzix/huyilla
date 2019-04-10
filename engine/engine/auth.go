@@ -1,4 +1,4 @@
-package main
+package engine
 
 import (
 	"fmt"
@@ -22,7 +22,7 @@ func (engine *Engine) SignUp(name string, password string) error {
 	}
 
 	// Create new player
-	defaultLocation := newAbsolutePoint(0, 0, 0, 0, 0, 0)
+	defaultLocation := NewAbsolutePoint(0, 0, 0, 0, 0, 0)
 
 	entity, err := engine.World.CreateEntity(ENTITY["human"], name, defaultLocation)
 	if err != nil {

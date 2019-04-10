@@ -1,4 +1,4 @@
-package main
+package engine
 
 import (
 	"fmt"
@@ -14,12 +14,13 @@ type Engine struct {
 	Secret  []byte
 }
 
-func (engine *Engine) Init() error {
+func (engine *Engine) Init(saveDir string) error {
 	// So that recipes and terrain generator can reference content by name.
 	content.PopulateContentNameMaps()
 
 	engine.World = &World{Seed: C.SEED}
-	if err := engine.World.Init("/tmp/huyilla", 1024*1024); err != nil { // 1 MB
+
+	if err := engine.World.Init(saveDir, 1024*1024); err != nil { // 1 MB
 		return err
 	}
 
@@ -44,7 +45,7 @@ func (engine *Engine) Tick() error {
 		for x := loc.X - C.ACTIVE_CHUNK_RADIUS; x < 1+loc.X+C.ACTIVE_CHUNK_RADIUS; x++ {
 			for y := loc.Y - C.ACTIVE_CHUNK_RADIUS; y < 1+loc.Y+C.ACTIVE_CHUNK_RADIUS; y++ {
 				for z := loc.Z - C.ACTIVE_CHUNK_RADIUS; z < 1+loc.Z+C.ACTIVE_CHUNK_RADIUS; z++ {
-					point := newPoint(x, y, z)
+					point := NewPoint(x, y, z)
 					if chunk, err := engine.World.Chunk(point); err == nil {
 						activeChunks[*types.NewComparablePoint(point)] = chunk
 					} else {
@@ -61,7 +62,7 @@ func (engine *Engine) Tick() error {
 	}
 
 	for cp, chunk := range activeChunks {
-		p := newPoint(cp.X, cp.Y, cp.Z)
+		p := NewPoint(cp.X, cp.Y, cp.Z)
 		for i := 0; i < len(chunk.ActiveVoxels); i++ {
 			point := types.AbsolutePoint{Chunk: p, Voxel: chunk.ActiveVoxels[i]}
 			if err := engine.voxelPhysics(chunk, &point); err != nil {
@@ -114,7 +115,7 @@ func (engine *Engine) Tick() error {
 
 	// save chunks
 	for cp, chunk := range activeChunks {
-		p := newPoint(cp.X, cp.Y, cp.Z)
+		p := NewPoint(cp.X, cp.Y, cp.Z)
 		if err := engine.World.SetChunk(p, chunk); err != nil {
 			return err
 		}

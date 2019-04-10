@@ -18,7 +18,7 @@ type Client struct {
 	world    *WorldCache
 	player   *types.PlayerDetails
 	username string
-	authToken []byte
+	api *API
 
 	screen *react.Screen
 
@@ -167,11 +167,11 @@ func (client *Client) Quit(err error) {
 }
 
 func (client *Client) Auth() error {
-	api := NewAPI("http://localhost:8080", client.username, "murakami")
+	client.api = NewAPI("http://localhost:8080", client.username, "murakami")
 
-	if exists, err := api.UserExists(); err == nil {
+	if exists, err := client.api.UserExists(); err == nil {
 		if !exists {
-			if err := api.Signup(); err != nil {
+			if err := client.api.Signup(); err != nil {
 				return err
 			}
 		}
@@ -179,9 +179,7 @@ func (client *Client) Auth() error {
 		return err
 	}
 
-	if token, err := api.Login(); err == nil {
-		client.authToken = token
-	} else {
+	if err := client.api.Login(); err != nil {
 		return err
 	}
 

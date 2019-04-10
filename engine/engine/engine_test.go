@@ -1,4 +1,4 @@
-package main
+package engine
 
 import (
 	"testing"
@@ -6,7 +6,7 @@ import (
 
 func TestHuyilla_ActiveChunkRadius(t *testing.T) {
 	h := &Engine{}
-	h.Init()
+	h.Init("/tmp/huyilla")
 	defer h.World.WipeDatabase()
 
 	if err := h.SignUp("felzix", "PASS"); err != nil {

@@ -1,4 +1,4 @@
-package main
+package engine
 
 import (
 	"testing"
@@ -7,7 +7,7 @@ import (
 
 func TestHuyilla_SignUp(t *testing.T) {
 	h := &Engine{}
-	h.Init()
+	h.Init("/tmp/huyilla")
 	defer h.World.WipeDatabase()
 
 	if err := h.SignUp("felzix", "PASS"); err != nil {
@@ -35,7 +35,7 @@ func TestHuyilla_SignUp(t *testing.T) {
 
 func TestHuyilla_Login(t *testing.T) {
 	h := &Engine{}
-	h.Init()
+	h.Init("/tmp/huyilla")
 	defer h.World.WipeDatabase()
 
 	if err := h.SignUp("allomance", "PASS"); err != nil {
@@ -89,7 +89,7 @@ func TestHuyilla_Login(t *testing.T) {
 
 func TestHuyilla_LoginNegative(t *testing.T) {
 	h := &Engine{}
-	h.Init()
+	h.Init("/tmp/huyilla")
 	defer h.World.WipeDatabase()
 
 	_, err := h.LogIn("felzix", "PASS")
@@ -103,7 +103,7 @@ func TestHuyilla_LoginNegative(t *testing.T) {
 
 func TestHuyilla_Logout(t *testing.T) {
 	h := &Engine{}
-	h.Init()
+	h.Init("/tmp/huyilla")
 	defer h.World.WipeDatabase()
 
 	if err := h.SignUp("allomance", "PASS"); err != nil {
