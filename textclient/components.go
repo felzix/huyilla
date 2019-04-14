@@ -172,7 +172,7 @@ func Tiles() *react.ReactElement {
 			absPoint := r.Props["absPoint"].(*types.AbsolutePoint)
 
 			chunk := client.world.chunks[*types.NewComparablePoint(absPoint.Chunk)]
-			zLevel := int(absPoint.Voxel.Z)
+			zLevel := absPoint.Voxel.Z
 
 			width := C.CHUNK_SIZE
 			if width > maxWidth {
@@ -187,21 +187,39 @@ func Tiles() *react.ReactElement {
 				Region: react.NewRegion(0, 0, maxWidth, maxHeight),
 			}
 
-			for y := 0; y < height; y++ {
-				for x := 0; x < width; x++ {
-					if chunk == nil {
+			if chunk == nil {
+				for y := 0; y < height; y++ {
+					for x := 0; x < width; x++ {
 						result.Region.Cells[x][y] = react.Cell{
 							R:     ' ',
 							Style: tcell.StyleDefault.Background(tcell.ColorDarkGray),
 						}
-					} else {
-						index := (x * C.CHUNK_SIZE * C.CHUNK_SIZE) + (y * C.CHUNK_SIZE) + zLevel
+					}
+				}
+			} else {
+				for y := 0; y < height; y++ {
+					for x := 0; x < width; x++ {
+						index := (x * C.CHUNK_SIZE * C.CHUNK_SIZE) + (y * C.CHUNK_SIZE) + int(zLevel)
 						ch := voxelToRune(chunk.Voxels[index])
 						result.Region.Cells[x][y] = react.Cell{
 							R:     ch,
 							Style: tcell.StyleDefault,
 						}
 					}
+				}
+
+				for _, entity := range chunk.Entities {
+					x := entity.Location.Voxel.X
+					y := entity.Location.Voxel.Y
+					z := entity.Location.Voxel.Z
+
+					if z == zLevel {
+						result.Region.Cells[y][x] = react.Cell{
+							R: entityToRune(entity),
+							Style: tcell.StyleDefault,
+						}
+					}
+
 				}
 			}
 			return &result, nil
