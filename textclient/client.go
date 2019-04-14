@@ -392,40 +392,6 @@ func GameBoard() *react.ReactElement {
 		},
 	}
 }
-/*
-
-func HorizontalLayout() *ReactElement {
-	return &ReactElement{
-		Type: "HorizontalLayout",
-		DrawFn: func(r *ReactElement, maxWidth, maxHeight int) (*DrawResult, error) {
-			children := r.Props["children"].([]*Child)
-
-			result := DrawResult{
-				Elements: make([]Child, len(children)),
-			}
-
-			for i, child := range children {
-				if i >= maxHeight { // just stop printing
-					break
-				}
-
-				result.Elements[i] = Child{
-					Element: child.Element,
-					Key:     child.Key,
-					Props:   child.Props,
-					X:       0,
-					Y:       i,
-					Width:   maxWidth,
-					Height:  1,
-				}
-			}
-
-			return &result, nil
-		},
-	}
-}
-
-*/
 
 func Tiles() *react.ReactElement {
 	return &react.ReactElement{
