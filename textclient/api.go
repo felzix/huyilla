@@ -8,6 +8,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 )
 
 type API struct {
@@ -138,7 +139,7 @@ func (api *API) UserExists() (bool, error) {
 	}
 }
 
-func (api *API) GetPlayer(name string) (*types.Player, error) {
+func (api *API) GetPlayer(name string) (*types.Entity, error) {
 	res, err := api.Request("GET", "/world/player/"+name, nil, map[string]string{
 		"Content-Type": "application/protobuf",
 		"token":        string(api.token),
@@ -154,15 +155,36 @@ func (api *API) GetPlayer(name string) (*types.Player, error) {
 		return nil, errors.New(fmt.Sprintf(`GetPlayer failure: Expected status 200 but got %d. %s`, res.StatusCode, blob))
 	}
 
-	var player types.Player
-	if err := player.Unmarshal(blob); err != nil {
+	var entity types.Entity
+	if err := entity.Unmarshal(blob); err != nil {
 		return nil, errors.New(fmt.Sprintf(`GetPlayer failure: Malformed protobuf blob: %v`, err))
 	}
 
-	return &player, nil
+	return &entity, nil
 }
 
-func (api *API) GetChunk(point *types.Point) (*types.Chunk, error) {
+func (api *API) GetWorldAge() (uint64, error) {
+	res, err := api.Request("GET", "/world/age", nil, nil)
+	if err != nil {
+		return 0, errors.New(fmt.Sprintf("GetWorldAge failure: %v", err))
+	}
+
+	blob, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return 0, errors.New(fmt.Sprintf("GetWorldAge failure: %v", err))
+	} else if res.StatusCode != http.StatusOK {
+		return 0, errors.New(fmt.Sprintf(`GetWorldAge failure: Expected status 200 but got %d. %s`, res.StatusCode, blob))
+	}
+
+	age, err := strconv.ParseUint(string(blob), 10, 64)
+	if err != nil {
+		return 0, errors.New(fmt.Sprintf("GetWorldAge failure: %v", err))
+	}
+
+	return age, nil
+}
+
+func (api *API) GetChunk(point *types.Point) (*types.ChunkDetail, error) {
 	res, err := api.Request("GET", fmt.Sprintf("/world/chunk/%d/%d/%d", point.X, point.Y, point.Z), nil, map[string]string{
 		"Content-Type": "application/protobuf",
 		"token":        string(api.token),
@@ -178,7 +200,7 @@ func (api *API) GetChunk(point *types.Point) (*types.Chunk, error) {
 		return nil, errors.New(fmt.Sprintf(`GetChunk failure: Expected status 200 but got %d. %s`, res.StatusCode, blob))
 	}
 
-	var chunk types.Chunk
+	var chunk types.ChunkDetail
 	if err := chunk.Unmarshal(blob); err != nil {
 		return nil, errors.New(fmt.Sprintf(`GetChunk failure: Malformed protobuf blob: %v`, err))
 	}

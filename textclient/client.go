@@ -68,7 +68,9 @@ func (client *Client) Deinit() {
 }
 
 func (client *Client) Run() error {
-	go client.EventPoller()
+	go client.EventPoller() // gets user input
+	go client.EnginePoller() // gets world state from the engine
+
 loop:
 	for {
 		if err := client.Draw(); err != nil {
@@ -159,6 +161,49 @@ func (client *Client) EventPoller() {
 	}
 }
 
+func (client *Client) EnginePoller() {
+	for {
+		select {
+		case <- client.quitq:
+			return
+		case <- time.After(time.Millisecond * 1000): // poll engine only so often
+		default:
+		}
+
+		if client.api == nil || client.player == nil {
+			continue // user is still entering in their information
+		}
+
+		// ignores error because getting world age is eqiuvalent to querying the readiness of the server
+		age, _ := client.api.GetWorldAge()
+
+		client.world.age = age
+
+		if client.world.age == 0 {
+			continue // world is not loaded
+		}
+
+		if client.player.Entity == nil {
+			entity, err := client.api.GetPlayer(client.username)
+			if err != nil {
+				client.Quit(err)
+				return
+			}
+
+			client.player.Entity = entity
+		}
+
+		centerChunk := client.player.Entity.Location.Chunk
+		chunk, err := client.api.GetChunk(centerChunk)
+		if err != nil {
+			client.Quit(err)
+			return
+		}
+
+		client.SetChunk(centerChunk, chunk)
+	}
+}
+
 func (client *Client) Quit(err error) {
 	client.err = err
 	client.quitOnce.Do(func() {
@@ -183,12 +228,18 @@ func (client *Client) Auth() error {
 		return err
 	}
 
-	player, err := client.api.GetPlayer(client.username)
+	entity, err := client.api.GetPlayer(client.username)
 	if err != nil {
 		return err
 	}
 
-	client.player = &types.PlayerDetails{Player: player}
+	client.player = &types.PlayerDetails{
+		Player: &types.Player{
+			Name: client.username,
+			EntityId: entity.Id,
+		},
+		Entity: entity,
+	}
 
 	return nil
 }
@@ -270,35 +321,68 @@ func Intro() *react.ReactElement {
 	}
 }
 
-// TODO this should be polling the engine, once that's possible
 func GameBoard() *react.ReactElement {
 	return &react.ReactElement{
 		Type: "GameBoard",
 		DrawFn: func(r *react.ReactElement, maxWidth, maxHeight int) (*react.DrawResult, error) {
 			client := r.Props["client"].(*Client)
 
+			topbarHeight := 2
+			boardSize := C.CHUNK_SIZE
+			totalheight := topbarHeight + boardSize
+
 			var child *react.Child
 			if client.world.age == 0 {
 				child = react.NewChild(react.Label(), "loading", maxWidth, maxHeight, react.Properties{
 					"label": "Loading world from engine. Please wait.",
 				})
-			} else {
-				// TODO there is no client.player
-				child = react.NewChild(react.HorizontalLayout(), "", maxWidth, maxHeight, react.Properties{
-					"children": []*react.Child{
-						react.ManagedChild(react.Label(), "debug-bar", react.Properties{
-							"label": fmt.Sprintf("%d", client.world.age),
-						}),
-						react.ManagedChild(react.Label(), "blank", react.Properties{
-							"label": "",
-						}),
-						react.ManagedChild(Tiles(), "", react.Properties{
-							"client":   client,
-							"absPoint": &types.AbsolutePoint{},
-							// "absPoint": client.player.Entity.Location,
-						}),
-					},
+			} else if totalheight > maxHeight || boardSize > maxWidth {
+				child = react.NewChild(react.Label(), "screen-too-small", maxWidth, maxHeight, react.Properties{
+					"label": "Terminal screen too small",
 				})
+			} else {
+				container := &react.ReactElement{
+					Type: "gameboard-container",
+					Key:  "only",
+					DrawFn: func(element *react.ReactElement, maxWidth int, maxHeight int) (*react.DrawResult, error) {
+						return &react.DrawResult{
+							Elements: []react.Child{
+								{
+									Element: react.HorizontalLayout(),
+									Key: "",
+									Props: react.Properties{
+										"children": []*react.Child{
+											react.ManagedChild(react.Label(), "debug-bar", react.Properties{
+												"label": fmt.Sprintf("%d", client.world.age),
+											}),
+											react.ManagedChild(react.Label(), "blank", react.Properties{
+												"label": "",
+											}),
+										},
+									},
+									X: 0,
+									Y: 0,
+									Width: maxWidth,
+									Height: 2,
+								},
+								{
+									Element: Tiles(),
+									Key: "",
+									Props: react.Properties{
+										"client":   client,
+										"absPoint": client.player.Entity.Location,
+									},
+									X: 0,
+									Y: 2,
+									Width: boardSize,
+									Height: boardSize,
+								},
+							},
+						}, nil
+					},
+				}
+
+				child = react.NewChild(container, "gameboard", maxWidth, maxHeight, nil)
 			}
 
 			result := react.DrawResult{
@@ -308,6 +392,40 @@ func GameBoard() *react.ReactElement {
 		},
 	}
 }
+/*
+
+func HorizontalLayout() *ReactElement {
+	return &ReactElement{
+		Type: "HorizontalLayout",
+		DrawFn: func(r *ReactElement, maxWidth, maxHeight int) (*DrawResult, error) {
+			children := r.Props["children"].([]*Child)
+
+			result := DrawResult{
+				Elements: make([]Child, len(children)),
+			}
+
+			for i, child := range children {
+				if i >= maxHeight { // just stop printing
+					break
+				}
+
+				result.Elements[i] = Child{
+					Element: child.Element,
+					Key:     child.Key,
+					Props:   child.Props,
+					X:       0,
+					Y:       i,
+					Width:   maxWidth,
+					Height:  1,
+				}
+			}
+
+			return &result, nil
+		},
+	}
+}
+
+*/
 
 func Tiles() *react.ReactElement {
 	return &react.ReactElement{

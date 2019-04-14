@@ -28,6 +28,7 @@ func (engine *Engine) SignUp(name string, password string) error {
 	if err != nil {
 		return err
 	}
+	entity.PlayerName = name
 
 	return engine.World.CreatePlayer(name, hashedPassword, entity.Id, defaultLocation)
 }

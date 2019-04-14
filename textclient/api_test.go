@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	. "github.com/felzix/goblin"
 	"github.com/felzix/huyilla/constants"
 	engine2 "github.com/felzix/huyilla/engine/engine"
@@ -15,7 +16,9 @@ func TestAPI(t *testing.T) {
 	g := Goblin(t)
 
 	g.Describe("http api", func() {
-		api := NewAPI("http://localhost:8080", "arana", "murakami")
+		const PORT = 8085
+
+		api := NewAPI(fmt.Sprintf("http://localhost:%d", PORT), "arana", "murakami")
 
 		var engine *engine2.Engine
 		var webServerError chan error
@@ -31,7 +34,7 @@ func TestAPI(t *testing.T) {
 			if err := engine.Init("/tmp/savedir-huyilla-" + unique.String()); err != nil {
 				t.Fatal(err)
 			}
-			server = engine.Serve(webServerError)
+			server = engine.Serve(PORT, webServerError)
 		})
 
 		g.After(func() {
@@ -142,14 +145,18 @@ func TestAPI(t *testing.T) {
 		})
 
 		g.Describe("world getting", func() {
+			g.It("gets world age", func() {
+				age, err := api.GetWorldAge()
+				g.Assert(err).IsNil()
+				g.Assert(age).Equal(uint64(1))
+			})
+
 			g.It("gets player", func() {
 				player, err := api.GetPlayer(api.Username)
 				g.Assert(err).IsNil()
 				g.Assert(player).IsNotNil()
-				g.Assert(player.Name).Equal(api.Username)
-				g.Assert(player.EntityId).NotEqual(0)
-				g.Assert(player.Password).Equal([]byte(nil))              // don't transmit password
-				g.Assert(player.Spawn).Equal((*types.AbsolutePoint)(nil)) // don't transmit spawn point
+				g.Assert(player.PlayerName).Equal(api.Username)
+				g.Assert(player.Id).NotEqual(0)
 			})
 
 			g.It("gets chunk", func() {

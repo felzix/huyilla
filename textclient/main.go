@@ -34,6 +34,7 @@ func main() {
 
 	if err := client.Run(); err != nil {
 		client.Deinit() // resets terminal changes
+		initialized = false
 		_, _ = fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(1)
 	}

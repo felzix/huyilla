@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 )
 
 func pingHandler(_ *Engine) http.HandlerFunc {
@@ -78,7 +79,7 @@ func loginHandler(engine *Engine) http.HandlerFunc {
 
 func logoutHandler(engine *Engine) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		name, tokenId, _, err := authenticate(engine, w, r)
+		name, tokenId, _, err := engine.authenticate(w, r)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -147,12 +148,34 @@ func playerHandler(engine *Engine) http.HandlerFunc {
 			return
 		}
 
-		sentPlayer := types.Player{
-			EntityId: player.EntityId,
-			Name:     player.Name,
+		entity, err := engine.World.Entity(player.EntityId)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		} else if entity == nil {
+			http.Error(
+				w,
+				fmt.Sprintf("Player's entity %d does not exist", player.EntityId),
+				http.StatusInternalServerError)
+			return
 		}
 
-		if blob, err := sentPlayer.Marshal(); err == nil {
+		thisUser, _, _, err := engine.authenticate(w, r)
+		if err != nil && err.Error() == "must specify token" {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		var toSend *types.Entity
+		if thisUser == player.Name {
+			toSend = entity
+		} else {
+			toSend = &types.Entity{
+				Id: entity.Id,
+			}
+		}
+
+		if blob, err := toSend.Marshal(); err == nil {
 			w.Header().Set("Content-Type", "application/protobuf")
 			if _, err := w.Write(blob); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -165,7 +188,7 @@ func playerHandler(engine *Engine) http.HandlerFunc {
 
 func chunkHandler(engine *Engine) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		name, _, _, err := authenticate(engine, w, r)
+		name, _, _, err := engine.authenticate(w, r)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -207,7 +230,25 @@ func chunkHandler(engine *Engine) http.HandlerFunc {
 			return
 		}
 
-		if blob, err := chunk.Marshal(); err == nil {
+		entities := make([]*types.Entity, len(chunk.Entities))
+		for i := 0; i < len(chunk.Entities); i++ {
+			id := chunk.Entities[i]
+			entity, err := engine.World.Entity(id)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			entities[i] = entity
+		}
+
+		toSend := &types.ChunkDetail{
+			Voxels: chunk.Voxels,
+			Compound: chunk.Compound,
+			Entities: entities,
+			Items: chunk.Items,
+		}
+
+		if blob, err := toSend.Marshal(); err == nil {
 			w.Header().Set("Content-Type", "application/protobuf")
 			if _, err := w.Write(blob); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -218,6 +259,24 @@ func chunkHandler(engine *Engine) http.HandlerFunc {
 	}
 }
 
+
+func worldAgeHandler(engine *Engine) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		age, err := engine.World.Age()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		ticks := []byte(strconv.FormatUint(age.Ticks, 10))
+
+		if _, err := w.Write(ticks); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	}
+}
+
+
 func Router(engine *Engine) *mux.Router {
 	r := mux.NewRouter()
 	r.HandleFunc("/ping", pingHandler(engine)).Methods("GET")
@@ -227,6 +286,7 @@ func Router(engine *Engine) *mux.Router {
 	r.HandleFunc("/auth/logout", logoutHandler(engine)).Methods("POST")
 	r.HandleFunc("/auth/exists/{name}", userExistsHandler(engine)).Methods("GET")
 
+	r.HandleFunc("/world/age", worldAgeHandler(engine)).Methods("GET")
 	r.HandleFunc("/world/player/{name}", playerHandler(engine)).Methods("GET")
 	r.HandleFunc("/world/chunk/{x}/{y}/{z}", chunkHandler(engine)).Methods("GET")
 	// http.HandleFunc("/stats", statsHandler)
@@ -234,20 +294,20 @@ func Router(engine *Engine) *mux.Router {
 	return r
 }
 
-func (engine *Engine) Serve(errChan chan error) *http.Server {
+func (engine *Engine) Serve(port int, errChan chan error) *http.Server {
 	r := Router(engine)
-	srv := &http.Server{Addr: ":8080", Handler: r}
+	addr := fmt.Sprintf(":%d", port)
+	srv := &http.Server{Addr: addr, Handler: r}
 
 	go func() {
 		// returns ErrServerClosed on graceful close
-
 		errChan <- srv.ListenAndServe()
 	}()
 
 	return srv
 }
 
-func authenticate(engine *Engine, w http.ResponseWriter, r *http.Request) (string, string, int64, error) {
+func (engine *Engine) authenticate(w http.ResponseWriter, r *http.Request) (string, string, int64, error) {
 	token := r.Header.Get("token")
 	if token == "" {
 		return "", "", 0, errors.New("must specify token")

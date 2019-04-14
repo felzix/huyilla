@@ -111,6 +111,17 @@ func TestWeb(t *testing.T) {
 			})
 		})
 
+		g.Describe("get wold age", func() {
+			g.It("gets world age", func() {
+				res := requesty("GET", "/world/age", nil, engine, nil)
+
+				g.Assert(res.Code).Equal(http.StatusOK)
+				body, err := ioutil.ReadAll(res.Body)
+				g.Assert(err).IsNil()
+				g.Assert(body).Equal([]byte("1"))
+			})
+		})
+
 		g.Describe("get player", func() {
 			g.It("Gets player info", func() {
 				res := requesty("GET", "/world/player/"+NAME, nil, engine, map[string]string{
@@ -121,15 +132,12 @@ func TestWeb(t *testing.T) {
 				g.Assert(res.Code).Equal(http.StatusOK)
 				body, err := ioutil.ReadAll(res.Body)
 				g.Assert(err).IsNil()
-				var player types.Player
-				if err := player.Unmarshal(body); err != nil {
+				var entity types.Entity
+				if err := entity.Unmarshal(body); err != nil {
 					t.Fatal(err)
 				}
-				g.Assert(player.Name).Equal(NAME)
-				g.Assert(player.EntityId).NotEqual(0)
-				g.Assert(player.Password).Equal([]byte(nil))
-				g.Assert(player.Token).Equal("")
-				g.Assert(player.Spawn).Equal((*types.AbsolutePoint)(nil))
+				g.Assert(entity.PlayerName).Equal(NAME)
+				g.Assert(entity.Id).NotEqual(0)
 			})
 		})
 
