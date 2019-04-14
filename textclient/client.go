@@ -5,7 +5,6 @@ import (
 	"time"
 
 	react "github.com/felzix/go-curses-react"
-	C "github.com/felzix/huyilla/constants"
 	"github.com/felzix/huyilla/content"
 	"github.com/felzix/huyilla/types"
 	"github.com/gdamore/tcell"
