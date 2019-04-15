@@ -6,9 +6,12 @@ import (
 	"github.com/felzix/huyilla/content"
 	"github.com/felzix/huyilla/types"
 	"github.com/pkg/errors"
+	"sync"
 )
 
 type Engine struct {
+	sync.Mutex
+
 	World   *World
 	Actions []*types.Action // TODO locking
 	Secret  []byte
@@ -88,9 +91,12 @@ func (engine *Engine) Tick() error {
 		}
 	}
 
-	for i := 0; i < len(engine.Actions); i++ {
-		action := engine.Actions[i]
+	engine.Lock()
+	actions := engine.Actions
+	engine.Actions = make([]*types.Action, 0) // clear action queue so engine can unlock
+	engine.Unlock()
 
+	for _, action := range actions {
 		var fn func(*types.Action) (bool, error)
 
 		switch a := action.Action.(type) {
@@ -109,9 +115,6 @@ func (engine *Engine) Tick() error {
 			return errors.Wrap(err, "action failure")
 		}
 	}
-
-	// clear action queue
-	engine.Actions = make([]*types.Action, 0)
 
 	// save chunks
 	for cp, chunk := range activeChunks {

@@ -151,6 +151,14 @@ func GameBoard() *react.ReactElement {
 							},
 						}, nil
 					},
+					HandleKeyFn: func(element *react.ReactElement, e *tcell.EventKey) (bool, error) {
+						// TODO
+						switch e.Key() {
+						case 'w':
+							// up
+						}
+						return true, nil
+					},
 				}
 
 				child = react.NewChild(container, "gameboard", maxWidth, maxHeight, nil)

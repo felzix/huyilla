@@ -276,6 +276,29 @@ func worldAgeHandler(engine *Engine) http.HandlerFunc {
 	}
 }
 
+func actHandler(engine *Engine) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Body == nil {
+			http.Error(w, "Must supply body", http.StatusBadRequest)
+			return
+		}
+
+		blob, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		var action types.Action
+		if err := action.Unmarshal(blob); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		engine.RegisterAction(&action)
+	}
+}
+
 
 func Router(engine *Engine) *mux.Router {
 	r := mux.NewRouter()
@@ -289,6 +312,7 @@ func Router(engine *Engine) *mux.Router {
 	r.HandleFunc("/world/age", worldAgeHandler(engine)).Methods("GET")
 	r.HandleFunc("/world/player/{name}", playerHandler(engine)).Methods("GET")
 	r.HandleFunc("/world/chunk/{x}/{y}/{z}", chunkHandler(engine)).Methods("GET")
+	r.HandleFunc("/world/act", actHandler(engine)).Methods("POST")
 	// http.HandleFunc("/stats", statsHandler)
 
 	return r
