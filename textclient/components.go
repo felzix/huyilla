@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-
 	react "github.com/felzix/go-curses-react"
 	C "github.com/felzix/huyilla/constants"
 	"github.com/felzix/huyilla/types"
@@ -152,12 +151,29 @@ func GameBoard() *react.ReactElement {
 						}, nil
 					},
 					HandleKeyFn: func(element *react.ReactElement, e *tcell.EventKey) (bool, error) {
-						// TODO
-						switch e.Key() {
-						case 'w':
-							// up
+						var to *types.AbsolutePoint
+
+						switch e.Rune() {
+						case 'w': // move up
+							to = client.player.Entity.Location
+							to.Voxel.Y--
+						case 's': // move down
+							to = client.player.Entity.Location
+							to.Voxel.Y++
+						case 'a': // move left
+							to = client.player.Entity.Location
+							to.Voxel.X--
+						case 'd': // move right
+							to = client.player.Entity.Location
+							to.Voxel.X++
 						}
-						return true, nil
+
+						if to != nil {
+							err := client.api.IssueMoveAction(to)
+							return false, err
+						} else {
+							return true, nil
+						}
 					},
 				}
 
@@ -222,7 +238,7 @@ func Tiles() *react.ReactElement {
 					z := entity.Location.Voxel.Z
 
 					if z == zLevel {
-						result.Region.Cells[y][x] = react.Cell{
+						result.Region.Cells[x][y] = react.Cell{
 							R: entityToRune(entity),
 							Style: tcell.StyleDefault,
 						}

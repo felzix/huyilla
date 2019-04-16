@@ -101,7 +101,7 @@ func (engine *Engine) Tick() error {
 
 		switch a := action.Action.(type) {
 		case *types.Action_Move:
-			fn = engine.move
+			fn = engine.Move
 		default:
 			// only log error - if the action is broken then don't block the engine
 			return errors.New(fmt.Sprintf("Invalid action %v", a))

@@ -24,6 +24,10 @@ func clonePoint(p *types.Point) *types.Point {
 	return NewPoint(p.X, p.Y, p.Z)
 }
 
+func CloneAbsolutePoint(p *types.AbsolutePoint) *types.AbsolutePoint {
+	return NewAbsolutePoint(p.Chunk.X, p.Chunk.Y, p.Chunk.Z, p.Voxel.X, p.Voxel.Y, p.Voxel.Z)
+}
+
 func pointEquals(p0, p1 *types.Point) bool {
 	return p0.X == p1.X &&
 		p0.Y == p1.Y &&

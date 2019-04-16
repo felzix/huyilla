@@ -14,7 +14,7 @@ func (engine *Engine) RegisterAction(action *types.Action) {
 }
 
 // returns true if move succeeded; false otherwise
-func (engine *Engine) move(action *types.Action) (bool, error) {
+func (engine *Engine) Move(action *types.Action) (bool, error) {
 	player, err := engine.World.Player(action.PlayerName)
 	if err != nil {
 		return false, err

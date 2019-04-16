@@ -171,5 +171,24 @@ func TestAPI(t *testing.T) {
 				g.Assert(err.Error()).Equal("GetChunk failure: Expected status 200 but got 403. can only load nearby chunks\n")
 			})
 		})
+
+		g.Describe("action issuing", func() {
+			g.It("issues an action", func() {
+				player, err := api.GetPlayer(api.Username)
+				g.Assert(err).IsNil()
+
+				originalY := player.Location.Voxel.Y
+				player.Location.Voxel.Y++
+				err = api.IssueMoveAction(player.Location)
+				g.Assert(err).IsNil()
+
+				err = engine.Tick()
+				g.Assert(err).IsNil()
+
+				player, err = api.GetPlayer(api.Username)
+				g.Assert(err).IsNil()
+				g.Assert(player.Location.Voxel.Y).Equal(originalY + 1)
+			})
+		})
 	})
 }

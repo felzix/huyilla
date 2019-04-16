@@ -207,3 +207,24 @@ func (api *API) GetChunk(point *types.Point) (*types.ChunkDetail, error) {
 
 	return &chunk, nil
 }
+
+func (api *API) IssueAction(action *types.Action) error {
+	blob, err := action.Marshal()
+	if err != nil {
+		return errors.New(fmt.Sprintf("GetChunk failure: %v", err))
+	}
+
+	_, err = api.Request("POST", fmt.Sprintf("/world/act"), bytes.NewReader(blob), map[string]string{
+		"Content-Type": "application/protobuf",
+		"token":        string(api.token),
+	})
+	if err != nil {
+		return errors.New(fmt.Sprintf("GetChunk failure: %v", err))
+	}
+
+	return nil
+}
+
+func (api *API) IssueMoveAction(whereTo *types.AbsolutePoint) error {
+	return api.IssueAction(types.NewMove(api.Username, whereTo))
+}
