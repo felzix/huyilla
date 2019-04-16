@@ -48,7 +48,7 @@ func (engine *Engine) Tick() error {
 		for x := loc.X - C.ACTIVE_CHUNK_RADIUS; x < 1+loc.X+C.ACTIVE_CHUNK_RADIUS; x++ {
 			for y := loc.Y - C.ACTIVE_CHUNK_RADIUS; y < 1+loc.Y+C.ACTIVE_CHUNK_RADIUS; y++ {
 				for z := loc.Z - C.ACTIVE_CHUNK_RADIUS; z < 1+loc.Z+C.ACTIVE_CHUNK_RADIUS; z++ {
-					point := NewPoint(x, y, z)
+					point := types.NewPoint(x, y, z)
 					if chunk, err := engine.World.Chunk(point); err == nil {
 						activeChunks[*types.NewComparablePoint(point)] = chunk
 					} else {
@@ -61,11 +61,11 @@ func (engine *Engine) Tick() error {
 
 	vitalizedVoxels := make([]types.Point, C.PASSIVE_VITALITY)
 	for i := 0; i < C.PASSIVE_VITALITY; i++ {
-		vitalizedVoxels[i] = *randomPoint()
+		vitalizedVoxels[i] = *types.RandomPoint(C.CHUNK_SIZE)
 	}
 
 	for cp, chunk := range activeChunks {
-		p := NewPoint(cp.X, cp.Y, cp.Z)
+		p := types.NewPoint(cp.X, cp.Y, cp.Z)
 		for i := 0; i < len(chunk.ActiveVoxels); i++ {
 			point := types.AbsolutePoint{Chunk: p, Voxel: chunk.ActiveVoxels[i]}
 			if err := engine.voxelPhysics(chunk, &point); err != nil {
@@ -118,7 +118,7 @@ func (engine *Engine) Tick() error {
 
 	// save chunks
 	for cp, chunk := range activeChunks {
-		p := NewPoint(cp.X, cp.Y, cp.Z)
+		p := types.NewPoint(cp.X, cp.Y, cp.Z)
 		if err := engine.World.SetChunk(p, chunk); err != nil {
 			return err
 		}

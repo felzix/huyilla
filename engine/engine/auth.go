@@ -3,6 +3,7 @@ package engine
 import (
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/felzix/huyilla/types"
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -22,7 +23,7 @@ func (engine *Engine) SignUp(name string, password string) error {
 	}
 
 	// Create new player
-	defaultLocation := NewAbsolutePoint(0, 0, 0, 0, 0, 0)
+	defaultLocation := types.NewAbsolutePoint(0, 0, 0, 0, 0, 0)
 
 	entity, err := engine.World.CreateEntity(ENTITY["human"], name, defaultLocation)
 	if err != nil {

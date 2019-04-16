@@ -94,7 +94,7 @@ func (world *World) GenerateChunk(p *types.Point) (*types.Chunk, error) {
 			for z = 0; z < C.CHUNK_SIZE; z++ {
 				rand.Seed(seed) // so voxels can use randomness
 				index := (x * C.CHUNK_SIZE * C.CHUNK_SIZE) + (y * C.CHUNK_SIZE) + z
-				location := NewAbsolutePoint(p.X, p.Y, p.Z, x, y, z)
+				location := types.NewAbsolutePoint(p.X, p.Y, p.Z, x, y, z)
 				chunk.Voxels[index] = genVoxel(location)
 			}
 		}
@@ -117,10 +117,10 @@ func genVoxel(p *types.AbsolutePoint) uint64 {
 		return v["air"]
 	}
 
-	center := randomPoint()
+	center := types.RandomPoint(C.CHUNK_SIZE)
 	center.Z = 0
 
-	d := distance(p.Voxel, center)
+	d := types.Distance(p.Voxel, center)
 	if p.Voxel.Z == center.Z && d <= float64(3) {
 		return v["water"]
 	}

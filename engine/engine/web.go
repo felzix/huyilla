@@ -195,7 +195,7 @@ func chunkHandler(engine *Engine) http.HandlerFunc {
 		}
 
 		vars := mux.Vars(r)
-		chunkPoint, err := stringToPoint(vars["x"], vars["y"], vars["z"])
+		chunkPoint, err := types.StringToPoint(vars["x"], vars["y"], vars["z"])
 		if err != nil {
 			http.Error(w, "bad url; must be /world/chunk/{x}/{y}/{z}", http.StatusBadRequest)
 			return
@@ -216,7 +216,7 @@ func chunkHandler(engine *Engine) http.HandlerFunc {
 			return
 		}
 
-		if gridDistance(playerEntity.Location.Chunk, chunkPoint) > constants.ACTIVE_CHUNK_RADIUS {
+		if types.GridDistance(playerEntity.Location.Chunk, chunkPoint) > constants.ACTIVE_CHUNK_RADIUS {
 			http.Error(w, "can only load nearby chunks", http.StatusForbidden)
 			return
 		}
@@ -226,7 +226,7 @@ func chunkHandler(engine *Engine) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		} else if chunk == nil {
-			http.Error(w, fmt.Sprintf(`No such Chunk "%s"`, pointToString(chunkPoint)), http.StatusNotFound)
+			http.Error(w, fmt.Sprintf(`No such Chunk "%s"`, types.PointToString(chunkPoint)), http.StatusNotFound)
 			return
 		}
 

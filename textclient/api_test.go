@@ -160,13 +160,13 @@ func TestAPI(t *testing.T) {
 			})
 
 			g.It("gets chunk", func() {
-				chunk, err := api.GetChunk(engine2.NewPoint(0, 0, constants.ACTIVE_CHUNK_RADIUS))
+				chunk, err := api.GetChunk(types.NewPoint(0, 0, constants.ACTIVE_CHUNK_RADIUS))
 				g.Assert(err).IsNil()
 				g.Assert(len(chunk.Voxels)).Equal(constants.CHUNK_LENGTH)
 			})
 
 			g.It("cannot get chunk out of range", func() {
-				_, err := api.GetChunk(engine2.NewPoint(0, 0, constants.ACTIVE_CHUNK_RADIUS+1))
+				_, err := api.GetChunk(types.NewPoint(0, 0, constants.ACTIVE_CHUNK_RADIUS+1))
 				g.Assert(err).IsNotNil()
 				g.Assert(err.Error()).Equal("GetChunk failure: Expected status 200 but got 403. can only load nearby chunks\n")
 			})

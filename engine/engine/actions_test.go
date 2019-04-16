@@ -49,7 +49,7 @@ func TestAction(t *testing.T) {
 
 		g.Describe("queue actions and tick", func() {
 			g.It("moves correctly", func() {
-				whereTo := NewAbsolutePoint(0, 0, 0, 2, 4, 8)
+				whereTo := types.NewAbsolutePoint(0, 0, 0, 2, 4, 8)
 
 				g.Assert(len(h.Actions)).Equal(0)
 
@@ -75,10 +75,10 @@ func TestAction(t *testing.T) {
 				entity, err := h.World.Entity(player.EntityId)
 				g.Assert(err).IsNil()
 				g.Assert(entity).IsNotNil()
-				g.Assert(absolutePointEquals(entity.Location, whereTo)).IsTrue(fmt.Sprintf(
+				g.Assert(types.AbsolutePointEquals(entity.Location, whereTo)).IsTrue(fmt.Sprintf(
 					`Player should be at "%s" but is at "%s"`,
-						absolutePointToString(whereTo),
-						absolutePointToString(entity.Location),
+					types.AbsolutePointToString(whereTo),
+					types.AbsolutePointToString(entity.Location),
 				))
 
 				chunk, err := h.World.Chunk(entity.Location.Chunk)
