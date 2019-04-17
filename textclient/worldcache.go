@@ -21,7 +21,3 @@ func (client *Client) SetChunk(coords *types.Point, chunk *types.ChunkDetail) {
 
 	client.world.chunks[*types.NewComparablePoint(coords)] = chunk
 }
-
-func (world *WorldCache) SetChunk(client, chunk *types.Chunk) {
-
-}
