@@ -5,7 +5,7 @@ import (
 	"fmt"
 	. "github.com/felzix/goblin"
 	"github.com/felzix/huyilla/constants"
-	engine2 "github.com/felzix/huyilla/engine/engine"
+	"github.com/felzix/huyilla/engine/engine"
 	"github.com/felzix/huyilla/types"
 	uuid "github.com/satori/go.uuid"
 	"net/http"
@@ -20,7 +20,7 @@ func TestAPI(t *testing.T) {
 
 		api := NewAPI(fmt.Sprintf("http://localhost:%d", PORT), "arana", "murakami")
 
-		var engine *engine2.Engine
+		var huyilla *engine.Engine
 		var webServerError chan error
 		var server *http.Server
 
@@ -30,15 +30,15 @@ func TestAPI(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			engine = &engine2.Engine{}
-			if err := engine.Init("/tmp/savedir-huyilla-" + unique.String()); err != nil {
+			huyilla = &engine.Engine{}
+			if err := huyilla.Init("/tmp/savedir-huyilla-" + unique.String()); err != nil {
 				t.Fatal(err)
 			}
-			server = engine.Serve(PORT, webServerError)
+			server = huyilla.Serve(PORT, webServerError)
 		})
 
 		g.After(func() {
-			if err := engine.World.WipeDatabase(); err != nil {
+			if err := huyilla.World.WipeDatabase(); err != nil {
 				t.Fatal(err)
 			}
 			if err := server.Shutdown(context.TODO()); err != nil {
@@ -66,7 +66,7 @@ func TestAPI(t *testing.T) {
 				g.Assert(err).IsNil()
 
 				g.Poll(5, 200, func() bool {
-					player, err := engine.World.Player(api.Username)
+					player, err := huyilla.World.Player(api.Username)
 					g.Assert(err).IsNil()
 
 					if player == nil {
@@ -76,7 +76,7 @@ func TestAPI(t *testing.T) {
 					g.Assert(len(player.Token)).Equal(0)
 					g.Assert(player.Name).Equal(api.Username)
 
-					entity, err := engine.World.Entity(player.EntityId)
+					entity, err := huyilla.World.Entity(player.EntityId)
 					g.Assert(err).IsNil()
 					g.Assert(entity).IsNotNil()
 
@@ -95,7 +95,7 @@ func TestAPI(t *testing.T) {
 				g.Assert(err).IsNil()
 
 				g.Poll(5, 200, func() bool {
-					player, err := engine.World.Player(api.Username)
+					player, err := huyilla.World.Player(api.Username)
 					g.Assert(err).IsNil()
 
 					if player == nil {
@@ -115,7 +115,7 @@ func TestAPI(t *testing.T) {
 
 				var player *types.Player
 				g.Poll(5, 200, func() bool {
-					player, err = engine.World.Player(api.Username)
+					player, err = huyilla.World.Player(api.Username)
 
 					if player == nil || len(player.Token) != 0 {
 						return false
@@ -129,7 +129,7 @@ func TestAPI(t *testing.T) {
 				g.Assert(err).IsNil()
 
 				g.Poll(5, 200, func() bool {
-					player, err = engine.World.Player(api.Username)
+					player, err = huyilla.World.Player(api.Username)
 					g.Assert(err).IsNil()
 
 					if player == nil {
@@ -182,7 +182,7 @@ func TestAPI(t *testing.T) {
 				err = api.IssueMoveAction(player.Location)
 				g.Assert(err).IsNil()
 
-				err = engine.Tick()
+				err = huyilla.Tick()
 				g.Assert(err).IsNil()
 
 				player, err = api.GetPlayer(api.Username)
