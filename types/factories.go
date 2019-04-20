@@ -8,7 +8,7 @@ import (
 
 func NewChunk(tick, chunkLength uint64) *Chunk {
 	return &Chunk{
-		Tick: tick,
+		Tick:   tick,
 		Voxels: make([]uint64, chunkLength),
 	}
 }

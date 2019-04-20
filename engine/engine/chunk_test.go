@@ -1,11 +1,11 @@
 package engine
 
 import (
+	. "github.com/felzix/goblin"
 	C "github.com/felzix/huyilla/constants"
 	"github.com/felzix/huyilla/types"
 	uuid "github.com/satori/go.uuid"
 	"testing"
-	. "github.com/felzix/goblin"
 )
 
 func TestChunk(t *testing.T) {

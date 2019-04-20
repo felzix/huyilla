@@ -6,8 +6,8 @@ import (
 )
 
 type WorldCache struct {
-	age      uint64
-	chunks   map[types.ComparablePoint]*types.ChunkDetail
+	age    uint64
+	chunks map[types.ComparablePoint]*types.ChunkDetail
 }
 
 func (world *WorldCache) Init() {

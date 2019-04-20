@@ -242,11 +242,11 @@ func chunkHandler(engine *Engine) http.HandlerFunc {
 		}
 
 		toSend := &types.ChunkDetail{
-			Tick: chunk.Tick,
-			Voxels: chunk.Voxels,
+			Tick:     chunk.Tick,
+			Voxels:   chunk.Voxels,
 			Compound: chunk.Compound,
 			Entities: entities,
-			Items: chunk.Items,
+			Items:    chunk.Items,
 		}
 
 		if blob, err := toSend.Marshal(); err == nil {
@@ -259,7 +259,6 @@ func chunkHandler(engine *Engine) http.HandlerFunc {
 		}
 	}
 }
-
 
 func worldAgeHandler(engine *Engine) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -299,7 +298,6 @@ func actHandler(engine *Engine) http.HandlerFunc {
 		engine.RegisterAction(&action)
 	}
 }
-
 
 func Router(engine *Engine) *mux.Router {
 	r := mux.NewRouter()

@@ -8,7 +8,6 @@ import (
 	"github.com/gdamore/tcell"
 )
 
-
 const (
 	VIEWMODE_INTRO = iota
 	VIEWMODE_GAME
@@ -119,7 +118,7 @@ func GameBoard() *react.ReactElement {
 							Elements: []react.Child{
 								{
 									Element: react.HorizontalLayout(),
-									Key: "",
+									Key:     "",
 									Props: react.Properties{
 										"children": []*react.Child{
 											react.ManagedChild(react.Label(), "debug-bar", react.Properties{
@@ -130,21 +129,21 @@ func GameBoard() *react.ReactElement {
 											}),
 										},
 									},
-									X: 0,
-									Y: 0,
-									Width: maxWidth,
+									X:      0,
+									Y:      0,
+									Width:  maxWidth,
 									Height: 2,
 								},
 								{
 									Element: Tiles(),
-									Key: "",
+									Key:     "",
 									Props: react.Properties{
 										"client":   client,
 										"absPoint": client.player.Entity.Location,
 									},
-									X: 0,
-									Y: 2,
-									Width: boardSize,
+									X:      0,
+									Y:      2,
+									Width:  boardSize,
 									Height: boardSize,
 								},
 							},
@@ -239,7 +238,7 @@ func Tiles() *react.ReactElement {
 
 					if z == zLevel {
 						result.Region.Cells[x][y] = react.Cell{
-							R: entityToRune(entity),
+							R:     entityToRune(entity),
 							Style: tcell.StyleDefault,
 						}
 					}

@@ -18,9 +18,9 @@ type Client struct {
 	username string
 	api      *API
 
-	screen *react.Screen
+	screen         *react.Screen
 	viewDepthDelta int
-	displayRadius uint
+	displayRadius  uint
 
 	quitq    chan struct{}
 	quitOnce sync.Once
@@ -65,7 +65,7 @@ func (client *Client) Deinit() {
 }
 
 func (client *Client) Run() error {
-	go client.EventPoller() // gets user input
+	go client.EventPoller()  // gets user input
 	go client.EnginePoller() // gets world state from the engine
 
 loop:
@@ -161,9 +161,9 @@ func (client *Client) EventPoller() {
 func (client *Client) EnginePoller() {
 	for {
 		select {
-		case <- client.quitq:
+		case <-client.quitq:
 			return
-		case <- time.After(time.Millisecond * 1000): // poll engine only so often
+		case <-time.After(time.Millisecond * 1000): // poll engine only so often
 		default:
 		}
 
@@ -202,7 +202,7 @@ func (client *Client) EnginePoller() {
 }
 
 func (client *Client) displayDiameter() uint {
-	return client.displayRadius * 2 + 1 // 1 is the voxel w/ the player
+	return client.displayRadius*2 + 1 // 1 is the voxel w/ the player
 }
 
 func (client *Client) Quit(err error) {
@@ -236,7 +236,7 @@ func (client *Client) Auth() error {
 
 	client.player = &types.PlayerDetails{
 		Player: &types.Player{
-			Name: client.username,
+			Name:     client.username,
 			EntityId: entity.Id,
 		},
 		Entity: entity,

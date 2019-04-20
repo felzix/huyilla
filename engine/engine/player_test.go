@@ -1,9 +1,9 @@
 package engine
 
 import (
+	. "github.com/felzix/goblin"
 	uuid "github.com/satori/go.uuid"
 	"testing"
-	. "github.com/felzix/goblin"
 )
 
 func Test(t *testing.T) {
