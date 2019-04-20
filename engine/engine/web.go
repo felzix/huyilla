@@ -216,7 +216,7 @@ func chunkHandler(engine *Engine) http.HandlerFunc {
 			return
 		}
 
-		if types.GridDistance(playerEntity.Location.Chunk, chunkPoint) > constants.ACTIVE_CHUNK_RADIUS {
+		if playerEntity.Location.Chunk.GridDistance(chunkPoint) > constants.ACTIVE_CHUNK_RADIUS {
 			http.Error(w, "can only load nearby chunks", http.StatusForbidden)
 			return
 		}
@@ -226,7 +226,7 @@ func chunkHandler(engine *Engine) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		} else if chunk == nil {
-			http.Error(w, fmt.Sprintf(`No such Chunk "%s"`, types.PointToString(chunkPoint)), http.StatusNotFound)
+			http.Error(w, fmt.Sprintf(`No such Chunk "%s"`, chunkPoint.ToString()), http.StatusNotFound)
 			return
 		}
 

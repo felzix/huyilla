@@ -120,7 +120,7 @@ func genVoxel(p *types.AbsolutePoint) uint64 {
 	center := types.RandomPoint(C.CHUNK_SIZE)
 	center.Z = 0
 
-	d := types.Distance(p.Voxel, center)
+	d := p.Voxel.Distance(center)
 	if p.Voxel.Z == center.Z && d <= float64(3) {
 		return v["water"]
 	}

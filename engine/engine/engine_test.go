@@ -3,7 +3,6 @@ package engine
 import (
 	"fmt"
 	. "github.com/felzix/goblin"
-	"github.com/felzix/huyilla/types"
 	uuid "github.com/satori/go.uuid"
 	"testing"
 )
@@ -59,13 +58,14 @@ func TestEngine(t *testing.T) {
 			g.Assert(len(chunk.Entities)).Equal(1)
 
 			// active range in the positive direction
-			edge := types.ClonePoint(entity.Location.Chunk)
+			edge := entity.Location.Chunk.Clone()
 			edge.X += 3
 			chunk, err = h.World.Chunk(edge)
+			g.Assert(err).IsNil()
 			g.Assert(chunk).IsNotNil() // chunk within player's range should exist
 			g.Assert(len(chunk.Entities)).Equal(0)
 
-			beyond := types.ClonePoint(entity.Location.Chunk)
+			beyond := entity.Location.Chunk.Clone()
 			beyond.X += 4
 			chunk, err = h.World.OnlyGetChunk(beyond)
 
@@ -74,13 +74,13 @@ func TestEngine(t *testing.T) {
 			g.Assert(chunk).IsNil() // Chunk beyond player's range exists
 
 			// active range in the negative direction
-			edge = types.ClonePoint(entity.Location.Chunk)
+			edge = entity.Location.Chunk.Clone()
 			edge.X -= 3
 			chunk, err = h.World.Chunk(edge)
 			g.Assert(err).IsNil()
 			g.Assert(chunk).IsNotNil() // Chunk within player's range should exist
 
-			beyond = types.ClonePoint(entity.Location.Chunk)
+			beyond = entity.Location.Chunk.Clone()
 			beyond.X -= 4
 			chunk, err = h.World.OnlyGetChunk(beyond)
 			g.Assert(err).IsNil()

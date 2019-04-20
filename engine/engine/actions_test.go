@@ -75,10 +75,10 @@ func TestAction(t *testing.T) {
 				entity, err := h.World.Entity(player.EntityId)
 				g.Assert(err).IsNil()
 				g.Assert(entity).IsNotNil()
-				g.Assert(types.AbsolutePointEquals(entity.Location, whereTo)).IsTrue(fmt.Sprintf(
+				g.Assert(entity.Location.Equals(whereTo)).IsTrue(fmt.Sprintf(
 					`Player should be at "%s" but is at "%s"`,
-					types.AbsolutePointToString(whereTo),
-					types.AbsolutePointToString(entity.Location),
+					whereTo.ToString(),
+					entity.Location.ToString(),
 				))
 
 				chunk, err := h.World.Chunk(entity.Location.Chunk)

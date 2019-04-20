@@ -19,6 +19,8 @@ type Client struct {
 	api      *API
 
 	screen *react.Screen
+	viewDepthDelta int
+	displayRadius uint
 
 	quitq    chan struct{}
 	quitOnce sync.Once
@@ -28,6 +30,8 @@ type Client struct {
 }
 
 func (client *Client) Init() error {
+	client.displayRadius = 15
+
 	if screen, err := react.NewScreen(); err == nil {
 		client.screen = screen
 	} else {
@@ -195,6 +199,10 @@ func (client *Client) EnginePoller() {
 
 		client.SetChunk(centerChunk, chunk)
 	}
+}
+
+func (client *Client) displayDiameter() uint {
+	return client.displayRadius * 2 + 1 // 1 is the voxel w/ the player
 }
 
 func (client *Client) Quit(err error) {
