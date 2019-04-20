@@ -4,40 +4,6 @@ import (
 	"math"
 )
 
-/*
-
-   def find_new_coords(self, x_delta, y_delta, z_delta, chunk_size):
-       newcoords = self.copy()
-
-       def incr(point, dim, by):
-           original_value = getattr(point, dim)
-           new_value = original_value + by
-           setattr(point, dim, new_value)
-
-       def once(dim, delta):
-           # int modulo and division are a little weird w/ negatives
-           mod_fix = -1 if delta < 0 else +1
-
-           fixed_chunk_size = chunk_size * mod_fix
-
-           incr(newcoords.chunk_coords, dim, delta // fixed_chunk_size)
-           incr(newcoords.voxel_coords, dim, delta % fixed_chunk_size)
-
-           if getattr(newcoords.voxel_coords, dim) >= chunk_size:
-               incr(newcoords.chunk_coords, dim, +1)
-               incr(newcoords.voxel_coords, dim, -chunk_size)
-           elif getattr(newcoords.voxel_coords, dim) < 0:
-               incr(newcoords.chunk_coords, dim, -1)
-               incr(newcoords.voxel_coords, dim, +chunk_size)
-
-       once("x", x_delta)
-       once("y", y_delta)
-       once("z", z_delta)
-
-       return newcoords
-
-*/
-
 func (m *AbsolutePoint) Derive(deltaX, deltaY, deltaZ int64, chunkSize uint64) *AbsolutePoint {
 	size := int64(chunkSize)
 	derived := m.Clone()
