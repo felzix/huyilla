@@ -242,6 +242,7 @@ func chunkHandler(engine *Engine) http.HandlerFunc {
 		}
 
 		toSend := &types.ChunkDetail{
+			Tick: chunk.Tick,
 			Voxels: chunk.Voxels,
 			Compound: chunk.Compound,
 			Entities: entities,

@@ -87,7 +87,7 @@ func (world *World) GenerateChunk(p *types.Point) (*types.Chunk, error) {
 	chunkSeed, _ := hashstructure.Hash(p, nil)
 	seed := int64(world.Seed * chunkSeed)
 
-	chunk := types.Chunk{Voxels: make([]uint64, C.CHUNK_LENGTH)}
+	chunk := types.NewChunk(0, C.CHUNK_LENGTH)
 	var x, y, z int64
 	for x = 0; x < C.CHUNK_SIZE; x++ {
 		for y = 0; y < C.CHUNK_SIZE; y++ {
@@ -100,10 +100,10 @@ func (world *World) GenerateChunk(p *types.Point) (*types.Chunk, error) {
 		}
 	}
 
-	if err := world.SetChunk(p, &chunk); err != nil {
+	if err := world.SetChunk(p, chunk); err != nil {
 		return nil, err
 	}
-	return &chunk, nil
+	return chunk, nil
 }
 
 func genVoxel(p *types.AbsolutePoint) uint64 {

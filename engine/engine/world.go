@@ -55,14 +55,15 @@ func (world *World) Age() (*types.Age, error) {
 	}
 }
 
-func (world *World) IncrementAge() error {
+func (world *World) IncrementAge() (*types.Age, error) {
 	if age, err := world.Age(); err == nil {
 		age.Ticks++
-		if err := settum(world, KEY_AGE, age); err != nil {
-			return err
+		if err := settum(world, KEY_AGE, age); err == nil {
+			return age, nil
+		} else {
+			return nil, err
 		}
 	} else {
-		return err
+		return nil, err
 	}
-	return nil
 }

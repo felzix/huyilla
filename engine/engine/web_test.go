@@ -111,7 +111,7 @@ func TestWeb(t *testing.T) {
 			})
 		})
 
-		g.Describe("get wold age", func() {
+		g.Describe("get world age", func() {
 			g.It("gets world age", func() {
 				res := requesty("GET", "/world/age", nil, engine, nil)
 
@@ -151,10 +151,10 @@ func TestWeb(t *testing.T) {
 				g.Assert(res.Code).Equal(http.StatusOK)
 				body, err := ioutil.ReadAll(res.Body)
 				g.Assert(err).IsNil()
-				var chunk types.Chunk
-				if err := chunk.Unmarshal(body); err != nil {
-					t.Fatal(err)
-				}
+
+				var chunk types.ChunkDetail
+				err = chunk.Unmarshal(body)
+				g.Assert(err).IsNil()
 				g.Assert(len(chunk.Voxels)).Equal(constants.CHUNK_LENGTH)
 			})
 

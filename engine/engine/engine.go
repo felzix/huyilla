@@ -36,6 +36,12 @@ func (engine *Engine) Init(saveDir string) error {
 }
 
 func (engine *Engine) Tick() error {
+	// advance age by one tick
+	age, err := engine.World.IncrementAge()
+	if err != nil {
+		return err
+	}
+
 	players, err := engine.World.GetActivePlayers()
 	if err != nil {
 		return errors.Wrap(err, "get active players")
@@ -119,14 +125,10 @@ func (engine *Engine) Tick() error {
 	// save chunks
 	for cp, chunk := range activeChunks {
 		p := types.NewPoint(cp.X, cp.Y, cp.Z)
+		chunk.Tick = age.Ticks
 		if err := engine.World.SetChunk(p, chunk); err != nil {
 			return err
 		}
-	}
-
-	// advance age by one tick
-	if err := engine.World.IncrementAge(); err != nil {
-		return err
 	}
 
 	return nil

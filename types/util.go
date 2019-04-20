@@ -7,7 +7,14 @@ import (
 	"strconv"
 )
 
-func NewMove(player string, whereTo *AbsolutePoint) *Action{
+func NewChunk(tick, chunkLength uint64) *Chunk {
+	return &Chunk{
+		Tick: tick,
+		Voxels: make([]uint64, chunkLength),
+	}
+}
+
+func NewMove(player string, whereTo *AbsolutePoint) *Action {
 	return &Action{
 		PlayerName: player,
 		Action: &Action_Move{
