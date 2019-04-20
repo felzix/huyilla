@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	. "github.com/felzix/goblin"
 	"math/rand"
 	"testing"
@@ -52,6 +53,30 @@ func TestSpace(t *testing.T) {
 			g.Assert(NewPoint(0, 1, 0).GridDistance(NewPoint(0, 2, 1))).Equal(int64(1))
 			g.Assert(NewPoint(0, 0, 0).GridDistance(NewPoint(0, 1, 2))).Equal(int64(2))
 			g.Assert(NewPoint(-1, 0, 0).GridDistance(NewPoint(4, 1, 1))).Equal(int64(5))
+		})
+
+		g.It("derives a positive delta", func() {
+			const CHUNK_SIZE = 16
+			p := NewAbsolutePoint(1, 2, 3, 4, 5, 6)
+			d := p.Derive(40, 40, 40, CHUNK_SIZE)
+			e := NewAbsolutePoint(3, 4, 5, 12, 13, 14)
+			g.Assert(d.Equals(e)).IsTrue(fmt.Sprintf("%s != %s", d.ToString(), e.ToString()))
+		})
+
+		g.It("derives a negative delta", func() {
+			const CHUNK_SIZE = 16
+			p := NewAbsolutePoint(1, 2, 3, 4, 5, 6)
+			d := p.Derive(-40, -40, -40, CHUNK_SIZE)
+			e := NewAbsolutePoint(-1, 0, 1, 12, 13, 14)
+			g.Assert(d.Equals(e)).IsTrue(fmt.Sprintf("%s != %s", d.ToString(), e.ToString()))
+		})
+
+		g.It("derives chunkSize", func() {
+			const CHUNK_SIZE = 16
+			p := NewAbsolutePoint(1, 1, 1, 1, 0, 1)
+			d := p.Derive(-CHUNK_SIZE, -CHUNK_SIZE*2, +CHUNK_SIZE, CHUNK_SIZE)
+			e := NewAbsolutePoint(0, -1, 2, 1, 0, 1)
+			g.Assert(d.Equals(e)).IsTrue(fmt.Sprintf("%s != %s", d.ToString(), e.ToString()))
 		})
 	})
 }

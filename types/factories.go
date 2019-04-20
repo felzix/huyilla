@@ -39,11 +39,15 @@ func (m *Point) Clone() *Point {
 	return NewPoint(m.X, m.Y, m.Z)
 }
 
+func (m *AbsolutePoint) Clone() *AbsolutePoint {
+	return NewAbsolutePoint(m.Chunk.X, m.Chunk.Y, m.Chunk.Z, m.Voxel.X, m.Voxel.Y, m.Voxel.Z)
+}
 
-func RandomPoint(chunkSize int64) *Point {
-	x := rand.Int63n(chunkSize)
-	y := rand.Int63n(chunkSize)
-	z := rand.Int63n(chunkSize)
+func RandomPoint(chunkSize uint64) *Point {
+	size := int64(chunkSize)
+	x := rand.Int63n(size)
+	y := rand.Int63n(size)
+	z := rand.Int63n(size)
 	return NewPoint(x, y, z)
 }
 

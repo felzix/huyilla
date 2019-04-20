@@ -38,6 +38,29 @@ import (
 
 */
 
+func (m *AbsolutePoint) Derive(deltaX, deltaY, deltaZ int64, chunkSize uint64) *AbsolutePoint {
+	size := int64(chunkSize)
+	derived := m.Clone()
+
+	var modFix int64
+	if deltaX < 0 {
+		modFix = -1
+	} else {
+		modFix = +1
+	}
+	fixedSize := size * modFix
+
+	derived.Chunk.X += deltaX / fixedSize * modFix
+	derived.Chunk.Y += deltaY / fixedSize * modFix
+	derived.Chunk.Z += deltaZ / fixedSize * modFix
+
+	derived.Voxel.X += deltaX % fixedSize * modFix
+	derived.Voxel.Y += deltaY % fixedSize * modFix
+	derived.Voxel.Z += deltaZ % fixedSize * modFix
+
+	return derived
+}
+
 func (m *Point) Equals(other *Point) bool {
 	return m.X == other.X &&
 		m.Y == other.Y &&
