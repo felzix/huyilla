@@ -8,23 +8,59 @@ func (m *AbsolutePoint) Derive(deltaX, deltaY, deltaZ int64, chunkSize uint64) *
 	size := int64(chunkSize)
 	derived := m.Clone()
 
-	var modFix int64
-	if deltaX < 0 {
-		modFix = -1
-	} else {
-		modFix = +1
+	derived.Chunk.X += deltaX / size
+	derived.Chunk.Z += deltaZ / size
+	derived.Chunk.Y += deltaY / size
+
+	derived.Voxel.X += deltaX % size
+	derived.Voxel.Y += deltaY % size
+	derived.Voxel.Z += deltaZ % size
+
+	if derived.Voxel.X >= size {
+		derived.Chunk.X += 1
+		derived.Voxel.X -= size
+	} else if derived.Voxel.X < 0 {
+		derived.Chunk.X -= 1
+		derived.Voxel.X += size
 	}
-	fixedSize := size * modFix
 
-	derived.Chunk.X += deltaX / fixedSize * modFix
-	derived.Chunk.Y += deltaY / fixedSize * modFix
-	derived.Chunk.Z += deltaZ / fixedSize * modFix
+	if derived.Voxel.Y >= size {
+		derived.Chunk.Y += 1
+		derived.Voxel.Y -= size
+	} else if derived.Voxel.Y < 0 {
+		derived.Chunk.Y -= 1
+		derived.Voxel.Y += size
+	}
 
-	derived.Voxel.X += deltaX % fixedSize * modFix
-	derived.Voxel.Y += deltaY % fixedSize * modFix
-	derived.Voxel.Z += deltaZ % fixedSize * modFix
+	if derived.Voxel.Z >= size {
+		derived.Chunk.Z += 1
+		derived.Voxel.Z -= size
+	} else if derived.Voxel.Z < 0 {
+		derived.Chunk.Z -= 1
+		derived.Voxel.Z += size
+	}
 
 	return derived
+}
+
+func (m *AbsolutePoint) Neighbors(chunkSize uint64) []*AbsolutePoint {
+	voxels := make([]*AbsolutePoint, 3*3*3 - 1)
+
+	edge := []int64{-1, 0, +1}
+	i := 0
+	for _, x := range edge {
+		for _, y := range edge {
+			for _, z := range edge {
+				if x == 0 && y == 0 && z == 0 {
+					continue
+				}
+				voxels[i] = m.Derive(x, y, z, chunkSize)
+				i++
+			}
+		}
+	}
+
+	return voxels
 }
 
 func (m *Point) Equals(other *Point) bool {

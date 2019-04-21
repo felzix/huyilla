@@ -58,8 +58,8 @@ func TestSpace(t *testing.T) {
 		g.It("derives a positive delta", func() {
 			const CHUNK_SIZE = 16
 			p := NewAbsolutePoint(1, 2, 3, 4, 5, 6)
-			d := p.Derive(40, 40, 40, CHUNK_SIZE)
-			e := NewAbsolutePoint(3, 4, 5, 12, 13, 14)
+			d := p.Derive(40, 40, 10, CHUNK_SIZE)
+			e := NewAbsolutePoint(3, 4, 4, 12, 13, 0)
 			g.Assert(d.Equals(e)).IsTrue(fmt.Sprintf("%s != %s", d.ToString(), e.ToString()))
 		})
 
@@ -67,7 +67,15 @@ func TestSpace(t *testing.T) {
 			const CHUNK_SIZE = 16
 			p := NewAbsolutePoint(1, 2, 3, 4, 5, 6)
 			d := p.Derive(-40, -40, -40, CHUNK_SIZE)
-			e := NewAbsolutePoint(-1, 0, 1, 12, 13, 14)
+			e := NewAbsolutePoint(-2, -1, 0, 12, 13, 14)
+			g.Assert(d.Equals(e)).IsTrue(fmt.Sprintf("%s != %s", d.ToString(), e.ToString()))
+		})
+
+		g.It("derives a neighbor", func() {
+			const CHUNK_SIZE = 16
+			p := NewAbsolutePoint(1, 2, 3, 0, 2, 15)
+			d := p.Derive(-1, -1, -1, CHUNK_SIZE)
+			e := NewAbsolutePoint(0, 2, 3, 15, 1, 14)
 			g.Assert(d.Equals(e)).IsTrue(fmt.Sprintf("%s != %s", d.ToString(), e.ToString()))
 		})
 
@@ -77,6 +85,43 @@ func TestSpace(t *testing.T) {
 			d := p.Derive(-CHUNK_SIZE, -CHUNK_SIZE*2, +CHUNK_SIZE, CHUNK_SIZE)
 			e := NewAbsolutePoint(0, -1, 2, 1, 0, 1)
 			g.Assert(d.Equals(e)).IsTrue(fmt.Sprintf("%s != %s", d.ToString(), e.ToString()))
+		})
+
+		g.It("knows its neighbors", func() {
+			const CHUNK_SIZE = 16
+			p := NewAbsolutePoint(1, 2, 3, 0, 2, 15)
+			n := p.Neighbors(CHUNK_SIZE)
+
+			test := func(i int, e *AbsolutePoint) {
+				g.Assert(n[i].Equals(e)).IsTrue(fmt.Sprintf("neighbor %d: %s != %s", i, n[i].ToString(), e.ToString()))
+			}
+
+			test(0,  NewAbsolutePoint(0, 2, 3, 15, 1, 14))
+			test(1,  NewAbsolutePoint(0, 2, 3, 15, 1, 15))
+			test(2,  NewAbsolutePoint(0, 2, 4, 15, 1, 0))
+			test(3,  NewAbsolutePoint(0, 2, 3, 15, 2, 14))
+			test(4,  NewAbsolutePoint(0, 2, 3, 15, 2, 15))
+			test(5,  NewAbsolutePoint(0, 2, 4, 15, 2, 0))
+			test(6,  NewAbsolutePoint(0, 2, 3, 15, 3, 14))
+			test(7,  NewAbsolutePoint(0, 2, 3, 15, 3, 15))
+			test(8,  NewAbsolutePoint(0, 2, 4, 15, 3, 0))
+			test(9,  NewAbsolutePoint(1, 2, 3, 0, 1, 14))
+			test(10, NewAbsolutePoint(1, 2, 3, 0, 1, 15))
+			test(11, NewAbsolutePoint(1, 2, 4, 0, 1, 0))
+			test(12, NewAbsolutePoint(1, 2, 3, 0, 2, 14))
+			test(13, NewAbsolutePoint(1, 2, 4, 0, 2, 0))
+			test(14, NewAbsolutePoint(1, 2, 3, 0, 3, 14))
+			test(15, NewAbsolutePoint(1, 2, 3, 0, 3, 15))
+			test(16, NewAbsolutePoint(1, 2, 4, 0, 3, 0))
+			test(17, NewAbsolutePoint(1, 2, 3, 1, 1, 14))
+			test(18, NewAbsolutePoint(1, 2, 3, 1, 1, 15))
+			test(19, NewAbsolutePoint(1, 2, 4, 1, 1, 0))
+			test(20, NewAbsolutePoint(1, 2, 3, 1, 2, 14))
+			test(21, NewAbsolutePoint(1, 2, 3, 1, 2, 15))
+			test(22, NewAbsolutePoint(1, 2, 4, 1, 2, 0))
+			test(23, NewAbsolutePoint(1, 2, 3, 1, 3, 14))
+			test(24, NewAbsolutePoint(1, 2, 3, 1, 3, 15))
+			test(25, NewAbsolutePoint(1, 2, 4, 1, 3, 0))
 		})
 	})
 }
