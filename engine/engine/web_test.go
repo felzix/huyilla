@@ -28,20 +28,16 @@ func TestWeb(t *testing.T) {
 
 		g.Before(func() {
 			unique, err := uuid.NewV4()
-			if err != nil {
-				t.Fatal(err)
-			}
+			g.Assert(err).IsNil()
 
 			engine = &Engine{}
-			if err := engine.Init("/tmp/savedir-huyilla-" + unique.String()); err != nil {
-				t.Fatal(err)
-			}
+			err = engine.Init("/tmp/savedir-huyilla-" + unique.String())
+			g.Assert(err).IsNil()
 		})
 
 		g.After(func() {
-			if err := engine.World.WipeDatabase(); err != nil {
-				t.Fatal(err)
-			}
+			err := engine.World.WipeDatabase()
+			g.Assert(err).IsNil()
 		})
 
 		g.Describe("ping", func() {
@@ -160,8 +156,98 @@ func TestWeb(t *testing.T) {
 				g.Assert(len(chunks.Chunks[0].Voxels)).Equal(constants.CHUNK_LENGTH)
 			})
 
+			g.It("in range, radius=1", func() {
+				res := requesty("GET", fmt.Sprintf("/world/chunk/%d/%d/%d?radius=1", 0, 0, constants.ACTIVE_CHUNK_RADIUS), nil, engine, map[string]string{
+					"contentType": "application/protobuf",
+					"token":       token,
+				})
+
+				g.Assert(res.Code).Equal(http.StatusOK)
+				body, err := ioutil.ReadAll(res.Body)
+				g.Assert(err).IsNil()
+
+				var chunks types.Chunks
+				err = chunks.Unmarshal(body)
+				g.Assert(err).IsNil()
+				g.Assert(len(chunks.Chunks)).Equal(27)
+				g.Assert(chunks.Chunks[0]).IsNotNil()
+				g.Assert(chunks.Chunks[26]).IsNotNil()
+				g.Assert(len(chunks.Chunks[0].Voxels)).Equal(constants.CHUNK_LENGTH)
+			})
+
+			g.It("barely in range, radius is max", func() {
+				res := requesty("GET", fmt.Sprintf("/world/chunk/%d/%d/%d?radius=%d", 0, 0, 0, constants.ACTIVE_CHUNK_RADIUS), nil, engine, map[string]string{
+					"contentType": "application/protobuf",
+					"token":       token,
+				})
+
+				g.Assert(res.Code).Equal(http.StatusOK)
+				body, err := ioutil.ReadAll(res.Body)
+				g.Assert(err).IsNil()
+
+				var chunks types.Chunks
+				err = chunks.Unmarshal(body)
+				g.Assert(err).IsNil()
+				g.Assert(len(chunks.Chunks)).Equal(7*7*7)
+				g.Assert(chunks.Chunks[0]).IsNotNil()
+				g.Assert(chunks.Chunks[7*7*7 - 1]).IsNotNil()
+				g.Assert(len(chunks.Chunks[0].Voxels)).Equal(constants.CHUNK_LENGTH)
+			})
+
+			// The idea is that the initial readtime is so large that two of them don't fit into the per-test duration set on the commandline (15s)
+			g.It("database caching works", func() {
+				// fill cache
+				requesty("GET", fmt.Sprintf("/world/chunk/%d/%d/%d?radius=3", 0, 0, constants.ACTIVE_CHUNK_RADIUS), nil, engine, map[string]string{
+					"contentType": "application/protobuf",
+					"token":       token,
+				})
+
+				// read from cache
+				res := requesty("GET", fmt.Sprintf("/world/chunk/%d/%d/%d?radius=3", 0, 0, constants.ACTIVE_CHUNK_RADIUS), nil, engine, map[string]string{
+					"contentType": "application/protobuf",
+					"token":       token,
+				})
+
+				g.Assert(res.Code).Equal(http.StatusOK)
+				body, err := ioutil.ReadAll(res.Body)
+				g.Assert(err).IsNil()
+
+				var chunks types.Chunks
+				err = chunks.Unmarshal(body)
+				g.Assert(err).IsNil()
+				g.Assert(len(chunks.Chunks)).Equal(7*7*7)
+				g.Assert(chunks.Chunks[0]).IsNotNil()
+				g.Assert(chunks.Chunks[7*7*7 - 1]).IsNotNil()
+				g.Assert(len(chunks.Chunks[0].Voxels)).Equal(constants.CHUNK_LENGTH)
+			})
+
+
 			g.It("out of range", func() {
 				res := requesty("GET", fmt.Sprintf("/world/chunk/%d/%d/%d", 0, constants.ACTIVE_CHUNK_RADIUS+1, 0), nil, engine, map[string]string{
+					"contentType": "application/protobuf",
+					"token":       token,
+				})
+
+				g.Assert(res.Code).Equal(http.StatusForbidden)
+				body, err := ioutil.ReadAll(res.Body)
+				g.Assert(err).IsNil()
+				g.Assert(string(body)).Equal("can only load nearby chunks\n")
+			})
+
+			g.It("out of range: too big", func() {
+				res := requesty("GET", fmt.Sprintf("/world/chunk/%d/%d/%d?radius=%d", 0, 0, 0, constants.ACTIVE_CHUNK_RADIUS+1), nil, engine, map[string]string{
+					"contentType": "application/protobuf",
+					"token":       token,
+				})
+
+				g.Assert(res.Code).Equal(http.StatusForbidden)
+				body, err := ioutil.ReadAll(res.Body)
+				g.Assert(err).IsNil()
+				g.Assert(string(body)).Equal("can only load nearby chunks\n")
+			})
+
+			g.It("out of range: max size and shifted", func() {
+				res := requesty("GET", fmt.Sprintf("/world/chunk/%d/%d/%d?radius=%d", 1, 0, 0, constants.ACTIVE_CHUNK_RADIUS), nil, engine, map[string]string{
 					"contentType": "application/protobuf",
 					"token":       token,
 				})

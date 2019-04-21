@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"fmt"
 	. "github.com/felzix/goblin"
 	uuid "github.com/satori/go.uuid"
 	"testing"
@@ -68,8 +67,6 @@ func TestEngine(t *testing.T) {
 			beyond := entity.Location.Chunk.Clone()
 			beyond.X += 4
 			chunk, err = h.World.OnlyGetChunk(beyond)
-
-			fmt.Printf("%T , %v", chunk, chunk)
 
 			g.Assert(chunk).IsNil() // Chunk beyond player's range exists
 
