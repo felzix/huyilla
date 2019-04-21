@@ -58,13 +58,17 @@ message Chunk {
     repeated Point activeVoxels = 6;
 }
 
-// Intended for transmission. Entities are sent in detail but transient detail like activeVoxels are excluded.
-message ChunkDetail {
+// Used for caching and transmission. Entities are provided in detail but transient info like activeVoxels are excluded.
+message DetailedChunk {
     uint64 tick = 1;
     repeated uint64 voxels = 2;  // 3D array stored as a 1D array
     map<uint32, Compound> compound = 3;
     repeated Entity entities = 4;
     repeated ItemAtPoint items = 5;
+}
+
+message Chunks {
+    repeated DetailedChunk chunks = 1;
 }
 
 message Inventory {

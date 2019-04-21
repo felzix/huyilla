@@ -195,10 +195,22 @@ func chunkHandler(engine *Engine) http.HandlerFunc {
 		}
 
 		vars := mux.Vars(r)
-		chunkPoint, err := types.StringToPoint(vars["x"], vars["y"], vars["z"])
+		center, err := types.StringToPoint(vars["x"], vars["y"], vars["z"])
 		if err != nil {
-			http.Error(w, "bad url; must be /world/chunk/{x}/{y}/{z}", http.StatusBadRequest)
+			http.Error(w, "bad url: must be /world/chunk/{x}/{y}/{z}", http.StatusBadRequest)
 			return
+		}
+
+		var radius uint64
+		radii, ok := r.URL.Query()["radius"]
+		if ok && len(radii) == 1 {
+			radius, err = strconv.ParseUint(radii[0], 10, 64)
+			if err != nil {
+				http.Error(w, "bad url param: radius must be a positive integer", http.StatusBadRequest)
+				return
+			}
+		} else {
+			radius = 0
 		}
 
 		player, err := engine.World.Player(name)
@@ -216,40 +228,54 @@ func chunkHandler(engine *Engine) http.HandlerFunc {
 			return
 		}
 
-		if playerEntity.Location.Chunk.GridDistance(chunkPoint) > constants.ACTIVE_CHUNK_RADIUS {
+		mostDistanceChunkPoint := center.Clone()
+		mostDistanceChunkPoint.X += int64(radius)
+		if playerEntity.Location.Chunk.GridDistance(mostDistanceChunkPoint) > constants.ACTIVE_CHUNK_RADIUS {
 			http.Error(w, "can only load nearby chunks", http.StatusForbidden)
 			return
 		}
 
-		chunk, err := engine.World.Chunk(chunkPoint)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		} else if chunk == nil {
-			http.Error(w, fmt.Sprintf(`No such Chunk "%s"`, chunkPoint.ToString()), http.StatusNotFound)
-			return
-		}
+		chunks := types.NewChunks(radius)
 
-		entities := make([]*types.Entity, len(chunk.Entities))
-		for i := 0; i < len(chunk.Entities); i++ {
-			id := chunk.Entities[i]
-			entity, err := engine.World.Entity(id)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
+		i := 0
+		for _, x := range makeRange(center.X - int64(radius), center.X + int64(radius)) {
+			for _, y := range makeRange(center.Y - int64(radius), center.Y + int64(radius)) {
+				for _, z := range makeRange(center.Z - int64(radius), center.Z + int64(radius)) {
+					point := types.NewPoint(x, y, z)
+					chunk, err := engine.World.Chunk(point)
+					if err != nil {
+						http.Error(w, err.Error(), http.StatusInternalServerError)
+						return
+					} else if chunk == nil { // shouldn't be possible
+						http.Error(w, fmt.Sprintf(`No such Chunk "%s"`, point.ToString()), http.StatusNotFound)
+						return
+					}
+
+					entities := make([]*types.Entity, len(chunk.Entities))
+					for i := 0; i < len(chunk.Entities); i++ {
+						id := chunk.Entities[i]
+						entity, err := engine.World.Entity(id)
+						if err != nil {
+							http.Error(w, err.Error(), http.StatusInternalServerError)
+							return
+						}
+						entities[i] = entity
+					}
+
+					chunks.Chunks[i] = &types.DetailedChunk{
+						Tick:     chunk.Tick,
+						Voxels:   chunk.Voxels,
+						Compound: chunk.Compound,
+						Entities: entities,
+						Items:    chunk.Items,
+					}
+
+					i++
+				}
 			}
-			entities[i] = entity
 		}
 
-		toSend := &types.ChunkDetail{
-			Tick:     chunk.Tick,
-			Voxels:   chunk.Voxels,
-			Compound: chunk.Compound,
-			Entities: entities,
-			Items:    chunk.Items,
-		}
-
-		if blob, err := toSend.Marshal(); err == nil {
+		if blob, err := chunks.Marshal(); err == nil {
 			w.Header().Set("Content-Type", "application/protobuf")
 			if _, err := w.Write(blob); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -340,4 +366,13 @@ func (engine *Engine) authenticate(w http.ResponseWriter, r *http.Request) (stri
 	} else {
 		return "", "", 0, err
 	}
+}
+
+
+func makeRange(min, max int64) []int64 {
+	a := make([]int64, max - min + 1)
+	for i := range a {
+		a[i] = min + int64(i)
+	}
+	return a
 }

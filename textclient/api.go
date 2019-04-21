@@ -184,7 +184,7 @@ func (api *API) GetWorldAge() (uint64, error) {
 	return age, nil
 }
 
-func (api *API) GetChunk(point *types.Point) (*types.ChunkDetail, error) {
+func (api *API) GetChunks(point *types.Point, radius uint64) (*types.Chunks, error) {
 	res, err := api.Request("GET", fmt.Sprintf("/world/chunk/%d/%d/%d", point.X, point.Y, point.Z), nil, map[string]string{
 		"Content-Type": "application/protobuf",
 		"token":        string(api.token),
@@ -200,7 +200,7 @@ func (api *API) GetChunk(point *types.Point) (*types.ChunkDetail, error) {
 		return nil, errors.New(fmt.Sprintf(`GetChunk failure: Expected status 200 but got %d. %s`, res.StatusCode, blob))
 	}
 
-	var chunk types.ChunkDetail
+	var chunk types.Chunks
 	if err := chunk.Unmarshal(blob); err != nil {
 		return nil, errors.New(fmt.Sprintf(`GetChunk failure: Malformed protobuf blob: %v`, err))
 	}

@@ -7,15 +7,15 @@ import (
 
 type WorldCache struct {
 	age    uint64
-	chunks map[types.ComparablePoint]*types.ChunkDetail
+	chunks map[types.ComparablePoint]*types.DetailedChunk
 }
 
 func (world *WorldCache) Init() {
 	world.age = 0
-	world.chunks = make(map[types.ComparablePoint]*types.ChunkDetail, constants.ACTIVE_CHUNK_CUBE)
+	world.chunks = make(map[types.ComparablePoint]*types.DetailedChunk, constants.ACTIVE_CHUNK_CUBE)
 }
 
-func (client *Client) SetChunk(coords *types.Point, chunk *types.ChunkDetail) {
+func (client *Client) SetChunk(coords *types.Point, chunk *types.DetailedChunk) {
 	client.Lock()
 	defer client.Unlock()
 

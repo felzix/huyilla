@@ -152,10 +152,12 @@ func TestWeb(t *testing.T) {
 				body, err := ioutil.ReadAll(res.Body)
 				g.Assert(err).IsNil()
 
-				var chunk types.ChunkDetail
-				err = chunk.Unmarshal(body)
+				var chunks types.Chunks
+				err = chunks.Unmarshal(body)
 				g.Assert(err).IsNil()
-				g.Assert(len(chunk.Voxels)).Equal(constants.CHUNK_LENGTH)
+				g.Assert(len(chunks.Chunks)).Equal(1)
+				g.Assert(chunks.Chunks[0]).IsNotNil()
+				g.Assert(len(chunks.Chunks[0].Voxels)).Equal(constants.CHUNK_LENGTH)
 			})
 
 			g.It("out of range", func() {

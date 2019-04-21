@@ -190,14 +190,14 @@ func (client *Client) EnginePoller() {
 			client.player.Entity = entity
 		}
 
-		centerChunk := client.player.Entity.Location.Chunk
-		chunk, err := client.api.GetChunk(centerChunk)
+		center := client.player.Entity.Location.Chunk
+		chunks, err := client.api.GetChunks(center, 0)
 		if err != nil {
 			client.Quit(err)
 			return
 		}
 
-		client.SetChunk(centerChunk, chunk)
+		client.SetChunk(center, chunks.Chunks[0])
 	}
 }
 
