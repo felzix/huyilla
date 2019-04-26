@@ -84,18 +84,22 @@ func (world *World) RemoveEntityFromChunk(entityId int64, p *types.Point) error 
 }
 
 func (world *World) GenerateChunk(p *types.Point) (*types.Chunk, error) {
-	chunkSeed, _ := hashstructure.Hash(p, nil)
-	seed := int64(world.Seed * chunkSeed)
+	if chunkSeed, err := hashstructure.Hash(p, nil); err == nil {
+		rand.Seed(int64(world.Seed * chunkSeed))
+	} else {
+		return nil, err
+	}
+
+	world.WorldGenerator.SetupForChunk(p)
 
 	chunk := types.NewChunk(0, C.CHUNK_LENGTH)
 	var x, y, z int64
 	for x = 0; x < C.CHUNK_SIZE; x++ {
 		for y = 0; y < C.CHUNK_SIZE; y++ {
 			for z = 0; z < C.CHUNK_SIZE; z++ {
-				rand.Seed(seed) // so voxels can use randomness
 				index := (x * C.CHUNK_SIZE * C.CHUNK_SIZE) + (y * C.CHUNK_SIZE) + z
 				location := types.NewAbsolutePoint(p.X, p.Y, p.Z, x, y, z)
-				chunk.Voxels[index] = genVoxel(location)
+				chunk.Voxels[index] = world.WorldGenerator.GenVoxel(location)
 			}
 		}
 	}
@@ -106,26 +110,9 @@ func (world *World) GenerateChunk(p *types.Point) (*types.Chunk, error) {
 	return chunk, nil
 }
 
-func genVoxel(p *types.AbsolutePoint) uint64 {
-	v := VOXEL
-
-	if p.Chunk.Z < 0 {
-		return v["dirt"]
-	}
-
-	if p.Chunk.Z > 0 {
-		return v["air"]
-	}
-
-	center := types.RandomPoint(C.CHUNK_SIZE)
-	center.Z = 0
-
-	d := p.Voxel.Distance(center)
-	if p.Voxel.Z == center.Z && d <= float64(3) {
-		return v["water"]
-	}
-	if p.Voxel.Z == 0 {
-		return v["barren_earth"]
-	}
-	return v["air"]
+// All methods are idempotent
+type WorldGenerator interface {
+	SetupForWorld()
+	SetupForChunk(chunkLocation *types.Point)
+	GenVoxel(voxelLocation *types.AbsolutePoint) uint64
 }

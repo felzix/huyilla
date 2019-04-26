@@ -34,12 +34,22 @@ func TestChunk(t *testing.T) {
 			}
 		})
 
-		g.It("generates a chunk", func() {
+		g.It("implicitly generates a chunk", func() {
 			chunk, err := h.World.Chunk(&types.Point{X: 0, Y: 0, Z: 0})
 			g.Assert(err).IsNil()
 
 			expectedVoxelCount := C.CHUNK_SIZE * C.CHUNK_SIZE * C.CHUNK_SIZE
 			g.Assert(len(chunk.Voxels)).Equal(expectedVoxelCount)
+		})
+
+		g.It("generates 1,000 chunks", func() {
+			expectedVoxelCount := C.CHUNK_SIZE * C.CHUNK_SIZE * C.CHUNK_SIZE
+
+			for i := 0; i < 1000; i++ {
+				chunk, err := h.World.GenerateChunk(&types.Point{X: 0, Y: 0, Z: 0})
+				g.Assert(err).IsNil()
+				g.Assert(len(chunk.Voxels)).Equal(expectedVoxelCount)
+			}
 		})
 	})
 }

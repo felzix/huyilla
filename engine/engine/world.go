@@ -10,6 +10,7 @@ import (
 type World struct {
 	DB   *diskv.Diskv
 	Seed uint64
+	WorldGenerator WorldGenerator
 }
 
 func (world *World) Init(saveDir string, cacheSize uint64) error {
@@ -32,6 +33,8 @@ func (world *World) Init(saveDir string, cacheSize uint64) error {
 			return err
 		}
 	}
+
+	world.WorldGenerator = NewLakeWorldGenerator(3)
 
 	return nil
 }
