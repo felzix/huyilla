@@ -12,7 +12,8 @@ func playerKey(name string) string {
 }
 
 func playerNameFromKey(key string) string {
-	return strings.Split(key, ".")[1]
+	// The "." (period) is not present because it's used as the filesystem separator.
+	return strings.TrimPrefix(key, "Player")
 }
 
 func (world *World) Player(name string) (*types.Player, error) {
@@ -48,8 +49,9 @@ func (world *World) DeletePlayer(name string) error {
 func (world *World) GetActivePlayers() ([]*types.PlayerDetails, error) {
 	var activePlayers []*types.PlayerDetails
 
-	for key := range world.DB.KeysPrefix("Player.", nil) {
+	for key := range world.DB.KeysPrefix("Player", nil) {
 		name := playerNameFromKey(key)
+
 		if player, err := world.Player(name); player != nil {
 			if len(player.Token) > 0 {
 				if entity, err := world.Entity(player.EntityId); err == nil {

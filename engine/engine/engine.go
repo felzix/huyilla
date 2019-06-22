@@ -6,6 +6,7 @@ import (
 	"github.com/felzix/huyilla/content"
 	"github.com/felzix/huyilla/types"
 	"github.com/pkg/errors"
+	"os"
 	"sync"
 )
 
@@ -34,6 +35,26 @@ func (engine *Engine) Init(saveDir string) error {
 
 	return nil
 }
+
+
+func debugPrint(thing interface{}) {
+	f, err := os.OpenFile("/tmp/huyilla-log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
+	if err != nil {
+		panic(err)
+	}
+
+	defer func () {
+		if err := f.Close(); err != nil {
+			panic(err)
+		}
+	}()
+
+	msg := fmt.Sprintf("%v\n", thing)
+	if _, err = f.WriteString(msg); err != nil {
+		panic(err)
+	}
+}
+
 
 func (engine *Engine) Tick() error {
 	// advance age by one tick

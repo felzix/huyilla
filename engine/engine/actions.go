@@ -31,6 +31,8 @@ func (engine *Engine) Move(action *types.Action) (bool, error) {
 		return false, errors.New(fmt.Sprintf(`Entity "%d" does not exist`, player.EntityId))
 	}
 
+	// TODO make the next few stazas collectively atomic so entities don't disappear on server failure
+
 	if err := engine.World.RemoveEntityFromChunk(player.EntityId, entity.Location.Chunk); err != nil {
 		return false, err
 	}

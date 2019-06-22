@@ -69,6 +69,7 @@ message DetailedChunk {
 
 message Chunks {
     repeated DetailedChunk chunks = 1;
+    repeated Point points = 2;
 }
 
 message Inventory {

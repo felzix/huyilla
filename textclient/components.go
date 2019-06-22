@@ -6,6 +6,7 @@ import (
 	C "github.com/felzix/huyilla/constants"
 	"github.com/felzix/huyilla/types"
 	"github.com/gdamore/tcell"
+	"os"
 )
 
 const (
@@ -96,16 +97,18 @@ func GameBoard() *react.ReactElement {
 		DrawFn: func(r *react.ReactElement, maxWidth, maxHeight int) (*react.DrawResult, error) {
 			client := r.Props["client"].(*Client)
 
+			viewDiameter := 3
 			topbarHeight := 2
 			boardSize := C.CHUNK_SIZE
-			totalheight := topbarHeight + boardSize
+			totalWidth := boardSize * viewDiameter
+			totalheight := topbarHeight + (boardSize * viewDiameter)
 
 			var child *react.Child
 			if client.world.age == 0 {
 				child = react.NewChild(react.Label(), "loading", maxWidth, maxHeight, react.Properties{
 					"label": "Loading world from engine. Please wait.",
 				})
-			} else if totalheight > maxHeight || boardSize > maxWidth {
+			} else if totalheight > maxHeight || totalWidth > maxWidth {
 				child = react.NewChild(react.Label(), "screen-too-small", maxWidth, maxHeight, react.Properties{
 					"label": "Terminal screen too small",
 				})
@@ -132,7 +135,7 @@ func GameBoard() *react.ReactElement {
 									X:      0,
 									Y:      0,
 									Width:  maxWidth,
-									Height: 2,
+									Height: topbarHeight,
 								},
 								{
 									Element: Tiles(),
@@ -142,9 +145,9 @@ func GameBoard() *react.ReactElement {
 										"absPoint": client.player.Entity.Location,
 									},
 									X:      0,
-									Y:      2,
-									Width:  boardSize,
-									Height: boardSize,
+									Y:      topbarHeight,
+									Width:  boardSize * viewDiameter,
+									Height: boardSize * viewDiameter,
 								},
 							},
 						}, nil
@@ -156,15 +159,31 @@ func GameBoard() *react.ReactElement {
 						case 'w': // move up
 							to = client.player.Entity.Location
 							to.Voxel.Y--
+							if to.Voxel.Y == -1 {
+								to.Voxel.Y = C.CHUNK_SIZE - 1
+								to.Chunk.Y--
+							}
 						case 's': // move down
 							to = client.player.Entity.Location
 							to.Voxel.Y++
+							if to.Voxel.Y == C.CHUNK_SIZE {
+								to.Voxel.Y = 0
+								to.Chunk.Y++
+							}
 						case 'a': // move left
 							to = client.player.Entity.Location
 							to.Voxel.X--
+							if to.Voxel.X == -1 {
+								to.Voxel.X = C.CHUNK_SIZE - 1
+								to.Chunk.X--
+							}
 						case 'd': // move right
 							to = client.player.Entity.Location
 							to.Voxel.X++
+							if to.Voxel.X == C.CHUNK_SIZE {
+								to.Voxel.X = 0
+								to.Chunk.X++
+							}
 						}
 
 						if to != nil {
@@ -194,58 +213,103 @@ func Tiles() *react.ReactElement {
 			client := r.Props["client"].(*Client)
 			absPoint := r.Props["absPoint"].(*types.AbsolutePoint)
 
-			chunk := client.world.chunks[*types.NewComparablePoint(absPoint.Chunk)]
-			zLevel := absPoint.Voxel.Z
-
-			width := C.CHUNK_SIZE
-			if width > maxWidth {
-				width = maxWidth
-			}
-			height := C.CHUNK_SIZE
-			if height > maxHeight {
-				height = maxHeight
-			}
-
 			result := react.DrawResult{
 				Region: react.NewRegion(0, 0, maxWidth, maxHeight),
 			}
 
-			if chunk == nil {
-				for y := 0; y < height; y++ {
-					for x := 0; x < width; x++ {
-						result.Region.Cells[x][y] = react.Cell{
-							R:     ' ',
-							Style: tcell.StyleDefault.Background(tcell.ColorDarkGray),
-						}
-					}
-				}
-			} else {
-				for y := 0; y < height; y++ {
-					for x := 0; x < width; x++ {
-						index := (x * C.CHUNK_SIZE * C.CHUNK_SIZE) + (y * C.CHUNK_SIZE) + int(zLevel)
-						ch := voxelToRune(chunk.Voxels[index])
-						result.Region.Cells[x][y] = react.Cell{
-							R:     ch,
-							Style: tcell.StyleDefault,
-						}
-					}
+			localX := 0
+			localY := 0
+
+			for chunkY := -1; chunkY < 2; chunkY++ {
+				height := C.CHUNK_SIZE
+				if height > maxHeight - localY {
+					height = maxHeight - localY
 				}
 
-				for _, entity := range chunk.Entities {
-					x := entity.Location.Voxel.X
-					y := entity.Location.Voxel.Y
-					z := entity.Location.Voxel.Z
+				for chunkX := -1; chunkX < 2; chunkX++ {
+					point := absPoint.Clone()
+					point.Chunk.Y += int64(chunkY)
+					point.Chunk.X += int64(chunkX)
+					chunk := client.world.chunks[*types.NewComparablePoint(point.Chunk)]
 
-					if z == zLevel {
-						result.Region.Cells[x][y] = react.Cell{
-							R:     entityToRune(entity),
-							Style: tcell.StyleDefault,
+					zLevel := point.Voxel.Z
+
+					width := C.CHUNK_SIZE
+					if width > maxWidth - localX {
+						width = maxWidth - localX
+					}
+
+					if chunk == nil {
+						for y := 0; y < height; y++ {
+							for x := 0; x < width; x++ {
+								result.Region.Cells[x + localX][y + localY] = react.Cell{
+									R:     ' ',
+									Style: tcell.StyleDefault.Background(tcell.ColorDarkGray),
+								}
+							}
+						}
+					} else {
+						for y := 0; y < height; y++ {
+							for x := 0; x < width; x++ {
+								index := (x * C.CHUNK_SIZE * C.CHUNK_SIZE) + (y * C.CHUNK_SIZE) + int(zLevel)
+								result.Region.Cells[x + localX][y + localY] = react.Cell{
+									R:     voxelToRune(chunk.Voxels[index]),
+									Style: tcell.StyleDefault,
+								}
+							}
+						}
+
+						for _, entity := range chunk.Entities {
+							x := int(entity.Location.Voxel.X)
+							y := int(entity.Location.Voxel.Y)
+							z := entity.Location.Voxel.Z
+
+							if x >= maxWidth - localX {
+								continue
+							}
+
+							if y >= maxHeight - localY {
+								continue
+							}
+
+							if z != zLevel {
+								continue
+							}
+
+							result.Region.Cells[x + localX][y + localY] = react.Cell{
+								R:     entityToRune(entity),
+								Style: tcell.StyleDefault,
+							}
 						}
 					}
 
+					localX += width
 				}
+
+				localX = 0
+				localY += height
 			}
 			return &result, nil
 		},
 	}
 }
+
+
+func debugPrint(thing interface{}) {
+	f, err := os.OpenFile("/tmp/huyilla-log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
+	if err != nil {
+		panic(err)
+	}
+
+	defer func () {
+		if err := f.Close(); err != nil {
+			panic(err)
+		}
+	}()
+
+	msg := fmt.Sprintf("%v\n", thing)
+	if _, err = f.WriteString(msg); err != nil {
+		panic(err)
+	}
+}
+

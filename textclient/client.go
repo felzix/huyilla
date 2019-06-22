@@ -164,7 +164,7 @@ func (client *Client) EnginePoller() {
 		select {
 		case <-client.quitq:
 			return
-		case <-time.After(time.Millisecond * 1000): // poll engine only so often
+		case <-time.After(time.Millisecond * 50): // poll engine only so often
 		default:
 		}
 
@@ -175,13 +175,9 @@ func (client *Client) EnginePoller() {
 		// ignores error because getting world age is eqiuvalent to querying the readiness of the server
 		age, _ := client.api.GetWorldAge()
 
-		client.world.age = age
+		if age > client.world.age {
+			client.world.age = age
 
-		if client.world.age == 0 {
-			continue // world is not loaded
-		}
-
-		if client.player.Entity == nil {
 			entity, err := client.api.GetPlayer(client.username)
 			if err != nil {
 				client.Quit(err)
@@ -189,16 +185,28 @@ func (client *Client) EnginePoller() {
 			}
 
 			client.player.Entity = entity
-		}
 
-		center := client.player.Entity.Location.Chunk
-		chunks, err := client.api.GetChunks(center, constants.ACTIVE_CHUNK_RADIUS)
-		if err != nil {
-			client.Quit(err)
-			return
-		}
+			center := client.player.Entity.Location.Chunk
 
-		client.SetChunk(center, chunks.Chunks[0])
+			// TODO
+			// my location is correct, as is the terrain being drawn
+			// but it's drawing me at the wrong place
+			// that's why if I go too far I disappear:
+			// it draws me off the screen
+			debugPrint(entity.Location.ToString())
+
+			chunks, err := client.api.GetChunks(center, constants.ACTIVE_CHUNK_RADIUS)
+
+			if err != nil {
+				client.Quit(err)
+				return
+			}
+
+			for i, chunk := range chunks.Chunks {
+				point := chunks.Points[i]
+				client.SetChunk(point, chunk)
+			}
+		}
 	}
 }
 

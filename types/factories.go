@@ -15,8 +15,10 @@ func NewChunk(tick, chunkLength uint64) *Chunk {
 
 func NewChunks(radius uint64) *Chunks {
 	diameter := 1 + radius*2
+	size := diameter*diameter*diameter
 	return &Chunks{
-		Chunks: make([]*DetailedChunk, diameter*diameter*diameter),
+		Chunks: make([]*DetailedChunk, size),
+		Points: make([]*Point, size),
 	}
 }
 
