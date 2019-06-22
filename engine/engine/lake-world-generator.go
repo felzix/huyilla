@@ -7,13 +7,13 @@ import (
 
 type LakeWorldGenerator struct {
 	worldSeed  uint64
-	lakeRadius uint8
+	lakeRadius float64
 	lakeCenter *types.Point
 }
 
 func NewLakeWorldGenerator(lakeRadius uint8) *LakeWorldGenerator {
 	return &LakeWorldGenerator{
-		lakeRadius: lakeRadius,
+		lakeRadius: float64(lakeRadius),
 	}
 }
 
@@ -36,12 +36,13 @@ func (gen *LakeWorldGenerator) GenVoxel(p *types.AbsolutePoint) uint64 {
 		return v["air"]
 	}
 
-	d := p.Voxel.Distance(gen.lakeCenter)
-	if p.Voxel.Z == gen.lakeCenter.Z && d <= float64(3) {
-		return v["water"]
+	if p.Voxel.Z == gen.lakeCenter.Z {
+		if p.Voxel.Distance(gen.lakeCenter) <= gen.lakeRadius {
+			return v["water"]
+		} else {
+			return v["barren_earth"]
+		}
+	} else {
+		return v["air"]
 	}
-	if p.Voxel.Z == 0 {
-		return v["barren_earth"]
-	}
-	return v["air"]
 }
