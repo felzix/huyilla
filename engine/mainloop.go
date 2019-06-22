@@ -43,7 +43,7 @@ mainloop:
 }
 
 func fail(err error) {
-	os.Stderr.WriteString("Error!\n")
-	os.Stderr.WriteString(err.Error())
+	_, _ = os.Stderr.WriteString("Error!\n")
+	_, _ = os.Stderr.WriteString(err.Error())
 	os.Exit(1)
 }

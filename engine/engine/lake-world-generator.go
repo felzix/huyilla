@@ -6,7 +6,7 @@ import (
 )
 
 type LakeWorldGenerator struct {
-	worldSeed uint64
+	worldSeed  uint64
 	lakeRadius uint8
 	lakeCenter *types.Point
 }

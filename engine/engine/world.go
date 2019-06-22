@@ -8,8 +8,8 @@ import (
 )
 
 type World struct {
-	DB   *diskv.Diskv
-	Seed uint64
+	DB             *diskv.Diskv
+	Seed           uint64
 	WorldGenerator WorldGenerator
 }
 

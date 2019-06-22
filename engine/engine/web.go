@@ -238,9 +238,9 @@ func chunkHandler(engine *Engine) http.HandlerFunc {
 		chunks := types.NewChunks(radius)
 
 		i := 0
-		for _, x := range makeRange(center.X - int64(radius), center.X + int64(radius)) {
-			for _, y := range makeRange(center.Y - int64(radius), center.Y + int64(radius)) {
-				for _, z := range makeRange(center.Z - int64(radius), center.Z + int64(radius)) {
+		for _, x := range makeRange(center.X-int64(radius), center.X+int64(radius)) {
+			for _, y := range makeRange(center.Y-int64(radius), center.Y+int64(radius)) {
+				for _, z := range makeRange(center.Z-int64(radius), center.Z+int64(radius)) {
 					point := types.NewPoint(x, y, z)
 					chunk, err := engine.World.Chunk(point)
 					if err != nil {
@@ -368,9 +368,8 @@ func (engine *Engine) authenticate(w http.ResponseWriter, r *http.Request) (stri
 	}
 }
 
-
 func makeRange(min, max int64) []int64 {
-	a := make([]int64, max - min + 1)
+	a := make([]int64, max-min+1)
 	for i := range a {
 		a[i] = min + int64(i)
 	}

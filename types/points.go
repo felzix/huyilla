@@ -44,7 +44,7 @@ func (m *AbsolutePoint) Derive(deltaX, deltaY, deltaZ int64, chunkSize uint64) *
 }
 
 func (m *AbsolutePoint) Neighbors(chunkSize uint64) []*AbsolutePoint {
-	voxels := make([]*AbsolutePoint, 3*3*3 - 1)
+	voxels := make([]*AbsolutePoint, 3*3*3-1)
 
 	edge := []int64{-1, 0, +1}
 	i := 0

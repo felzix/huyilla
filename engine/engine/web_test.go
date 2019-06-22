@@ -52,6 +52,14 @@ func TestWeb(t *testing.T) {
 		})
 
 		g.Describe("signup flow", func() {
+			g.It("Doesn't yet exist", func() {
+				res := requesty("GET", "/auth/exists/"+NAME, nil, engine, nil)
+				body, err := ioutil.ReadAll(res.Body)
+				g.Assert(err).IsNil()
+				g.Assert(body).Equal([]byte("false"))
+				g.Assert(res.Code).Equal(http.StatusOK)
+			})
+
 			g.It("Signs up", func() {
 				res := requesty("POST", "/auth/signup", bytes.NewReader(auth), engine, map[string]string{
 					"contentType": "application/protobuf",
@@ -67,6 +75,14 @@ func TestWeb(t *testing.T) {
 				g.Assert(player).IsNotNil()
 				g.Assert(len(player.Token)).Equal(0)
 				g.Assert(player.Name).Equal(NAME)
+			})
+
+			g.It("Now exists", func() {
+				res := requesty("GET", "/auth/exists/"+NAME, nil, engine, nil)
+				body, err := ioutil.ReadAll(res.Body)
+				g.Assert(err).IsNil()
+				g.Assert(body).Equal([]byte("true"))
+				g.Assert(res.Code).Equal(http.StatusOK)
 			})
 
 			g.It("Logs in", func() {
@@ -188,9 +204,9 @@ func TestWeb(t *testing.T) {
 				var chunks types.Chunks
 				err = chunks.Unmarshal(body)
 				g.Assert(err).IsNil()
-				g.Assert(len(chunks.Chunks)).Equal(7*7*7)
+				g.Assert(len(chunks.Chunks)).Equal(7 * 7 * 7)
 				g.Assert(chunks.Chunks[0]).IsNotNil()
-				g.Assert(chunks.Chunks[7*7*7 - 1]).IsNotNil()
+				g.Assert(chunks.Chunks[7*7*7-1]).IsNotNil()
 				g.Assert(len(chunks.Chunks[0].Voxels)).Equal(constants.CHUNK_LENGTH)
 			})
 
@@ -215,12 +231,11 @@ func TestWeb(t *testing.T) {
 				var chunks types.Chunks
 				err = chunks.Unmarshal(body)
 				g.Assert(err).IsNil()
-				g.Assert(len(chunks.Chunks)).Equal(7*7*7)
+				g.Assert(len(chunks.Chunks)).Equal(7 * 7 * 7)
 				g.Assert(chunks.Chunks[0]).IsNotNil()
-				g.Assert(chunks.Chunks[7*7*7 - 1]).IsNotNil()
+				g.Assert(chunks.Chunks[7*7*7-1]).IsNotNil()
 				g.Assert(len(chunks.Chunks[0].Voxels)).Equal(constants.CHUNK_LENGTH)
 			})
-
 
 			g.It("out of range", func() {
 				res := requesty("GET", fmt.Sprintf("/world/chunk/%d/%d/%d", 0, constants.ACTIVE_CHUNK_RADIUS+1, 0), nil, engine, map[string]string{

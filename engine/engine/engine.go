@@ -23,7 +23,7 @@ func (engine *Engine) Init(saveDir string) error {
 
 	engine.World = &World{Seed: C.SEED}
 
-	if err := engine.World.Init(saveDir, 16 * 1024*1024); err != nil { // 16 MB
+	if err := engine.World.Init(saveDir, 16*1024*1024); err != nil { // 16 MB
 		return err
 	}
 
