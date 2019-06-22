@@ -9,6 +9,8 @@ import (
 	"time"
 )
 
+const PORT = 8080
+
 func main() {
 	fmt.Println("Starting engine...")
 
@@ -20,10 +22,10 @@ func main() {
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
-	fmt.Println("Engine started!")
+	fmt.Printf("Engine started @ port %d!\n", PORT)
 
 	var webServerError chan error
-	huyilla.Serve(8080, webServerError)
+	huyilla.Serve(PORT, webServerError)
 
 mainloop:
 	for {
