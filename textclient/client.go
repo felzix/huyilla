@@ -188,15 +188,8 @@ func (client *Client) EnginePoller() {
 
 			center := client.player.Entity.Location.Chunk
 
-			// TODO
-			// my location is correct, as is the terrain being drawn
-			// but it's drawing me at the wrong place
-			// that's why if I go too far I disappear:
-			// it draws me off the screen
-			debugPrint(entity.Location.ToString())
 
 			chunks, err := client.api.GetChunks(center, constants.ACTIVE_CHUNK_RADIUS)
-
 			if err != nil {
 				client.Quit(err)
 				return

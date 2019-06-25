@@ -15,13 +15,16 @@ func (engine *Engine) RegisterAction(action *types.Action) {
 
 // returns true if move succeeded; false otherwise
 func (engine *Engine) Move(action *types.Action) (bool, error) {
+	engine.Lock()
+	defer engine.Unlock()
+
 	player, err := engine.World.Player(action.PlayerName)
 	if err != nil {
 		return false, err
 	}
 
 	if player.EntityId == 0 {
-		return false, errors.New("player doesn't have an entity (player has not yet finished signup)")
+		return false, errors.New("player doesn't have an entity (player has not finished signup)")
 	}
 
 	entity, err := engine.World.Entity(player.EntityId)

@@ -269,6 +269,7 @@ func chunkHandler(engine *Engine) http.HandlerFunc {
 						Entities: entities,
 						Items:    chunk.Items,
 					}
+
 					chunks.Points[i] = point
 
 					i++

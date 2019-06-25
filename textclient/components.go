@@ -142,7 +142,7 @@ func GameBoard() *react.ReactElement {
 									Key:     "",
 									Props: react.Properties{
 										"client":   client,
-										"absPoint": client.player.Entity.Location,
+										"center": client.player.Entity.Location,
 									},
 									X:      0,
 									Y:      topbarHeight,
@@ -243,7 +243,7 @@ func Tiles() *react.ReactElement {
 		Type: "Tiles",
 		DrawFn: func(r *react.ReactElement, maxWidth, maxHeight int) (*react.DrawResult, error) {
 			client := r.Props["client"].(*Client)
-			absPoint := r.Props["absPoint"].(*types.AbsolutePoint)
+			center := r.Props["center"].(*types.AbsolutePoint)
 
 			result := react.DrawResult{
 				Region: react.NewRegion(0, 0, maxWidth, maxHeight),
@@ -252,19 +252,19 @@ func Tiles() *react.ReactElement {
 			localX := 0
 			localY := 0
 
-			for chunkY := -1; chunkY < 2; chunkY++ {
-				height := C.CHUNK_SIZE
-				if height > maxHeight - localY {
-					height = maxHeight - localY
+			for chunkX := -1; chunkX < 2; chunkX++ {
+				width := C.CHUNK_SIZE
+				if width > maxWidth - localX {
+					width = maxWidth - localX
 				}
 
-				for chunkX := -1; chunkX < 2; chunkX++ {
-					width := C.CHUNK_SIZE
-					if width > maxWidth - localX {
-						width = maxWidth - localX
+				for chunkY := -1; chunkY < 2; chunkY++ {
+					height := C.CHUNK_SIZE
+					if height > maxHeight - localY {
+						height = maxHeight - localY
 					}
 
-					point := absPoint.Derive(int64(chunkX*16), int64(chunkY*16), 0, C.CHUNK_SIZE)
+					point := center.Derive(int64(chunkX*C.CHUNK_SIZE), int64(chunkY*C.CHUNK_SIZE), 0, C.CHUNK_SIZE)
 					chunk := client.world.chunks[*types.NewComparablePoint(point.Chunk)]
 
 					zLevel := int(point.Voxel.Z)
@@ -276,11 +276,11 @@ func Tiles() *react.ReactElement {
 						drawEntitiesForChunk(result, localX, localY, width, height, zLevel, chunk)
 					}
 
-					localX += width
+					localY += height
 				}
 
-				localX = 0
-				localY += height
+				localY = 0
+				localX += width
 			}
 			return &result, nil
 		},

@@ -48,8 +48,53 @@ func TestAction(t *testing.T) {
 		})
 
 		g.Describe("queue actions and tick", func() {
-			g.It("moves correctly", func() {
+			g.It("moves within chunk", func() {
 				whereTo := types.NewAbsolutePoint(0, 0, 0, 2, 4, 8)
+
+				g.Assert(len(h.Actions)).Equal(0)
+
+				h.RegisterAction(&types.Action{
+					PlayerName: NAME,
+					Action: &types.Action_Move{
+						Move: &types.Action_MoveAction{
+							WhereTo: whereTo,
+						}}})
+
+				g.Assert(len(h.Actions)).Equal(1)
+
+				err := h.Tick()
+				g.Assert(err).IsNil()
+
+				g.Assert(len(h.Actions)).Equal(0)
+
+				player, err := h.World.Player(NAME)
+				g.Assert(err).IsNil()
+				g.Assert(player).IsNotNil()
+				g.Assert(player.EntityId).NotEqual(0)
+
+				entity, err := h.World.Entity(player.EntityId)
+				g.Assert(err).IsNil()
+				g.Assert(entity).IsNotNil()
+				g.Assert(entity.Location.Equals(whereTo)).IsTrue(fmt.Sprintf(
+					`Player should be at "%s" but is at "%s"`,
+					whereTo.ToString(),
+					entity.Location.ToString(),
+				))
+
+				chunk, err := h.World.Chunk(entity.Location.Chunk)
+				g.Assert(err).IsNil()
+
+				entityPresent := false
+				for _, e := range chunk.Entities {
+					if e == entity.Id {
+						entityPresent = true
+					}
+				}
+				g.Assert(entityPresent).IsTrue("Entity is not actually present in the chunk")
+			})
+
+			g.It("moves to another chunk", func() {
+				whereTo := types.NewAbsolutePoint(-1, 0, 0, 15, 0, 0)
 
 				g.Assert(len(h.Actions)).Equal(0)
 
