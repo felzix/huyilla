@@ -43,11 +43,18 @@ func (world *World) OnlyGetChunk(p *types.Point) (*types.Chunk, error) {
 }
 
 func (world *World) CreateChunk(p *types.Point, chunk *types.Chunk) error {
-	return settum(world, chunkKey(p), chunk)
+	return world.SetChunk(p, chunk)
 }
 
 func (world *World) SetChunk(p *types.Point, chunk *types.Chunk) error {
-	return world.CreateChunk(p, chunk)
+	age, err := world.Age()
+	if err != nil {
+		return err
+	}
+
+	chunk.Tick = age.Ticks
+
+	return settum(world, chunkKey(p), chunk)
 }
 
 func (world *World) DeleteChunk(p *types.Point) error {

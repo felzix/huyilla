@@ -6,7 +6,6 @@ import (
 	"github.com/felzix/huyilla/content"
 	"github.com/felzix/huyilla/types"
 	"github.com/pkg/errors"
-	"os"
 	"sync"
 )
 
@@ -36,29 +35,9 @@ func (engine *Engine) Init(saveDir string) error {
 	return nil
 }
 
-
-func debugPrint(thing interface{}) {
-	f, err := os.OpenFile("/tmp/huyilla-log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
-	if err != nil {
-		panic(err)
-	}
-
-	defer func () {
-		if err := f.Close(); err != nil {
-			panic(err)
-		}
-	}()
-
-	msg := fmt.Sprintf("%v\n", thing)
-	if _, err = f.WriteString(msg); err != nil {
-		panic(err)
-	}
-}
-
-
 func (engine *Engine) Tick() error {
 	// advance age by one tick
-	age, err := engine.World.IncrementAge()
+	_, err := engine.World.IncrementAge()
 	if err != nil {
 		return err
 	}
@@ -140,15 +119,6 @@ func (engine *Engine) Tick() error {
 			// TODO failure no error
 		} else {
 			return errors.Wrap(err, "action failure")
-		}
-	}
-
-	// save chunks
-	for cp, chunk := range activeChunks {
-		p := types.NewPoint(cp.X, cp.Y, cp.Z)
-		chunk.Tick = age.Ticks
-		if err := engine.World.SetChunk(p, chunk); err != nil {
-			return err
 		}
 	}
 

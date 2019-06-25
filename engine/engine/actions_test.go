@@ -81,7 +81,7 @@ func TestAction(t *testing.T) {
 					entity.Location.ToString(),
 				))
 
-				chunk, err := h.World.Chunk(entity.Location.Chunk)
+				chunk, err := h.World.Chunk(whereTo.Chunk)
 				g.Assert(err).IsNil()
 
 				entityPresent := false
@@ -96,21 +96,18 @@ func TestAction(t *testing.T) {
 			g.It("moves to another chunk", func() {
 				whereTo := types.NewAbsolutePoint(-1, 0, 0, 15, 0, 0)
 
-				g.Assert(len(h.Actions)).Equal(0)
-
-				h.RegisterAction(&types.Action{
+				move := &types.Action{
 					PlayerName: NAME,
 					Action: &types.Action_Move{
 						Move: &types.Action_MoveAction{
 							WhereTo: whereTo,
-						}}})
+						},
+					},
+				}
 
-				g.Assert(len(h.Actions)).Equal(1)
-
-				err := h.Tick()
+				success, err := h.Move(move)
 				g.Assert(err).IsNil()
-
-				g.Assert(len(h.Actions)).Equal(0)
+				g.Assert(success).Equal(true)
 
 				player, err := h.World.Player(NAME)
 				g.Assert(err).IsNil()
@@ -126,7 +123,7 @@ func TestAction(t *testing.T) {
 					entity.Location.ToString(),
 				))
 
-				chunk, err := h.World.Chunk(entity.Location.Chunk)
+				chunk, err := h.World.Chunk(whereTo.Chunk)
 				g.Assert(err).IsNil()
 
 				entityPresent := false
@@ -138,5 +135,51 @@ func TestAction(t *testing.T) {
 				g.Assert(entityPresent).IsTrue("Entity is not actually present in the chunk")
 			})
 		})
+
+		g.It("moves to another chunk, via action registration", func() {
+			whereTo := types.NewAbsolutePoint(-1, 0, 0, 0, 0, 0)
+
+			g.Assert(len(h.Actions)).Equal(0)
+
+			h.RegisterAction(&types.Action{
+				PlayerName: NAME,
+				Action: &types.Action_Move{
+					Move: &types.Action_MoveAction{
+						WhereTo: whereTo,
+					}}})
+
+			g.Assert(len(h.Actions)).Equal(1)
+
+			err := h.Tick()
+			g.Assert(err).IsNil()
+
+			g.Assert(len(h.Actions)).Equal(0)
+
+			player, err := h.World.Player(NAME)
+			g.Assert(err).IsNil()
+			g.Assert(player).IsNotNil()
+			g.Assert(player.EntityId).NotEqual(0)
+
+			entity, err := h.World.Entity(player.EntityId)
+			g.Assert(err).IsNil()
+			g.Assert(entity).IsNotNil()
+			g.Assert(entity.Location.Equals(whereTo)).IsTrue(fmt.Sprintf(
+				`Player should be at "%s" but is at "%s"`,
+				whereTo.ToString(),
+				entity.Location.ToString(),
+			))
+
+			chunk, err := h.World.Chunk(whereTo.Chunk)
+			g.Assert(err).IsNil()
+
+			entityPresent := false
+			for _, e := range chunk.Entities {
+				if e == entity.Id {
+					entityPresent = true
+				}
+			}
+			g.Assert(entityPresent).IsTrue("Entity is not actually present in the chunk")
+		})
+
 	})
 }

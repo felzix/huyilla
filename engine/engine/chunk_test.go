@@ -51,5 +51,45 @@ func TestChunk(t *testing.T) {
 				g.Assert(len(chunk.Voxels)).Equal(expectedVoxelCount)
 			}
 		})
+
+		g.It("adds entity to chunk", func() {
+			p := types.NewAbsolutePoint(0, 0, 0, 0, 0, 0)
+
+			_, err := h.World.GenerateChunk(p.Chunk)
+			g.Assert(err).IsNil()
+
+			entity, err := h.World.CreateEntity(0, "", p)
+			g.Assert(err).IsNil()
+
+			err = h.World.AddEntityToChunk(entity)
+			g.Assert(err).IsNil()
+
+			chunk, err := h.World.Chunk(p.Chunk)
+			g.Assert(err).IsNil()
+			g.Assert(chunk).IsNotNil()
+
+			g.Assert(len(chunk.Entities)).Equal(1)
+		})
+
+		g.It("removes entity from chunk", func() {
+			p := types.NewAbsolutePoint(0, 0, 0, 0, 0, 0)
+
+			_, err := h.World.GenerateChunk(p.Chunk)
+			g.Assert(err).IsNil()
+
+			entity, err := h.World.CreateEntity(0, "", p)
+			g.Assert(err).IsNil()
+
+			err = h.World.AddEntityToChunk(entity)
+			g.Assert(err).IsNil()
+
+			err = h.World.RemoveEntityFromChunk(entity.Id, p.Chunk)
+			g.Assert(err).IsNil()
+
+			chunk, err := h.World.Chunk(p.Chunk)
+			g.Assert(err).IsNil()
+
+			g.Assert(len(chunk.Entities)).Equal(0)
+		})
 	})
 }
