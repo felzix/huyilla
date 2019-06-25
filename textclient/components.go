@@ -157,33 +157,13 @@ func GameBoard() *react.ReactElement {
 
 						switch e.Rune() {
 						case 'w': // move up
-							to = client.player.Entity.Location
-							to.Voxel.Y--
-							if to.Voxel.Y == -1 {
-								to.Voxel.Y = C.CHUNK_SIZE - 1
-								to.Chunk.Y--
-							}
+							to = client.player.Entity.Location.Derive(0, -1, 0, C.CHUNK_SIZE)
 						case 's': // move down
-							to = client.player.Entity.Location
-							to.Voxel.Y++
-							if to.Voxel.Y == C.CHUNK_SIZE {
-								to.Voxel.Y = 0
-								to.Chunk.Y++
-							}
+							to = client.player.Entity.Location.Derive(0, +1, 0, C.CHUNK_SIZE)
 						case 'a': // move left
-							to = client.player.Entity.Location
-							to.Voxel.X--
-							if to.Voxel.X == -1 {
-								to.Voxel.X = C.CHUNK_SIZE - 1
-								to.Chunk.X--
-							}
+							to = client.player.Entity.Location.Derive(-1, 0, 0, C.CHUNK_SIZE)
 						case 'd': // move right
-							to = client.player.Entity.Location
-							to.Voxel.X++
-							if to.Voxel.X == C.CHUNK_SIZE {
-								to.Voxel.X = 0
-								to.Chunk.X++
-							}
+							to = client.player.Entity.Location.Derive(+1, 0, 0, C.CHUNK_SIZE)
 						}
 
 						if to != nil {
@@ -203,6 +183,58 @@ func GameBoard() *react.ReactElement {
 			}
 			return &result, nil
 		},
+	}
+}
+
+func drawMissingChunk(result react.DrawResult, localX, localY, width, height int) {
+	for y := 0; y < height; y++ {
+		for x := 0; x < width; x++ {
+			drawMissingTile(result, x, y, localX, localY)
+		}
+	}
+}
+
+func drawMissingTile(result react.DrawResult, x, y, localX, localY int) {
+	result.Region.Cells[x + localX][y + localY] = react.Cell{
+		R:     ' ',
+		Style: tcell.StyleDefault.Background(tcell.ColorDarkGray),
+	}
+}
+
+func drawChunk(result react.DrawResult, localX, localY, width, height, zLevel int, chunk *types.DetailedChunk) {
+	for y := 0; y < height; y++ {
+		for x := 0; x < width; x++ {
+			drawTile(result, x, y, localX, localY, zLevel, chunk)
+		}
+	}
+}
+
+func drawTile(result react.DrawResult, x, y, localX, localY, zLevel int, chunk *types.DetailedChunk) {
+	index := (x * C.CHUNK_SIZE * C.CHUNK_SIZE) + (y * C.CHUNK_SIZE) + zLevel
+	result.Region.Cells[x + localX][y + localY] = react.Cell{
+		R:     voxelToRune(chunk.Voxels[index]),
+		Style: tcell.StyleDefault,
+	}
+}
+
+func drawEntitiesForChunk(result react.DrawResult, localX, localY, width, height, zLevel int, chunk *types.DetailedChunk) {
+	for _, entity := range chunk.Entities {
+		x := int(entity.Location.Voxel.X)
+		y := int(entity.Location.Voxel.Y)
+		z := int(entity.Location.Voxel.Z)
+
+		if x >= width || y >= height || z != zLevel {
+			continue
+		}
+
+		drawEntity(result, x, y, localX, localY, entity)
+	}
+}
+
+func drawEntity(result react.DrawResult, x, y, localX, localY int, entity *types.Entity) {
+	result.Region.Cells[x + localX][y + localY] = react.Cell{
+		R:     entityToRune(entity),
+		Style: tcell.StyleDefault,
 	}
 }
 
@@ -227,60 +259,21 @@ func Tiles() *react.ReactElement {
 				}
 
 				for chunkX := -1; chunkX < 2; chunkX++ {
-					point := absPoint.Clone()
-					point.Chunk.Y += int64(chunkY)
-					point.Chunk.X += int64(chunkX)
-					chunk := client.world.chunks[*types.NewComparablePoint(point.Chunk)]
-
-					zLevel := point.Voxel.Z
-
 					width := C.CHUNK_SIZE
 					if width > maxWidth - localX {
 						width = maxWidth - localX
 					}
 
+					point := absPoint.Derive(int64(chunkX*16), int64(chunkY*16), 0, C.CHUNK_SIZE)
+					chunk := client.world.chunks[*types.NewComparablePoint(point.Chunk)]
+
+					zLevel := int(point.Voxel.Z)
+
 					if chunk == nil {
-						for y := 0; y < height; y++ {
-							for x := 0; x < width; x++ {
-								result.Region.Cells[x + localX][y + localY] = react.Cell{
-									R:     ' ',
-									Style: tcell.StyleDefault.Background(tcell.ColorDarkGray),
-								}
-							}
-						}
+						drawMissingChunk(result, localX, localY, width, height)
 					} else {
-						for y := 0; y < height; y++ {
-							for x := 0; x < width; x++ {
-								index := (x * C.CHUNK_SIZE * C.CHUNK_SIZE) + (y * C.CHUNK_SIZE) + int(zLevel)
-								result.Region.Cells[x + localX][y + localY] = react.Cell{
-									R:     voxelToRune(chunk.Voxels[index]),
-									Style: tcell.StyleDefault,
-								}
-							}
-						}
-
-						for _, entity := range chunk.Entities {
-							x := int(entity.Location.Voxel.X)
-							y := int(entity.Location.Voxel.Y)
-							z := entity.Location.Voxel.Z
-
-							if x >= maxWidth - localX {
-								continue
-							}
-
-							if y >= maxHeight - localY {
-								continue
-							}
-
-							if z != zLevel {
-								continue
-							}
-
-							result.Region.Cells[x + localX][y + localY] = react.Cell{
-								R:     entityToRune(entity),
-								Style: tcell.StyleDefault,
-							}
-						}
+						drawChunk(result, localX, localY, width, height, zLevel, chunk)
+						drawEntitiesForChunk(result, localX, localY, width, height, zLevel, chunk)
 					}
 
 					localX += width
