@@ -188,7 +188,6 @@ func (client *Client) EnginePoller() {
 
 			center := client.player.Entity.Location.Chunk
 
-
 			chunks, err := client.api.GetChunks(center, constants.ACTIVE_CHUNK_RADIUS)
 			if err != nil {
 				client.Quit(err)

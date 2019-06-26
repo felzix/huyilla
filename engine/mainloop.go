@@ -34,7 +34,7 @@ mainloop:
 			break mainloop
 		case err := <-webServerError:
 			fail(err)
-		case <-time.After(time.Millisecond * 50):  // tick period
+		case <-time.After(time.Millisecond * 50): // tick period
 			if err := huyilla.Tick(); err != nil {
 				fail(err)
 			}

@@ -141,7 +141,7 @@ func GameBoard() *react.ReactElement {
 									Element: Tiles(),
 									Key:     "",
 									Props: react.Properties{
-										"client":   client,
+										"client": client,
 										"center": client.player.Entity.Location,
 									},
 									X:      0,
@@ -195,7 +195,7 @@ func drawMissingChunk(result react.DrawResult, localX, localY, width, height int
 }
 
 func drawMissingTile(result react.DrawResult, x, y, localX, localY int) {
-	result.Region.Cells[x + localX][y + localY] = react.Cell{
+	result.Region.Cells[x+localX][y+localY] = react.Cell{
 		R:     ' ',
 		Style: tcell.StyleDefault.Background(tcell.ColorDarkGray),
 	}
@@ -211,7 +211,7 @@ func drawChunk(result react.DrawResult, localX, localY, width, height, zLevel in
 
 func drawTile(result react.DrawResult, x, y, localX, localY, zLevel int, chunk *types.DetailedChunk) {
 	index := (x * C.CHUNK_SIZE * C.CHUNK_SIZE) + (y * C.CHUNK_SIZE) + zLevel
-	result.Region.Cells[x + localX][y + localY] = react.Cell{
+	result.Region.Cells[x+localX][y+localY] = react.Cell{
 		R:     voxelToRune(chunk.Voxels[index]),
 		Style: tcell.StyleDefault,
 	}
@@ -232,7 +232,7 @@ func drawEntitiesForChunk(result react.DrawResult, localX, localY, width, height
 }
 
 func drawEntity(result react.DrawResult, x, y, localX, localY int, entity *types.Entity) {
-	result.Region.Cells[x + localX][y + localY] = react.Cell{
+	result.Region.Cells[x+localX][y+localY] = react.Cell{
 		R:     entityToRune(entity),
 		Style: tcell.StyleDefault,
 	}
@@ -254,13 +254,13 @@ func Tiles() *react.ReactElement {
 
 			for chunkX := -1; chunkX < 2; chunkX++ {
 				width := C.CHUNK_SIZE
-				if width > maxWidth - localX {
+				if width > maxWidth-localX {
 					width = maxWidth - localX
 				}
 
 				for chunkY := -1; chunkY < 2; chunkY++ {
 					height := C.CHUNK_SIZE
-					if height > maxHeight - localY {
+					if height > maxHeight-localY {
 						height = maxHeight - localY
 					}
 
@@ -287,14 +287,13 @@ func Tiles() *react.ReactElement {
 	}
 }
 
-
 func debugPrint(thing interface{}) {
 	f, err := os.OpenFile("/tmp/huyilla-log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
 	if err != nil {
 		panic(err)
 	}
 
-	defer func () {
+	defer func() {
 		if err := f.Close(); err != nil {
 			panic(err)
 		}
@@ -305,4 +304,3 @@ func debugPrint(thing interface{}) {
 		panic(err)
 	}
 }
-
