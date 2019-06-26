@@ -55,10 +55,9 @@ message Chunk {
     map<uint32, Compound> compound = 3;
     repeated int64 entities = 4;
     repeated ItemAtPoint items = 5;
-    repeated Point activeVoxels = 6;
 }
 
-// Used for caching and transmission. Entities are provided in detail but transient info like activeVoxels are excluded.
+// Used for caching and transmission. Entities are provided in detail but transient info are excluded.
 message DetailedChunk {
     uint64 tick = 1;
     repeated uint64 voxels = 2;  // 3D array stored as a 1D array
