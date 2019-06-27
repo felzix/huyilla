@@ -106,7 +106,7 @@ func (world *World) GenerateChunk(p *types.Point) (*types.Chunk, error) {
 			for z = 0; z < C.CHUNK_SIZE; z++ {
 				index := (x * C.CHUNK_SIZE * C.CHUNK_SIZE) + (y * C.CHUNK_SIZE) + z
 				location := types.NewAbsolutePoint(p.X, p.Y, p.Z, x, y, z)
-				chunk.Voxels[index] = world.WorldGenerator.GenVoxel(location)
+				chunk.Voxels[index] = uint64(world.WorldGenerator.GenVoxel(location))
 			}
 		}
 	}
@@ -121,5 +121,5 @@ func (world *World) GenerateChunk(p *types.Point) (*types.Chunk, error) {
 type WorldGenerator interface {
 	SetupForWorld()
 	SetupForChunk(chunkLocation *types.Point)
-	GenVoxel(voxelLocation *types.AbsolutePoint) uint64
+	GenVoxel(voxelLocation *types.AbsolutePoint) types.Voxel
 }

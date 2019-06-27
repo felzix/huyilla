@@ -159,28 +159,14 @@ message Action {
 
 message Content {
     map<uint64, EntityDefinition> e = 1;
-    // only 2^16 voxel types are supported
-    map<uint64, VoxelDefinition> v = 2;
-    map<uint64, FormDefinition> f = 3;
-    map<uint64, MaterialDefinition> m = 4;
+    map<uint64, FormDefinition> f = 3; // only 2^16 kinds
+    map<uint64, MaterialDefinition> m = 4; // only 2^16 kinds
 }
 
 message EntityDefinition {
     string name = 1;
     bool falls = 2;
     uint64 inventoryCapacity = 3;
-}
-
-message VoxelDefinition {
-    string name = 1;
-
-    enum State {
-        RigidSolid = 0;  // like stone
-        LooseSolid = 1;  // like sand
-        Liquid = 2;  // like water
-        Gas = 3;  // like air
-    }
-    State state = 2;
 }
 
 message FormDefinition {
@@ -191,15 +177,16 @@ message FormDefinition {
     bool Wieldable2Handed = 101;
 
     enum WearableSlot {
-        WearableHead = 0;
-        WearableChest = 1;
-        WearableHands = 2;
-        WearableLegs = 3;
-        WearableFeet = 4;
-        WearableFinger = 5;
-        WearableNeck = 6;
-        WearableEyes = 7;
-        WearableWaist = 8;
+        None = 0;
+        WearableHead = 1;
+        WearableChest = 2;
+        WearableHands = 3;
+        WearableLegs = 4;
+        WearableFeet = 5;
+        WearableFinger = 6;
+        WearableNeck = 7;
+        WearableEyes = 8;
+        WearableWaist = 9;
     }
     WearableSlot wearableSlot = 200;
 

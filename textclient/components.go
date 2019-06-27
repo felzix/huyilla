@@ -212,7 +212,7 @@ func drawChunk(result react.DrawResult, localX, localY, width, height, zLevel in
 func drawTile(result react.DrawResult, x, y, localX, localY, zLevel int, chunk *types.DetailedChunk) {
 	index := (x * C.CHUNK_SIZE * C.CHUNK_SIZE) + (y * C.CHUNK_SIZE) + zLevel
 	result.Region.Cells[x+localX][y+localY] = react.Cell{
-		R:     voxelToRune(chunk.Voxels[index]),
+		R:     voxelToRune(types.Voxel(chunk.Voxels[index])),
 		Style: tcell.StyleDefault,
 	}
 }

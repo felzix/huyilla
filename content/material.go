@@ -2,34 +2,43 @@ package content
 
 import "github.com/felzix/huyilla/types"
 
-var MaterialDefinitions = map[uint64]*types.MaterialDefinition{
-	0: {Name: "adminium"},
+const MinTemp = 0
+const MaxTemp = 8191
 
-	1: {Name: "dirt"},
-	2: {Name: "water",
+var MaterialDefinitions = map[uint64]*types.MaterialDefinition{
+	0: {Name: "air",
+		SolidAt: MaxTemp,
+		GasAt:   MinTemp},
+
+	100: {Name: "dirt"},
+	101: {Name: "silt"},
+	102: {Name: "grass"},
+
+	200: {Name: "water",
 		PH:      7,
 		SolidAt: 273,
 		GasAt:   373},
 
-	3: {Name: "siltstone"},
+	1000: {Name: "quartz"},
+	1001: {Name: "feldspar"},
+	1002: {Name: "mica"},
+	1003: {Name: "salt"},
 
-	4: {Name: "copper",
+	2000: {Name: "copper",
 		Metallic: true,
 		SolidAt:  1357,
 		GasAt:    2835},
 
-	5: {Name: "cow skin",
+	3000: {Name: "cow skin",
 		Fleshy: true},
-	6: {Name: "cow leather",
+	3001: {Name: "cow leather",
 		Fleshy: true},
 
-	7: {Name: "oakwood",
+	4000: {Name: "oakwood",
 		Wooden: true},
-	8: {Name: "oakbark",
+	4001: {Name: "oakbark",
 		Wooden: true},
 
-	9: {Name: "salt",
-		Salty: true},
-	10: {Name: "tannin",
+	5000: {Name: "tannin",
 		PH: 3},
 }

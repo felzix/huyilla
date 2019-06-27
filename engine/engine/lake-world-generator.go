@@ -25,24 +25,45 @@ func (gen *LakeWorldGenerator) SetupForChunk(_ *types.Point) {
 	gen.lakeCenter = center
 }
 
-func (gen *LakeWorldGenerator) GenVoxel(p *types.AbsolutePoint) uint64 {
-	v := VOXEL
+func (gen *LakeWorldGenerator) GenVoxel(p *types.AbsolutePoint) types.Voxel {
+	m := MATERIAL
+	f := FORM
 
 	if p.Chunk.Z < 0 {
-		return v["dirt"]
+		return types.ExpandedVoxel{
+			Form: f["cube"],
+			Material: m["dirt"],
+			Temperature: types.RoomTemperature,
+		}.Compress()
 	}
 
 	if p.Chunk.Z > 0 {
-		return v["air"]
+		return types.ExpandedVoxel{
+			Form: f["cube"],
+			Material: m["air"],
+			Temperature: types.RoomTemperature,
+		}.Compress()
 	}
 
 	if p.Voxel.Z == gen.lakeCenter.Z {
 		if p.Voxel.Distance(gen.lakeCenter) <= gen.lakeRadius {
-			return v["water"]
+			return types.ExpandedVoxel{
+				Form: f["cube"],
+				Material: m["water"],
+				Temperature: types.RoomTemperature,
+			}.Compress()
 		} else {
-			return v["barren_earth"]
+			return types.ExpandedVoxel{
+				Form: f["cube"],
+				Material: m["dirt"],
+				Temperature: types.RoomTemperature,
+			}.Compress()
 		}
 	} else {
-		return v["air"]
+		return types.ExpandedVoxel{
+			Form: f["cube"],
+			Material: m["air"],
+			Temperature: types.RoomTemperature,
+		}.Compress()
 	}
 }

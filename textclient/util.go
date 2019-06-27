@@ -5,17 +5,21 @@ import (
 	"github.com/felzix/huyilla/types"
 )
 
-func voxelToRune(voxel uint64) rune {
-	voxelType := voxel & 0xFFFF
+func voxelToRune(v types.Voxel) rune {
+	voxel := v.Expand()
 
-	switch voxelType {
-	case content.VOXEL["air"]:
+	if voxel.Form != content.FORM["cube"] {
+		return rune(0)
+	}
+
+	switch voxel.Material {
+	case content.MATERIAL["air"]:
 		return ' '
-	case content.VOXEL["barren_earth"]:
+	case content.MATERIAL["dirt"]:
 		return '.'
-	case content.VOXEL["barren_grass"]:
+	case content.MATERIAL["grass"]:
 		return ','
-	case content.VOXEL["water"]:
+	case content.MATERIAL["water"]:
 		return '~'
 	default:
 		return rune(0)

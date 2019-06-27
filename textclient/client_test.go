@@ -3,6 +3,7 @@ package main
 import (
 	. "github.com/felzix/goblin"
 	"github.com/felzix/huyilla/content"
+	"github.com/felzix/huyilla/types"
 	"testing"
 )
 
@@ -15,11 +16,20 @@ func TestClient(t *testing.T) {
 		})
 
 		g.It("air voxel", func() {
-			g.Assert(voxelToRune(uint64(0))).Equal(' ')
+			air := types.ExpandedVoxel{
+				Form: 0, // cube
+				Material: 0, // air
+			}.Compress()
+
+			g.Assert(voxelToRune(air)).Equal(' ')
 		})
 
 		g.It("barren earth voxel", func() {
-			g.Assert(voxelToRune(uint64(1))).Equal('.')
+			dirt := types.ExpandedVoxel{
+				Form: 0, // cube
+				Material: 100, // dirt
+			}.Compress()
+			g.Assert(voxelToRune(dirt)).Equal('.')
 		})
 	})
 }

@@ -6,7 +6,6 @@ import (
 )
 
 var ENTITY = content.ENTITY
-var VOXEL = content.VOXEL
 var FORM = content.FORM
 var MATERIAL = content.MATERIAL
 
