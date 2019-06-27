@@ -6,20 +6,23 @@ import (
 )
 
 func voxelToRune(v types.Voxel) rune {
+	F := content.FORM
+	M := content.MATERIAL
+
 	voxel := v.Expand()
 
-	if voxel.Form != content.FORM["cube"] {
+	if voxel.Form != F["cube"] {
 		return rune(0)
 	}
 
 	switch voxel.Material {
-	case content.MATERIAL["air"]:
+	case M["air"]:
 		return ' '
-	case content.MATERIAL["dirt"]:
+	case M["dirt"]:
 		return '.'
-	case content.MATERIAL["grass"]:
+	case M["grass"]:
 		return ','
-	case content.MATERIAL["water"]:
+	case M["water"]:
 		return '~'
 	default:
 		return rune(0)
@@ -27,12 +30,14 @@ func voxelToRune(v types.Voxel) rune {
 }
 
 func entityToRune(entity *types.Entity) rune {
+	E := content.ENTITY
+
 	switch entity.Type {
-	case content.ENTITY["human"]:
+	case E["human"]:
 		return '@'
-	case content.ENTITY["snake"]:
+	case E["snake"]:
 		return '~'
-	case content.ENTITY["wisp"]:
+	case E["wisp"]:
 		return '*'
 	default:
 		return rune(0)
