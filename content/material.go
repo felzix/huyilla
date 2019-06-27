@@ -2,13 +2,10 @@ package content
 
 import "github.com/felzix/huyilla/types"
 
-const MinTemp = 0
-const MaxTemp = 8191
-
 var MaterialDefinitions = map[uint64]*types.MaterialDefinition{
 	0: {Name: "air",
-		SolidAt: MaxTemp,
-		GasAt:   MinTemp},
+		SolidAt: uint32(types.MaxTemperature),
+		GasAt:   uint32(types.MinTemperature)},
 
 	100: {Name: "dirt"},
 	101: {Name: "silt"},

@@ -21,7 +21,9 @@ proto: types/types.pb.go
 fmt:
 	go fmt $(PKG)/...
 
-test: proto
+
+# Depends on engine to capture content's init() behavior.
+test: engine
 	go test -gcflags=-l $(PKG)/...
 
 deps:
