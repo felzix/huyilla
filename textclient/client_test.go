@@ -2,7 +2,6 @@ package main
 
 import (
 	. "github.com/felzix/goblin"
-	"github.com/felzix/huyilla/content"
 	"github.com/felzix/huyilla/types"
 	"testing"
 )
@@ -11,10 +10,6 @@ func TestClient(t *testing.T) {
 	g := Goblin(t)
 
 	g.Describe("Client Test", func() {
-		g.Before(func() {
-			content.PopulateContentNameMaps()
-		})
-
 		g.It("air voxel", func() {
 			air := types.ExpandedVoxel{
 				Form: 0, // cube

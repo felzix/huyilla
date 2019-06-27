@@ -12,7 +12,7 @@ var ENTITY = make(map[string]uint64)
 var FORM = make(map[string]uint64)
 var MATERIAL = make(map[string]uint64)
 
-func PopulateContentNameMaps() {
+func init() {
 	for id, def := range ContentDefinitions.E {
 		ENTITY[def.Name] = id
 	}

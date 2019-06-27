@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"github.com/felzix/huyilla/content"
 	"github.com/felzix/huyilla/types"
 	"github.com/gogo/protobuf/proto"
 	"github.com/peterbourgon/diskv"
@@ -14,9 +13,6 @@ type World struct {
 }
 
 func (world *World) Init(saveDir string, cacheSize uint64) error {
-	// So that recipes and terrain generator can reference content by name.
-	content.PopulateContentNameMaps()
-
 	if db, err := makeDB(saveDir, cacheSize); err == nil {
 		world.DB = db
 	} else {

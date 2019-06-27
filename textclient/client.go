@@ -6,7 +6,6 @@ import (
 	"time"
 
 	react "github.com/felzix/go-curses-react"
-	"github.com/felzix/huyilla/content"
 	"github.com/felzix/huyilla/types"
 	"github.com/gdamore/tcell"
 )
@@ -55,8 +54,6 @@ func (client *Client) Init() error {
 
 	client.world = &WorldCache{}
 	client.world.Init()
-
-	content.PopulateContentNameMaps()
 
 	return nil
 }

@@ -3,7 +3,6 @@ package engine
 import (
 	"fmt"
 	C "github.com/felzix/huyilla/constants"
-	"github.com/felzix/huyilla/content"
 	"github.com/felzix/huyilla/types"
 	"github.com/pkg/errors"
 	"sync"
@@ -18,9 +17,6 @@ type Engine struct {
 }
 
 func (engine *Engine) Init(saveDir string) error {
-	// So that recipes and terrain generator can reference content by name.
-	content.PopulateContentNameMaps()
-
 	engine.World = &World{Seed: C.SEED}
 
 	if err := engine.World.Init(saveDir, 16*1024*1024); err != nil { // 16 MB
