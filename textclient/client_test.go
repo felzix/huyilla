@@ -12,7 +12,7 @@ func TestClient(t *testing.T) {
 	g.Describe("Client Test", func() {
 		g.It("air voxel", func() {
 			air := types.ExpandedVoxel{
-				Form: 0, // cube
+				Form:     0, // cube
 				Material: 0, // air
 			}.Compress()
 
@@ -21,7 +21,7 @@ func TestClient(t *testing.T) {
 
 		g.It("barren earth voxel", func() {
 			dirt := types.ExpandedVoxel{
-				Form: 0, // cube
+				Form:     0,   // cube
 				Material: 100, // dirt
 			}.Compress()
 			g.Assert(voxelToRune(dirt)).Equal('.')

@@ -11,10 +11,10 @@ func TestVoxel(t *testing.T) {
 	g.Describe("Basic", func() {
 		g.It("compress-expand preserves values", func() {
 			v := (ExpandedVoxel{
-				Form: 12,
-				Material: 9004,
+				Form:        12,
+				Material:    9004,
 				Temperature: RoomTemperature,
-				Pressure: 0,
+				Pressure:    0,
 			}).Compress()
 
 			voxel := v.Expand()

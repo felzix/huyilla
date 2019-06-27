@@ -91,5 +91,5 @@ var FormDefinitions = map[uint64]*types.FormDefinition{
 
 	36000: {Name: "shovel",
 		Wieldable2Handed: true,
-		Digging: 90},
+		Digging:          90},
 }

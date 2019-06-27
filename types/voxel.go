@@ -13,24 +13,24 @@ package types
 const RoomTemperature = uint64(295)
 
 type ExpandedVoxel struct {
-	Form uint64
-	Material uint64
-	Other uint64
+	Form        uint64
+	Material    uint64
+	Other       uint64
 	Temperature uint64
-	Pressure uint64 // TODO consider using a different struct where only this field is named differently
-	Multiblock uint64 // TODO use different structure for multiblocks
+	Pressure    uint64 // TODO consider using a different struct where only this field is named differently
+	Multiblock  uint64 // TODO use different structure for multiblocks
 }
 
 type Voxel uint64
 
 func (v Voxel) Expand() ExpandedVoxel {
 	return ExpandedVoxel{
-		Form: uint64(v & 0xFFFF000000000000 >> 48),
-		Material: uint64(v & 0x0000FFFF00000000 >> 32),
-		Other: uint64(v & 0x00000000FFFC0000 >> 18),
+		Form:        uint64(v & 0xFFFF000000000000 >> 48),
+		Material:    uint64(v & 0x0000FFFF00000000 >> 32),
+		Other:       uint64(v & 0x00000000FFFC0000 >> 18),
 		Temperature: uint64(v & 0x00000000000FFFE0 >> 5),
-		Pressure: uint64(v & 0x000000000000000E >> 1),
-		Multiblock: uint64(v & 0x0000000000000001 >> 0),
+		Pressure:    uint64(v & 0x000000000000000E >> 1),
+		Multiblock:  uint64(v & 0x0000000000000001 >> 0),
 	}
 }
 
