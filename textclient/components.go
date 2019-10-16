@@ -14,7 +14,16 @@ const (
 )
 
 func MakeApp() *react.ReactElement {
-	root := &react.ReactElement{
+	// TODO this must be here due to a bug in react where child elements are rebuilt on every tick
+	//      maybe less of a bug and more of a lack of a seriously crucial feature...
+	//      (this could be in the element's State but might as well be a closure)
+	// TODO that doesn't even work. somehow even though State updates to the new zLevelDelta,
+	//      the zLevelDelta prop sent is not being updated
+	//      ...because dom reconciliation just copies over the Props
+	//      it doesn't consider their possibly changing
+	zLevelDelta := int64(0)
+
+	return &react.ReactElement{
 		State: react.State{
 			"mode": VIEWMODE_INTRO,
 		},
@@ -37,6 +46,7 @@ func MakeApp() *react.ReactElement {
 				element = GameBoard()
 				props = react.Properties{
 					"client": client,
+					"zLevelDelta": &zLevelDelta, // must pass pointer due to aforementioned bug
 				}
 			}
 
@@ -47,8 +57,6 @@ func MakeApp() *react.ReactElement {
 			return &result, nil
 		},
 	}
-
-	return root
 }
 
 func Intro() *react.ReactElement {
@@ -95,6 +103,7 @@ func GameBoard() *react.ReactElement {
 		Type: "GameBoard",
 		DrawFn: func(r *react.ReactElement, maxWidth, maxHeight int) (*react.DrawResult, error) {
 			client := r.Props["client"].(*Client)
+			zLevelDelta := r.Props["zLevelDelta"].(*int64)
 
 			viewDiameter := 3
 			topbarHeight := 2
@@ -116,6 +125,7 @@ func GameBoard() *react.ReactElement {
 					Type: "gameboard-container",
 					Key:  "only",
 					DrawFn: func(element *react.ReactElement, maxWidth int, maxHeight int) (*react.DrawResult, error) {
+						center := client.player.Entity.Location.Derive(0, 0, *zLevelDelta, C.CHUNK_SIZE)
 						return &react.DrawResult{
 							Elements: []react.Child{
 								{
@@ -141,7 +151,7 @@ func GameBoard() *react.ReactElement {
 									Key:     "",
 									Props: react.Properties{
 										"client": client,
-										"center": client.player.Entity.Location,
+										"center": center,
 									},
 									X:      0,
 									Y:      topbarHeight,
@@ -163,6 +173,12 @@ func GameBoard() *react.ReactElement {
 							to = client.player.Entity.Location.Derive(-1, 0, 0, C.CHUNK_SIZE)
 						case 'd': // move right
 							to = client.player.Entity.Location.Derive(+1, 0, 0, C.CHUNK_SIZE)
+						case '<': // increase view z-level (look up)
+							*zLevelDelta++
+							return true, nil
+						case '>': // decrease view z-level (look down)
+							*zLevelDelta--
+							return true, nil
 						}
 
 						if to != nil {
@@ -179,6 +195,57 @@ func GameBoard() *react.ReactElement {
 
 			result := react.DrawResult{
 				Elements: []react.Child{*child},
+			}
+			return &result, nil
+		},
+	}
+}
+
+func Tiles() *react.ReactElement {
+	return &react.ReactElement{
+		Type: "Tiles",
+		DrawFn: func(r *react.ReactElement, maxWidth, maxHeight int) (*react.DrawResult, error) {
+			client := r.Props["client"].(*Client)
+			center := r.Props["center"].(*types.AbsolutePoint)
+
+			// Log.Debugf("MARINA %v", center)
+
+			result := react.DrawResult{
+				Region: react.NewRegion(0, 0, maxWidth, maxHeight),
+			}
+
+			localX := 0
+			localY := 0
+
+			for chunkX := -1; chunkX < 2; chunkX++ {
+				width := C.CHUNK_SIZE
+				if width > maxWidth-localX {
+					width = maxWidth - localX
+				}
+
+				for chunkY := -1; chunkY < 2; chunkY++ {
+					height := C.CHUNK_SIZE
+					if height > maxHeight-localY {
+						height = maxHeight - localY
+					}
+
+					point := center.Derive(int64(chunkX*C.CHUNK_SIZE), int64(chunkY*C.CHUNK_SIZE), 0, C.CHUNK_SIZE)
+					chunk := client.world.chunks[*types.NewComparablePoint(point.Chunk)]
+
+					zLevel := int(point.Voxel.Z)
+
+					if chunk == nil {
+						drawMissingChunk(result, localX, localY, width, height)
+					} else {
+						drawChunk(result, localX, localY, width, height, zLevel, chunk)
+						drawEntitiesForChunk(result, localX, localY, width, height, zLevel, chunk)
+					}
+
+					localY += height
+				}
+
+				localY = 0
+				localX += width
 			}
 			return &result, nil
 		},
@@ -236,55 +303,5 @@ func drawEntity(result react.DrawResult, x, y, localX, localY int, entity *types
 	result.Region.Cells[x+localX][y+localY] = react.Cell{
 		R:     entityToRune(entity),
 		Style: tcell.StyleDefault,
-	}
-}
-
-func Tiles() *react.ReactElement {
-	return &react.ReactElement{
-		Type: "Tiles",
-		DrawFn: func(r *react.ReactElement, maxWidth, maxHeight int) (*react.DrawResult, error) {
-			client := r.Props["client"].(*Client)
-			center := r.Props["center"].(*types.AbsolutePoint)
-
-			result := react.DrawResult{
-				Region: react.NewRegion(0, 0, maxWidth, maxHeight),
-			}
-
-			localX := 0
-			localY := 0
-
-			for chunkX := -1; chunkX < 2; chunkX++ {
-				width := C.CHUNK_SIZE
-				if width > maxWidth-localX {
-					width = maxWidth - localX
-				}
-
-				for chunkY := -1; chunkY < 2; chunkY++ {
-					height := C.CHUNK_SIZE
-					if height > maxHeight-localY {
-						height = maxHeight - localY
-					}
-
-					point := center.Derive(int64(chunkX*C.CHUNK_SIZE), int64(chunkY*C.CHUNK_SIZE), 0, C.CHUNK_SIZE)
-					chunk := client.world.chunks[*types.NewComparablePoint(point.Chunk)]
-
-					zLevel := int(point.Voxel.Z)
-
-					if chunk == nil {
-						Log.Warningf("react:Tiles: chunk missing @ %v", point.Chunk)
-						drawMissingChunk(result, localX, localY, width, height)
-					} else {
-						drawChunk(result, localX, localY, width, height, zLevel, chunk)
-						drawEntitiesForChunk(result, localX, localY, width, height, zLevel, chunk)
-					}
-
-					localY += height
-				}
-
-				localY = 0
-				localX += width
-			}
-			return &result, nil
-		},
 	}
 }
