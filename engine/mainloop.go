@@ -9,20 +9,22 @@ import (
 	"time"
 )
 
+
+
 const PORT = 8080
 
 func main() {
-	fmt.Println("Starting engine...")
+	engine.Log.Info("Starting engine...")
 
 	huyilla := &engine.Engine{}
 	if err := huyilla.Init("/tmp/huyilla"); err != nil {
-
+		panic(err)
 	}
 
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
-	fmt.Printf("Engine started @ port %d!\n", PORT)
+	engine.Log.Infof("Engine started @ port %d!\n", PORT)
 
 	var webServerError chan error
 	huyilla.Serve(PORT, webServerError)

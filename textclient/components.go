@@ -6,7 +6,6 @@ import (
 	C "github.com/felzix/huyilla/constants"
 	"github.com/felzix/huyilla/types"
 	"github.com/gdamore/tcell"
-	"os"
 )
 
 const (
@@ -211,8 +210,10 @@ func drawChunk(result react.DrawResult, localX, localY, width, height, zLevel in
 
 func drawTile(result react.DrawResult, x, y, localX, localY, zLevel int, chunk *types.DetailedChunk) {
 	index := (x * C.CHUNK_SIZE * C.CHUNK_SIZE) + (y * C.CHUNK_SIZE) + zLevel
+	voxel := types.Voxel(chunk.Voxels[index])
+	rune_ := voxelToRune(voxel)
 	result.Region.Cells[x+localX][y+localY] = react.Cell{
-		R:     voxelToRune(types.Voxel(chunk.Voxels[index])),
+		R:     rune_,
 		Style: tcell.StyleDefault,
 	}
 }
@@ -270,6 +271,7 @@ func Tiles() *react.ReactElement {
 					zLevel := int(point.Voxel.Z)
 
 					if chunk == nil {
+						Log.Warningf("react:Tiles: chunk missing @ %v", point.Chunk)
 						drawMissingChunk(result, localX, localY, width, height)
 					} else {
 						drawChunk(result, localX, localY, width, height, zLevel, chunk)
@@ -284,23 +286,5 @@ func Tiles() *react.ReactElement {
 			}
 			return &result, nil
 		},
-	}
-}
-
-func debugPrint(thing interface{}) {
-	f, err := os.OpenFile("/tmp/huyilla-log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
-	if err != nil {
-		panic(err)
-	}
-
-	defer func() {
-		if err := f.Close(); err != nil {
-			panic(err)
-		}
-	}()
-
-	msg := fmt.Sprintf("%v\n", thing)
-	if _, err = f.WriteString(msg); err != nil {
-		panic(err)
 	}
 }

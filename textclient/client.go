@@ -162,38 +162,36 @@ func (client *Client) EnginePoller() {
 		case <-client.quitq:
 			return
 		case <-time.After(time.Millisecond * 50): // poll engine only so often
-		default:
-		}
-
-		if client.api == nil || client.player == nil {
-			continue // user is still entering in their information
-		}
-
-		// ignores error because getting world age is eqiuvalent to querying the readiness of the server
-		age, _ := client.api.GetWorldAge()
-
-		if age > client.world.age {
-			client.world.age = age
-
-			entity, err := client.api.GetPlayer(client.username)
-			if err != nil {
-				client.Quit(err)
-				return
+			if client.api == nil || client.player == nil {
+				continue // user is still entering in their information
 			}
 
-			client.player.Entity = entity
+			// ignores error because getting world age is eqiuvalent to querying the readiness of the server
+			age, _ := client.api.GetWorldAge()
 
-			center := client.player.Entity.Location.Chunk
+			if age > client.world.age {
+				client.world.age = age
 
-			chunks, err := client.api.GetChunks(center, constants.ACTIVE_CHUNK_RADIUS)
-			if err != nil {
-				client.Quit(err)
-				return
-			}
+				entity, err := client.api.GetPlayer(client.username)
+				if err != nil {
+					client.Quit(err)
+					return
+				}
 
-			for i, chunk := range chunks.Chunks {
-				point := chunks.Points[i]
-				client.SetChunk(point, chunk)
+				client.player.Entity = entity
+
+				center := client.player.Entity.Location.Chunk
+
+				chunks, err := client.api.GetChunks(center, constants.ACTIVE_CHUNK_RADIUS)
+				if err != nil {
+					client.Quit(err)
+					return
+				}
+
+				for i, chunk := range chunks.Chunks {
+					point := chunks.Points[i]
+					client.SetChunk(point, chunk)
+				}
 			}
 		}
 	}

@@ -59,10 +59,16 @@ func (gen *LakeWorldGenerator) GenVoxel(p *types.AbsolutePoint) types.Voxel {
 				Temperature: types.RoomTemperature,
 			}.Compress()
 		}
-	} else {
+	} else if p.Voxel.Z > gen.lakeCenter.Z {
 		return types.ExpandedVoxel{
 			Form:        f["cube"],
 			Material:    m["air"],
+			Temperature: types.RoomTemperature,
+		}.Compress()
+	} else {
+		return types.ExpandedVoxel{
+			Form:        f["cube"],
+			Material:    m["dirt"],
 			Temperature: types.RoomTemperature,
 		}.Compress()
 	}

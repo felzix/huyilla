@@ -13,6 +13,7 @@ import (
 
 func pingHandler(_ *Engine) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		Log.Debug("web:ping")
 		if _, err := fmt.Fprintf(w, "pong"); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
@@ -21,6 +22,7 @@ func pingHandler(_ *Engine) http.HandlerFunc {
 
 func signupHandler(engine *Engine) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		Log.Debug("web:signup")
 		if r.Body == nil {
 			http.Error(w, "Must supply body", http.StatusBadRequest)
 			return
@@ -50,6 +52,7 @@ func signupHandler(engine *Engine) http.HandlerFunc {
 
 func loginHandler(engine *Engine) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		Log.Debug("web:login")
 		if r.Body == nil {
 			http.Error(w, "Must supply body", http.StatusBadRequest)
 			return
@@ -79,6 +82,7 @@ func loginHandler(engine *Engine) http.HandlerFunc {
 
 func logoutHandler(engine *Engine) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		Log.Debug("web:logout")
 		name, tokenId, _, err := engine.authenticate(w, r)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -118,8 +122,10 @@ func userExistsHandler(engine *Engine) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		username := vars["name"]
+		Log.Debugf("web:userExists: username=%v", username)
 
 		if exists, err := engine.UserExists(username); err == nil {
+			Log.Debugf("web: userExists: username=%v exists=%v", username, exists)
 			if _, err := fmt.Fprint(w, exists); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
@@ -133,6 +139,8 @@ func playerHandler(engine *Engine) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		name := vars["name"]
+
+		Log.Debugf("web:player: name=%v", name)
 
 		if name == "" {
 			http.Error(w, "", http.StatusNotFound)
@@ -188,8 +196,10 @@ func playerHandler(engine *Engine) http.HandlerFunc {
 
 func chunkHandler(engine *Engine) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		Log.Debug("web:chunk")
 		name, _, _, err := engine.authenticate(w, r)
 		if err != nil {
+			Log.Errorf("web:chunk: error=%v", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -197,6 +207,7 @@ func chunkHandler(engine *Engine) http.HandlerFunc {
 		vars := mux.Vars(r)
 		center, err := types.StringToPoint(vars["x"], vars["y"], vars["z"])
 		if err != nil {
+			Log.Errorf("web:chunk: error=%v", err)
 			http.Error(w, "bad url: must be /world/chunk/{x}/{y}/{z}", http.StatusBadRequest)
 			return
 		}
@@ -206,6 +217,7 @@ func chunkHandler(engine *Engine) http.HandlerFunc {
 		if ok && len(radii) == 1 {
 			radius, err = strconv.ParseUint(radii[0], 10, 64)
 			if err != nil {
+				Log.Errorf("web:chunk: error=%v", err)
 				http.Error(w, "bad url param: radius must be a positive integer", http.StatusBadRequest)
 				return
 			}
@@ -215,15 +227,18 @@ func chunkHandler(engine *Engine) http.HandlerFunc {
 
 		player, err := engine.World.Player(name)
 		if err != nil {
+			Log.Errorf("web:chunk: error=%v", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		} else if player == nil {
+			Log.Errorf("web:chunk: error=%v", err)
 			http.Error(w, fmt.Sprintf(`No such player "%s"`, name), http.StatusNotFound)
 			return
 		}
 
 		playerEntity, err := engine.World.Entity(player.EntityId)
 		if err != nil {
+			Log.Errorf("web:chunk: error=%v", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -231,6 +246,7 @@ func chunkHandler(engine *Engine) http.HandlerFunc {
 		mostDistanceChunkPoint := center.Clone()
 		mostDistanceChunkPoint.X += int64(radius)
 		if playerEntity.Location.Chunk.GridDistance(mostDistanceChunkPoint) > constants.ACTIVE_CHUNK_RADIUS {
+			Log.Errorf("web:chunk: error=%v", err)
 			http.Error(w, "can only load nearby chunks", http.StatusForbidden)
 			return
 		}
@@ -244,9 +260,11 @@ func chunkHandler(engine *Engine) http.HandlerFunc {
 					point := types.NewPoint(x, y, z)
 					chunk, err := engine.World.Chunk(point)
 					if err != nil {
+						Log.Errorf("web:chunk: error=%v", err)
 						http.Error(w, err.Error(), http.StatusInternalServerError)
 						return
 					} else if chunk == nil { // shouldn't be possible
+						Log.Errorf(`web:chunk: error=No such Chunk "%s"`, point.ToString())
 						http.Error(w, fmt.Sprintf(`No such Chunk "%s"`, point.ToString()), http.StatusNotFound)
 						return
 					}
@@ -256,6 +274,7 @@ func chunkHandler(engine *Engine) http.HandlerFunc {
 						id := chunk.Entities[i]
 						entity, err := engine.World.Entity(id)
 						if err != nil {
+							Log.Errorf("web:chunk: error=%v", err)
 							http.Error(w, err.Error(), http.StatusInternalServerError)
 							return
 						}
@@ -280,9 +299,11 @@ func chunkHandler(engine *Engine) http.HandlerFunc {
 		if blob, err := chunks.Marshal(); err == nil {
 			w.Header().Set("Content-Type", "application/protobuf")
 			if _, err := w.Write(blob); err != nil {
+				Log.Errorf("web:chunk: error=%v", err)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 		} else {
+			Log.Errorf("web:chunk: error=%v", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	}
@@ -290,6 +311,7 @@ func chunkHandler(engine *Engine) http.HandlerFunc {
 
 func worldAgeHandler(engine *Engine) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		Log.Debug("web: worldAge")
 		age, err := engine.World.Age()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -306,6 +328,7 @@ func worldAgeHandler(engine *Engine) http.HandlerFunc {
 
 func actHandler(engine *Engine) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		Log.Debug("web: act")
 		if r.Body == nil {
 			http.Error(w, "Must supply body", http.StatusBadRequest)
 			return

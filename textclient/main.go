@@ -7,6 +7,17 @@ import (
 )
 
 func main() {
+	backend, closeFn, err := MakeFileLogBackend("/tmp/huyilla-log")
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if err := closeFn(); err != nil {
+			panic(err)
+		}
+	}()
+	Log.SetBackend(backend)
+
 	var client Client
 	initialized := false
 

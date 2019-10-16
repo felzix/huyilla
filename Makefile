@@ -44,6 +44,7 @@ deps:
 		github.com/gorilla/mux \
 		github.com/felzix/go-curses-react \
 		github.com/felzix/goblin \
+		github.com/op/go-logging \
 
 
 clean:

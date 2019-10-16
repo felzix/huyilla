@@ -70,7 +70,7 @@ var FormDefinitions = map[uint64]*types.FormDefinition{
 
 	32800: {Name: "pole"},
 	32801: {Name: "sphere"},
-	32802: {Name: "cube"},
+	32802: {Name: "small cube"},
 
 	32900: {Name: "stick"},
 	32901: {Name: "log"},
