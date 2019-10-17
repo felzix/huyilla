@@ -1,14 +1,17 @@
 PKG = github.com/felzix/huyilla
 
-.PHONY: all clean test deps proto rundir engine textclient
+.PHONY: all clean test deps proto rundir engine textclient guiclient
 
-all: engine textclient
+all: engine textclient guiclient
 
 engine: proto rundir
 	go build -o run/engine ./engine
 
 textclient: proto rundir
 	go build -o run/textclient ./textclient
+
+guiclient: proto rundir
+	go build -o run/guiclient ./guiclient
 
 rundir:
 	mkdir -p run
@@ -45,6 +48,7 @@ deps:
 		github.com/felzix/go-curses-react \
 		github.com/felzix/goblin \
 		github.com/op/go-logging \
+		github.com/golang/freetype/truetype \
 
 
 clean:
