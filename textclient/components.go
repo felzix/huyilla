@@ -45,7 +45,7 @@ func MakeApp() *react.ReactElement {
 			case VIEWMODE_GAME:
 				element = GameBoard()
 				props = react.Properties{
-					"client": client,
+					"client":      client,
 					"zLevelDelta": &zLevelDelta, // must pass pointer due to aforementioned bug
 				}
 			}
