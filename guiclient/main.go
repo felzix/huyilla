@@ -79,7 +79,7 @@ func makeVoxel(scene *core.Node, x, y, z float32, color string) {
 	scene.Add(mesh)
 }
 
-func main() {
+func setupGraphics() (*g3nApp.Application, *core.Node, *camera.Camera) {
 	// Create application and scene
 	app := g3nApp.App()
 	scene := core.NewNode()
@@ -87,13 +87,7 @@ func main() {
 	// Set the scene to be managed by the gui manager
 	gui.Manager().Set(scene)
 
-	// Create perspective camera
-	cam := camera.New(1)
-	cam.SetPosition(0, 0, 4)
-	scene.Add(cam)
-
-	// Set up orbit control for the camera
-	camera.NewOrbitControl(cam)
+	cam := addCamera(scene)
 
 	// Set up callback to update viewport and camera aspect ratio when the window is resized
 	onResize := func(evname string, ev interface{}) {
@@ -106,7 +100,55 @@ func main() {
 	app.Subscribe(window.OnWindowSize, onResize)
 	onResize("", nil)
 
+	return app, scene, cam
+}
+
+func addCamera(scene *core.Node) *camera.Camera {
+	// Create perspective camera
+	cam := camera.New(1)
+	cam.SetPosition(0, 0, 30)
+	scene.Add(cam)
+
+	// Set up orbit control for the camera
+	camera.NewOrbitControl(cam)
+
+	return cam
+}
+
+// Create and add lights to the scene
+func addLight(scene *core.Node) {
+	scene.Add(light.NewAmbient(&math32.Color{1.0, 1.0, 1.0}, 0.8))
+	pointLight := light.NewPoint(&math32.Color{1, 1, 1}, 5.0)
+	pointLight.SetPosition(1, 0, 2)
+	scene.Add(pointLight)
+}
+
+// Create and add an axis helper to the scene
+func addAxes(scene *core.Node) {
+	scene.Add(helper.NewAxes(0.5))
+}
+
+// Set background color to gray
+func setBackgroundColor(app *g3nApp.Application) {
+	app.Gls().ClearColor(0.5, 0.5, 0.5, 1.0)
+}
+
+func runGraphics(app *g3nApp.Application, scene *core.Node, cam *camera.Camera) {
+	app.Run(func(renderer *renderer.Renderer, deltaTime time.Duration) {
+		app.Gls().Clear(gls.DEPTH_BUFFER_BIT | gls.STENCIL_BUFFER_BIT | gls.COLOR_BUFFER_BIT)
+		if err := renderer.Render(scene, cam); err != nil {
+			panic(err)
+		}
+	})
+}
+
+func main() {
+	app, scene, cam := setupGraphics()
 	buildVoxels(scene, makeChunk())
+	addLight(scene)
+	addAxes(scene)
+	setBackgroundColor(app)
+	runGraphics(app, scene, cam)
 
 	// Create and add app button to the scene
 	// btn := gui.NewButton("Make Red")
@@ -117,23 +159,4 @@ func main() {
 	// })
 	// scene.Add(btn)
 
-	// Create and add lights to the scene
-	scene.Add(light.NewAmbient(&math32.Color{1.0, 1.0, 1.0}, 0.8))
-	pointLight := light.NewPoint(&math32.Color{1, 1, 1}, 5.0)
-	pointLight.SetPosition(1, 0, 2)
-	scene.Add(pointLight)
-
-	// Create and add an axis helper to the scene
-	scene.Add(helper.NewAxes(0.5))
-
-	// Set background color to gray
-	app.Gls().ClearColor(0.5, 0.5, 0.5, 1.0)
-
-	// Run the application
-	app.Run(func(renderer *renderer.Renderer, deltaTime time.Duration) {
-		app.Gls().Clear(gls.DEPTH_BUFFER_BIT | gls.STENCIL_BUFFER_BIT | gls.COLOR_BUFFER_BIT)
-		if err := renderer.Render(scene, cam); err != nil {
-			panic(err)
-		}
-	})
 }
