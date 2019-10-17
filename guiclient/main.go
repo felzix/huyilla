@@ -1,7 +1,11 @@
 package main
 
 import (
-	"github.com/g3n/engine/app"
+	C "github.com/felzix/huyilla/constants"
+	"github.com/felzix/huyilla/content"
+	"github.com/felzix/huyilla/engine/engine"
+	"github.com/felzix/huyilla/types"
+	g3nApp "github.com/g3n/engine/app"
 	"github.com/g3n/engine/camera"
 	"github.com/g3n/engine/core"
 	"github.com/g3n/engine/geometry"
@@ -17,9 +21,59 @@ import (
 	"time"
 )
 
-func makeVoxel(scene *core.Node, x, y, z float32) {
+func makeChunk() *types.Chunk {
+	world := &engine.World{Seed: C.SEED}
+
+	if err := world.Init("/tmp/huyilla-gui", 16*1024*1024); err != nil { // 16 MB
+		panic(err)
+	}
+
+	center := types.NewPoint(0, 0, 0)
+	chunk, err := world.Chunk(center)
+	if err != nil {
+		panic(err)
+	}
+
+	return chunk
+}
+
+func voxelToColor(voxel types.Voxel) (string, bool) {
+	M := content.MATERIAL
+
+	v := voxel.Expand()
+
+	// see /Users/robertdavidson/go/src/github.com/g3n/engine/math32/color.go
+	switch v.Material {
+	case M["air"]:
+		return "", false
+	case M["dirt"]:
+		return "SaddleBrown", true
+	case M["grass"]:
+		return "SpringGreen", true
+	case M["water"]:
+		return "DarkBlue", true
+	default:
+		return "", false
+	}
+}
+
+func buildVoxels(scene *core.Node, chunk *types.Chunk) {
+	for x := 0; x < C.CHUNK_SIZE; x++ {
+		for y := 0; y < C.CHUNK_SIZE; y++ {
+			for z := 0; z < C.CHUNK_SIZE; z++ {
+				voxel := chunk.GetVoxel(uint64(x), uint64(y), uint64(z))
+				color, drawn := voxelToColor(voxel)
+				if drawn {
+					makeVoxel(scene, float32(x), float32(y), float32(z), color)
+				}
+			}
+		}
+	}
+}
+
+func makeVoxel(scene *core.Node, x, y, z float32, color string) {
 	geom := geometry.NewCube(1)
-	mat := material.NewStandard(math32.NewColor("DarkBlue"))
+	mat := material.NewStandard(math32.NewColor(color))
 	mesh := graphic.NewMesh(geom, mat)
 	mesh.SetPosition(x, y, z)
 	scene.Add(mesh)
@@ -27,7 +81,7 @@ func makeVoxel(scene *core.Node, x, y, z float32) {
 
 func main() {
 	// Create application and scene
-	app := app.App()
+	app := g3nApp.App()
 	scene := core.NewNode()
 
 	// Set the scene to be managed by the gui manager
@@ -35,7 +89,7 @@ func main() {
 
 	// Create perspective camera
 	cam := camera.New(1)
-	cam.SetPosition(0, 0, 3)
+	cam.SetPosition(0, 0, 4)
 	scene.Add(cam)
 
 	// Set up orbit control for the camera
@@ -52,8 +106,7 @@ func main() {
 	app.Subscribe(window.OnWindowSize, onResize)
 	onResize("", nil)
 
-	makeVoxel(scene, 0, 0, 0)
-	makeVoxel(scene, 0, 0, 2)
+	buildVoxels(scene, makeChunk())
 
 	// Create and add app button to the scene
 	// btn := gui.NewButton("Make Red")
