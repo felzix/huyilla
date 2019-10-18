@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/felzix/huyilla/client"
 	"github.com/felzix/huyilla/constants"
 	"sync"
 	"time"
@@ -10,13 +11,13 @@ import (
 	"github.com/gdamore/tcell"
 )
 
-type Client struct {
+type TextClient struct {
 	sync.Mutex
 
-	world    *WorldCache
+	world    *client.WorldCache
 	player   *types.PlayerDetails
 	username string
-	api      *API
+	api      *client.API
 
 	screen         *react.Screen
 	viewDepthDelta int
@@ -29,57 +30,56 @@ type Client struct {
 	eventq chan tcell.Event
 }
 
-func (client *Client) Init() error {
-	client.displayRadius = 15
+func (textClient *TextClient) Init() error {
+	textClient.displayRadius = 15
 
 	if screen, err := react.NewScreen(); err == nil {
-		client.screen = screen
+		textClient.screen = screen
 	} else {
 		return err
 	}
 
-	client.quitq = make(chan struct{})
-	client.eventq = make(chan tcell.Event)
+	textClient.quitq = make(chan struct{})
+	textClient.eventq = make(chan tcell.Event)
 
 	root := MakeApp()
 	root.Props = react.Properties{
-		"client": client,
+		"textClient": textClient,
 	}
-	if err := client.screen.Init(root, func(err error) error {
-		client.Quit(err)
+	if err := textClient.screen.Init(root, func(err error) error {
+		textClient.Quit(err)
 		return nil
 	}); err != nil {
 		return err
 	}
 
-	client.world = &WorldCache{}
-	client.world.Init()
+	textClient.world = client.NewWorldCache()
 
 	return nil
 }
 
-func (client *Client) Deinit() {
-	client.screen.TCellScreen.Fini()
+func (textClient *TextClient) Deinit() {
+	textClient.screen.TCellScreen.Fini()
 }
 
-func (client *Client) Run() error {
-	go client.EventPoller()  // gets user input
-	go client.EnginePoller() // gets world state from the engine
+func (textClient *TextClient) Run() error {
+	go textClient.EventPoller()  // gets user input
+	go textClient.EnginePoller() // gets world state from the engine
 
 loop:
 	for {
-		if err := client.Draw(); err != nil {
-			client.Quit(err)
+		if err := textClient.Draw(); err != nil {
+			textClient.Quit(err)
 			break loop
 		}
 		select {
-		case <-client.quitq:
+		case <-textClient.quitq:
 			break loop
 		// draw-input loop runs no faster than once every 10ms
 		case <-time.After(time.Millisecond * 10):
-		case ev := <-client.eventq:
-			if err := client.HandleEvent(ev); err != nil {
-				client.Quit(err)
+		case ev := <-textClient.eventq:
+			if err := textClient.HandleEvent(ev); err != nil {
+				textClient.Quit(err)
 				break loop
 			}
 		}
@@ -87,133 +87,133 @@ loop:
 
 	// Inject a wakeup interrupt
 	iev := tcell.NewEventInterrupt(nil)
-	if err := client.screen.TCellScreen.PostEvent(iev); err != nil {
+	if err := textClient.screen.TCellScreen.PostEvent(iev); err != nil {
 		return err
 	}
 
-	return client.err
+	return textClient.err
 }
 
-func (client *Client) HandleEvent(e tcell.Event) error {
+func (textClient *TextClient) HandleEvent(e tcell.Event) error {
 	switch e := e.(type) {
 	case *tcell.EventResize:
-		client.handleResize(e)
+		textClient.handleResize(e)
 	case *tcell.EventKey:
-		return client.handleKey(e)
+		return textClient.handleKey(e)
 	case *tcell.EventMouse:
-		return client.handleMouse(e)
+		return textClient.handleMouse(e)
 	}
 
 	return nil
 }
 
-func (client *Client) handleResize(e *tcell.EventResize) {
-	client.screen.Resize()
-	client.screen.TCellScreen.Sync() // visually jarring but needed after a resize
+func (textClient *TextClient) handleResize(e *tcell.EventResize) {
+	textClient.screen.Resize()
+	textClient.screen.TCellScreen.Sync() // visually jarring but needed after a resize
 }
 
-func (client *Client) handleKey(e *tcell.EventKey) error {
-	client.Lock()
-	defer client.Unlock()
-	return client.screen.HandleKey(e)
+func (textClient *TextClient) handleKey(e *tcell.EventKey) error {
+	textClient.Lock()
+	defer textClient.Unlock()
+	return textClient.screen.HandleKey(e)
 }
 
-func (client *Client) handleMouse(e *tcell.EventMouse) error {
+func (textClient *TextClient) handleMouse(e *tcell.EventMouse) error {
 	// x, y := e.Position()
 	// fmt.Printf("(%d,%d)", x, y)
 	return nil
 }
 
-func (client *Client) Draw() error {
-	client.Lock()
-	defer client.Unlock()
+func (textClient *TextClient) Draw() error {
+	textClient.Lock()
+	defer textClient.Unlock()
 
-	err := client.screen.Draw()
+	err := textClient.screen.Draw()
 	if err == nil {
-		client.screen.TCellScreen.Show()
+		textClient.screen.TCellScreen.Show()
 	}
 	return err
 }
 
-func (client *Client) EventPoller() {
+func (textClient *TextClient) EventPoller() {
 	for {
 		select {
-		case <-client.quitq:
+		case <-textClient.quitq:
 			return
 		default:
 		}
 
-		e := client.screen.TCellScreen.PollEvent()
+		e := textClient.screen.TCellScreen.PollEvent()
 		if e == nil {
 			return
 		}
 
 		select {
-		case <-client.quitq:
+		case <-textClient.quitq:
 			return
-		case client.eventq <- e:
+		case textClient.eventq <- e:
 		}
 	}
 }
 
-func (client *Client) EnginePoller() {
+func (textClient *TextClient) EnginePoller() {
 	for {
 		select {
-		case <-client.quitq:
+		case <-textClient.quitq:
 			return
 		case <-time.After(time.Millisecond * 50): // poll engine only so often
-			if client.api == nil || client.player == nil {
+			if textClient.api == nil || textClient.player == nil {
 				continue // user is still entering in their information
 			}
 
 			// ignores error because getting world age is eqiuvalent to querying the readiness of the server
-			age, _ := client.api.GetWorldAge()
+			age, _ := textClient.api.GetWorldAge()
 
-			if age > client.world.age {
-				client.world.age = age
+			if age > textClient.world.GetAge() {
+				textClient.world.SetAge(age)
 
-				entity, err := client.api.GetPlayer(client.username)
+				entity, err := textClient.api.GetPlayer(textClient.username)
 				if err != nil {
-					client.Quit(err)
+					textClient.Quit(err)
 					return
 				}
 
-				client.player.Entity = entity
+				textClient.player.Entity = entity
 
-				center := client.player.Entity.Location.Chunk
+				center := textClient.player.Entity.Location.Chunk
 
-				chunks, err := client.api.GetChunks(center, constants.ACTIVE_CHUNK_RADIUS)
+				chunks, err := textClient.api.GetChunks(center, constants.ACTIVE_CHUNK_RADIUS)
 				if err != nil {
-					client.Quit(err)
+					textClient.Quit(err)
 					return
 				}
 
 				for i, chunk := range chunks.Chunks {
 					point := chunks.Points[i]
-					client.SetChunk(point, chunk)
+					textClient.world.SetChunk(point, chunk)
 				}
 			}
 		}
 	}
 }
 
-func (client *Client) displayDiameter() uint {
-	return client.displayRadius*2 + 1 // 1 is the voxel w/ the player
+func (textClient *TextClient) displayDiameter() uint {
+	return textClient.displayRadius*2 + 1 // 1 is the voxel w/ the player
 }
 
-func (client *Client) Quit(err error) {
-	client.err = err
-	client.quitOnce.Do(func() {
-		close(client.quitq)
+func (textClient *TextClient) Quit(err error) {
+	textClient.err = err
+	textClient.quitOnce.Do(func() {
+		close(textClient.quitq)
 	})
 }
 
-func (client *Client) Auth() error {
-	client.api = NewAPI("http://localhost:8080", client.username, "murakami")
+func (textClient *TextClient) Auth() error {
+	textClient.api = client.NewAPI("http://localhost:8080", textClient.username, "murakami")
 
-	if exists, err := client.api.UserExists(); err == nil {
+	if exists, err := textClient.api.UserExists(); err == nil {
 		if !exists {
-			if err := client.api.Signup(); err != nil {
+			if err := textClient.api.Signup(); err != nil {
 				return err
 			}
 		}
@@ -221,18 +221,18 @@ func (client *Client) Auth() error {
 		return err
 	}
 
-	if err := client.api.Login(); err != nil {
+	if err := textClient.api.Login(); err != nil {
 		return err
 	}
 
-	entity, err := client.api.GetPlayer(client.username)
+	entity, err := textClient.api.GetPlayer(textClient.username)
 	if err != nil {
 		return err
 	}
 
-	client.player = &types.PlayerDetails{
+	textClient.player = &types.PlayerDetails{
 		Player: &types.Player{
-			Name:     client.username,
+			Name:     textClient.username,
 			EntityId: entity.Id,
 		},
 		Entity: entity,

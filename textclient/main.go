@@ -18,7 +18,7 @@ func main() {
 	}()
 	Log.SetBackend(backend)
 
-	var client Client
+	var client TextClient
 	initialized := false
 
 	defer func() {

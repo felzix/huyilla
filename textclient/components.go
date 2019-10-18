@@ -28,7 +28,7 @@ func MakeApp() *react.ReactElement {
 			"mode": VIEWMODE_INTRO,
 		},
 		DrawFn: func(r *react.ReactElement, maxWidth, maxHeight int) (*react.DrawResult, error) {
-			client := r.Props["client"].(*Client)
+			client := r.Props["client"].(*TextClient)
 			mode := r.State["mode"].(int)
 
 			var element *react.ReactElement
@@ -63,7 +63,7 @@ func Intro() *react.ReactElement {
 	return &react.ReactElement{
 		Type: "Intro",
 		DrawFn: func(r *react.ReactElement, maxWidth, maxHeight int) (*react.DrawResult, error) {
-			client := r.Props["client"].(*Client)
+			client := r.Props["client"].(*TextClient)
 			nextMode := r.Props["nextMode"].(func())
 
 			child := react.NewChild(react.HorizontalLayout(), "", maxWidth, maxHeight, react.Properties{
@@ -102,7 +102,7 @@ func GameBoard() *react.ReactElement {
 	return &react.ReactElement{
 		Type: "GameBoard",
 		DrawFn: func(r *react.ReactElement, maxWidth, maxHeight int) (*react.DrawResult, error) {
-			client := r.Props["client"].(*Client)
+			client := r.Props["client"].(*TextClient)
 			zLevelDelta := r.Props["zLevelDelta"].(*int64)
 
 			viewDiameter := 3
@@ -112,7 +112,7 @@ func GameBoard() *react.ReactElement {
 			totalheight := topbarHeight + (boardSize * viewDiameter)
 
 			var child *react.Child
-			if client.world.age == 0 {
+			if client.world.GetAge() == 0 {
 				child = react.NewChild(react.Label(), "loading", maxWidth, maxHeight, react.Properties{
 					"label": "Loading world from engine. Please wait.",
 				})
@@ -134,7 +134,7 @@ func GameBoard() *react.ReactElement {
 									Props: react.Properties{
 										"children": []*react.Child{
 											react.ManagedChild(react.Label(), "debug-bar", react.Properties{
-												"label": fmt.Sprintf("%d", client.world.age),
+												"label": fmt.Sprintf("%d", client.world.GetAge()),
 											}),
 											react.ManagedChild(react.Label(), "blank", react.Properties{
 												"label": "",
@@ -205,7 +205,7 @@ func Tiles() *react.ReactElement {
 	return &react.ReactElement{
 		Type: "Tiles",
 		DrawFn: func(r *react.ReactElement, maxWidth, maxHeight int) (*react.DrawResult, error) {
-			client := r.Props["client"].(*Client)
+			client := r.Props["client"].(*TextClient)
 			center := r.Props["center"].(*types.AbsolutePoint)
 
 			// Log.Debugf("MARINA %v", center)
@@ -230,7 +230,7 @@ func Tiles() *react.ReactElement {
 					}
 
 					point := center.Derive(int64(chunkX*C.CHUNK_SIZE), int64(chunkY*C.CHUNK_SIZE), 0, C.CHUNK_SIZE)
-					chunk := client.world.chunks[*types.NewComparablePoint(point.Chunk)]
+					chunk := client.world.GetChunk(point.Chunk)
 
 					zLevel := int(point.Voxel.Z)
 

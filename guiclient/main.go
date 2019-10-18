@@ -1,12 +1,12 @@
 package main
 
 import (
+	"github.com/felzix/huyilla/client"
 	C "github.com/felzix/huyilla/constants"
 	"github.com/felzix/huyilla/content"
-	"github.com/felzix/huyilla/engine/engine"
 	"github.com/felzix/huyilla/types"
 	g3nApp "github.com/g3n/engine/app"
-	"github.com/g3n/engine/camera"
+	g3nCamera "github.com/g3n/engine/camera"
 	"github.com/g3n/engine/core"
 	"github.com/g3n/engine/geometry"
 	"github.com/g3n/engine/gls"
@@ -18,68 +18,217 @@ import (
 	"github.com/g3n/engine/renderer"
 	"github.com/g3n/engine/util/helper"
 	"github.com/g3n/engine/window"
+	"github.com/gdamore/tcell"
+	"sync"
 	"time"
 )
 
-func makeChunk() *types.Chunk {
-	world := &engine.World{Seed: C.SEED}
-
-	if err := world.Init("/tmp/huyilla-gui", 16*1024*1024); err != nil { // 16 MB
-		panic(err)
-	}
-
-	center := types.NewPoint(0, 0, 0)
-	chunk, err := world.Chunk(center)
-	if err != nil {
-		panic(err)
-	}
-
-	return chunk
-}
-
-func voxelToColor(voxel types.Voxel) (string, bool) {
-	M := content.MATERIAL
-
-	v := voxel.Expand()
-
-	// see /Users/robertdavidson/go/src/github.com/g3n/engine/math32/color.go
-	switch v.Material {
-	case M["air"]:
-		return "", false
-	case M["dirt"]:
-		return "SaddleBrown", true
-	case M["grass"]:
-		return "SpringGreen", true
-	case M["water"]:
-		return "DarkBlue", true
-	default:
-		return "", false
-	}
-}
-
-func buildVoxels(scene *core.Node, chunk *types.Chunk) {
+func buildVoxels(scene *core.Node, chunk *types.DetailedChunk, offset *types.Point) {
 	for x := 0; x < C.CHUNK_SIZE; x++ {
 		for y := 0; y < C.CHUNK_SIZE; y++ {
 			for z := 0; z < C.CHUNK_SIZE; z++ {
 				voxel := chunk.GetVoxel(uint64(x), uint64(y), uint64(z))
-				color, drawn := voxelToColor(voxel)
-				if drawn {
-					makeVoxel(scene, float32(x), float32(y), float32(z), color)
+				if isDrawn(voxel) {
+					trueX := float32(x + int(offset.X * 16))
+					trueY := float32(y + int(offset.Y * 16))
+					trueZ := float32(z + int(offset.Z * 16))
+					makeVoxel(scene, trueX, trueY, trueZ, voxel)
 				}
 			}
 		}
 	}
 }
 
-func makeVoxel(scene *core.Node, x, y, z float32, color string) {
-	geom := geometry.NewCube(1)
-	mat := material.NewStandard(math32.NewColor(color))
+func isDrawn(voxel types.Voxel) bool {
+	M := content.MATERIAL
+	v := voxel.Expand()
+	switch v.Material {
+	case M["air"]:
+		return false
+	case M["dirt"]:
+		return true
+	case M["grass"]:
+		return true
+	case M["water"]:
+		return true
+	default:
+		return false
+	}
+}
+
+var geometries = make(map[uint64]geometry.IGeometry)
+
+func makeGeometries() {
+	geometries[content.FORM["cube"]] = geometry.NewCube(1)
+}
+
+var materials = make(map[uint64]material.IMaterial)
+
+func makeMaterials() {
+	materials[content.MATERIAL["dirt"]] = material.NewStandard(math32.NewColor("SaddleBrown"))
+	materials[content.MATERIAL["grass"]] = material.NewStandard(math32.NewColor("SpringGreen"))
+	materials[content.MATERIAL["water"]] = material.NewStandard(math32.NewColor("DarkBlue"))
+}
+
+func makeVoxel(scene *core.Node, x, y, z float32, voxel types.Voxel) {
+	v := voxel.Expand()
+	geom := geometries[v.Form]
+	mat := materials[v.Material]
+
 	mesh := graphic.NewMesh(geom, mat)
 	mesh.SetPosition(x, y, z)
 	scene.Add(mesh)
 }
 
-func setupGraphics() (*g3nApp.Application, *core.Node, *camera.Camera) {
+type GuiClient struct {
+	sync.Mutex
+
+	world    *client.WorldCache
+	player   *types.PlayerDetails
+	username string
+	api      *client.API
+
+	displayRadius  uint
+
+	quitq    chan struct{}
+	quitOnce sync.Once
+	err      error
+
+	eventq chan tcell.Event
+
+	app *g3nApp.Application
+	rootScene *core.Node
+	camera *g3nCamera.Camera
+}
+
+func NewGuiClient() *GuiClient {
+	app, scene, cam := setupGraphics()
+
+	return &GuiClient{
+		world: client.NewWorldCache(),
+		player: nil,
+		username: "felzix",
+		api: nil,
+
+		displayRadius: 3,
+
+		quitq: make(chan struct{}),
+		quitOnce: sync.Once{},
+		err: nil,
+
+		eventq:  make(chan tcell.Event),
+
+		app: app,
+		rootScene: scene,
+		camera: cam,
+	}
+}
+
+func (guiClient *GuiClient) Run() error {
+	if err := guiClient.Auth(); err != nil {
+		return err
+	}
+	go guiClient.EnginePoller()
+	guiClient.runGraphics()
+
+	return guiClient.err
+}
+
+func (guiClient *GuiClient) Auth() error {
+	guiClient.api = client.NewAPI("http://localhost:8080", guiClient.username, "murakami")
+
+	if exists, err := guiClient.api.UserExists(); err == nil {
+		if !exists {
+			if err := guiClient.api.Signup(); err != nil {
+				return err
+			}
+		}
+	} else {
+		return err
+	}
+
+	if err := guiClient.api.Login(); err != nil {
+		return err
+	}
+
+	entity, err := guiClient.api.GetPlayer(guiClient.username)
+	if err != nil {
+		return err
+	}
+
+	guiClient.player = &types.PlayerDetails{
+		Player: &types.Player{
+			Name:     guiClient.username,
+			EntityId: entity.Id,
+		},
+		Entity: entity,
+	}
+
+	return nil
+}
+
+func (guiClient *GuiClient) runGraphics() {
+	guiClient.app.Run(func(renderer *renderer.Renderer, deltaTime time.Duration) {
+		guiClient.app.Gls().Clear(gls.DEPTH_BUFFER_BIT | gls.STENCIL_BUFFER_BIT | gls.COLOR_BUFFER_BIT)
+		if err := renderer.Render(guiClient.rootScene, guiClient.camera); err != nil {
+			panic(err)
+		}
+	})
+}
+
+
+func (guiClient *GuiClient) Quit(err error) {
+	guiClient.err = err
+	guiClient.quitOnce.Do(func() {
+		close(guiClient.quitq)
+	})
+}
+
+func (guiClient *GuiClient) EnginePoller() {
+	for {
+		select {
+		case <-guiClient.quitq:
+			return
+		case <-time.After(time.Millisecond * 500): // poll engine only so often
+			if guiClient.api == nil || guiClient.player == nil {
+				continue // user is still entering in their information
+			}
+
+			// ignores error because getting world age is eqiuvalent to querying the readiness of the server
+			age, _ := guiClient.api.GetWorldAge()
+
+			if age > guiClient.world.GetAge() {
+				guiClient.world.SetAge(age)
+
+				entity, err := guiClient.api.GetPlayer(guiClient.username)
+				if err != nil {
+					guiClient.Quit(err)
+					return
+				}
+
+				guiClient.player.Entity = entity
+
+				center := guiClient.player.Entity.Location.Chunk
+
+				chunks, err := guiClient.api.GetChunks(center, C.ACTIVE_CHUNK_RADIUS)
+				if err != nil {
+					guiClient.Quit(err)
+					return
+				}
+
+				for i, chunk := range chunks.Chunks {
+					point := chunks.Points[i]
+					guiClient.world.SetChunk(point, chunk)
+				}
+				buildVoxels(guiClient.rootScene, guiClient.world.GetChunk(center), &types.Point{})
+				below := types.NewPoint(center.X, center.Y, center.Z - 1)
+				buildVoxels(guiClient.rootScene, guiClient.world.GetChunk(below), &types.Point{Z: -1})
+			}
+		}
+	}
+}
+
+func setupGraphics() (*g3nApp.Application, *core.Node, *g3nCamera.Camera) {
 	// Create application and scene
 	app := g3nApp.App()
 	scene := core.NewNode()
@@ -100,25 +249,28 @@ func setupGraphics() (*g3nApp.Application, *core.Node, *camera.Camera) {
 	app.Subscribe(window.OnWindowSize, onResize)
 	onResize("", nil)
 
+	makeGeometries()
+	makeMaterials()
+
 	return app, scene, cam
 }
 
-func addCamera(scene *core.Node) *camera.Camera {
+func addCamera(scene *core.Node) *g3nCamera.Camera {
 	// Create perspective camera
-	cam := camera.New(1)
+	cam := g3nCamera.New(1)
 	cam.SetPosition(0, 0, 30)
 	scene.Add(cam)
 
 	// Set up orbit control for the camera
-	camera.NewOrbitControl(cam)
+	g3nCamera.NewOrbitControl(cam)
 
 	return cam
 }
 
 // Create and add lights to the scene
 func addLight(scene *core.Node) {
-	scene.Add(light.NewAmbient(&math32.Color{1.0, 1.0, 1.0}, 0.8))
-	pointLight := light.NewPoint(&math32.Color{1, 1, 1}, 5.0)
+	scene.Add(light.NewAmbient(&math32.Color{R: 1.0, G: 1.0, B: 1.0}, 0.8))
+	pointLight := light.NewPoint(&math32.Color{R: 1, G: 1, B: 1}, 5.0)
 	pointLight.SetPosition(1, 0, 2)
 	scene.Add(pointLight)
 }
@@ -133,30 +285,13 @@ func setBackgroundColor(app *g3nApp.Application) {
 	app.Gls().ClearColor(0.5, 0.5, 0.5, 1.0)
 }
 
-func runGraphics(app *g3nApp.Application, scene *core.Node, cam *camera.Camera) {
-	app.Run(func(renderer *renderer.Renderer, deltaTime time.Duration) {
-		app.Gls().Clear(gls.DEPTH_BUFFER_BIT | gls.STENCIL_BUFFER_BIT | gls.COLOR_BUFFER_BIT)
-		if err := renderer.Render(scene, cam); err != nil {
-			panic(err)
-		}
-	})
-}
-
 func main() {
-	app, scene, cam := setupGraphics()
-	buildVoxels(scene, makeChunk())
-	addLight(scene)
-	addAxes(scene)
-	setBackgroundColor(app)
-	runGraphics(app, scene, cam)
+	guiClient := NewGuiClient()
+	addLight(guiClient.rootScene)
+	addAxes(guiClient.rootScene)
+	setBackgroundColor(guiClient.app)
 
-	// Create and add app button to the scene
-	// btn := gui.NewButton("Make Red")
-	// btn.SetPosition(100, 40)
-	// btn.SetSize(40, 40)
-	// btn.Subscribe(gui.OnClick, func(name string, ev interface{}) {
-	// 	mat.SetColor(math32.NewColor("DarkRed"))
-	// })
-	// scene.Add(btn)
-
+	if err := guiClient.Run(); err != nil {
+		panic(err)
+	}
 }

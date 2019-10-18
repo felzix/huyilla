@@ -9,7 +9,7 @@ import (
 func TestClient(t *testing.T) {
 	g := Goblin(t)
 
-	g.Describe("Client Test", func() {
+	g.Describe("TextClient Test", func() {
 		g.It("air voxel", func() {
 			air := types.ExpandedVoxel{
 				Form:     0, // cube
