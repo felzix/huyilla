@@ -37,6 +37,26 @@ func buildVoxels(scene *core.Node, chunk *types.DetailedChunk, offset *types.Poi
 			}
 		}
 	}
+	for _, e := range chunk.Entities {
+		eX := float32(e.Location.Voxel.X + (offset.X * 16))
+		eY := float32(e.Location.Voxel.Y + (offset.Y * 16))
+		eZ := float32(e.Location.Voxel.Z + (offset.Z * 16))
+		makeEntity(scene, eX, eY, eZ, e)
+	}
+}
+
+func makeEntity(scene *core.Node, x, y, z float32, entity *types.Entity) {
+	def := content.EntityDefinitions[entity.Type]
+	geom := geometries[def.Form]
+	mat := materials[def.Material]
+
+	mesh := graphic.NewMesh(geom, mat)
+	mesh.SetPosition(x, y, z)
+	// mesh.SetDirection(math32.Pi / 2, 0, math32.Pi / 2)
+	mesh.SetDirection(1, 1, 1)
+	// mesh.SetRotation(math32.Pi / 2, math32.Pi / 2, math32.Pi / 2)
+	scene.Add(mesh)
+	mesh.SetRotation(1, 1, 1)
 }
 
 func isDrawn(voxel types.Voxel) bool {
@@ -60,6 +80,7 @@ var geometries = make(map[uint64]geometry.IGeometry)
 
 func makeGeometries() {
 	geometries[content.FORM["cube"]] = geometry.NewCube(1)
+	geometries[content.FORM["human"]] = geometry.NewCylinder(0.3, 1.8, 16, 1, true, true)
 }
 
 var materials = make(map[uint64]material.IMaterial)
@@ -68,6 +89,8 @@ func makeMaterials() {
 	materials[content.MATERIAL["dirt"]] = material.NewStandard(math32.NewColor("SaddleBrown"))
 	materials[content.MATERIAL["grass"]] = material.NewStandard(math32.NewColor("SpringGreen"))
 	materials[content.MATERIAL["water"]] = material.NewStandard(math32.NewColor("DarkBlue"))
+
+	materials[content.MATERIAL["human"]] = material.NewStandard(math32.NewColor("DarkRed"))
 }
 
 func makeVoxel(scene *core.Node, x, y, z float32, voxel types.Voxel) {

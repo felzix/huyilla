@@ -2,6 +2,7 @@ package content
 
 import "github.com/felzix/huyilla/types"
 
+// 16 bits available: 0 - 65535
 var FormDefinitions = map[uint64]*types.FormDefinition{
 	// Forms typical of voxels
 
@@ -52,6 +53,11 @@ var FormDefinitions = map[uint64]*types.FormDefinition{
 	39: {Name: "pole, vertical"},
 	40: {Name: "pole, north-south"},
 	41: {Name: "pole, east-west"},
+
+	// Forms typical of entities
+	10000: {Name: "human"},
+	10001: {Name: "snake"},
+	10002: {Name: "wisp"},
 
 	// relevant for solids but not fluids
 	32000: {Name: "big chunks"},

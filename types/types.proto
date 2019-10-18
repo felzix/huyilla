@@ -165,8 +165,10 @@ message Content {
 
 message EntityDefinition {
     string name = 1;
-    bool falls = 2;
-    uint64 inventoryCapacity = 3;
+    uint64 form = 2;
+    uint64 material = 3;
+    bool falls = 4;
+    uint64 inventoryCapacity = 5;
 }
 
 message FormDefinition {
