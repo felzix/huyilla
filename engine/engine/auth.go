@@ -23,7 +23,7 @@ func (engine *Engine) SignUp(name string, password string) error {
 	}
 
 	// Create new player
-	defaultLocation := types.NewAbsolutePoint(0, 0, 0, 0, 0, 0)
+	defaultLocation := types.NewAbsolutePoint(0, 0, 0, 0, 0, 1)
 
 	entity, err := engine.World.CreateEntity(ENTITY["human"], name, defaultLocation)
 	if err != nil {

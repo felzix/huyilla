@@ -51,12 +51,9 @@ func makeEntity(scene *core.Node, x, y, z float32, entity *types.Entity) {
 	mat := materials[def.Material]
 
 	mesh := graphic.NewMesh(geom, mat)
-	mesh.SetPosition(x, y, z)
-	// mesh.SetDirection(math32.Pi / 2, 0, math32.Pi / 2)
-	mesh.SetDirection(1, 1, 1)
-	// mesh.SetRotation(math32.Pi / 2, math32.Pi / 2, math32.Pi / 2)
+	mesh.SetPosition(x, y, z + 1)
 	scene.Add(mesh)
-	mesh.SetRotation(1, 1, 1)
+	mesh.SetRotation(math32.Pi/2, 0, 0)
 }
 
 func isDrawn(voxel types.Voxel) bool {
@@ -99,8 +96,8 @@ func makeVoxel(scene *core.Node, x, y, z float32, voxel types.Voxel) {
 	mat := materials[v.Material]
 
 	mesh := graphic.NewMesh(geom, mat)
-	mesh.SetPosition(x, y, z)
 	scene.Add(mesh)
+	mesh.SetPosition(x, y, z)
 }
 
 type GuiClient struct {
@@ -212,7 +209,7 @@ func (guiClient *GuiClient) EnginePoller() {
 		select {
 		case <-guiClient.quitq:
 			return
-		case <-time.After(time.Millisecond * 500): // poll engine only so often
+		case <-time.After(time.Millisecond * 2000): // poll engine only so often
 			if guiClient.api == nil || guiClient.player == nil {
 				continue // user is still entering in their information
 			}
@@ -280,12 +277,14 @@ func setupGraphics() (*g3nApp.Application, *core.Node, *g3nCamera.Camera) {
 
 func addCamera(scene *core.Node) *g3nCamera.Camera {
 	// Create perspective camera
-	cam := g3nCamera.New(1)
-	cam.SetPosition(0, 0, 30)
+	cam := g3nCamera.NewPerspective(1, 1, 1000, 45, 0)
+	// cam := g3nCamera.New(1)
+	cam.SetPosition(0, 0, 1)
 	scene.Add(cam)
+	cam.SetRotation(1.5, 0, 0)
 
 	// Set up orbit control for the camera
-	g3nCamera.NewOrbitControl(cam)
+	// control := g3nCamera.NewOrbitControl(cam)
 
 	return cam
 }
