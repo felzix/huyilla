@@ -38,7 +38,7 @@ func (controller *CameraController) winSize() float32 {
 	return float32(size)
 }
 
-func (controller *CameraController) onCursor (eventName string, event interface{}) {
+func (controller *CameraController) onCursor(eventName string, event interface{}) {
 	width, height := window.Get().GetSize()
 
 	cursorEvent := event.(*window.CursorEvent)
@@ -47,7 +47,7 @@ func (controller *CameraController) onCursor (eventName string, event interface{
 	x0, y0 := MiddleOfScreen()
 	xDelta := cursorEvent.Xpos - float32(x0)
 	yDelta := cursorEvent.Ypos - float32(y0)
-	controller.Rotate(cX * xDelta, cY * yDelta)
+	controller.Rotate(cX*xDelta, cY*yDelta)
 	SetCursorPos(x0, y0)
 }
 
@@ -70,5 +70,5 @@ func SetCursorPos(x, y float64) {
 
 func MiddleOfScreen() (float64, float64) {
 	width, height := window.Get().GetSize()
-	return float64(width)/2, float64(height)/2
+	return float64(width) / 2, float64(height) / 2
 }

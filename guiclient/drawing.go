@@ -1,4 +1,5 @@
 package main
+
 import (
 	C "github.com/felzix/huyilla/constants"
 	"github.com/felzix/huyilla/content"
@@ -8,15 +9,22 @@ import (
 	"github.com/g3n/engine/math32"
 )
 
-func (guiClient *GuiClient) buildVoxels(chunk *types.DetailedChunk, offset *types.Point) {
+func (guiClient *GuiClient) buildVoxels(previousChunk, chunk *types.DetailedChunk, offset *types.Point) {
 	for x := 0; x < C.CHUNK_SIZE; x++ {
 		for y := 0; y < C.CHUNK_SIZE; y++ {
 			for z := 0; z < C.CHUNK_SIZE; z++ {
+				previousVoxel := types.Voxel(0)
+				if previousChunk == nil {
+					previousVoxel = 0
+				} else {
+					previousVoxel = previousChunk.GetVoxel(uint64(x), uint64(y), uint64(z))
+				}
+
 				voxel := chunk.GetVoxel(uint64(x), uint64(y), uint64(z))
-				if isDrawn(voxel) {
-					trueX := float32(x + int(offset.X * 16))
-					trueY := float32(y + int(offset.Y * 16))
-					trueZ := float32(z + int(offset.Z * 16))
+				if voxel != previousVoxel && isDrawn(voxel) {
+					trueX := float32(x + int(offset.X*16))
+					trueY := float32(y + int(offset.Y*16))
+					trueZ := float32(z + int(offset.Z*16))
 					makeVoxel(guiClient.rootScene, trueX, trueY, trueZ, voxel)
 				}
 			}
@@ -36,7 +44,7 @@ func (guiClient *GuiClient) makeEntity(x, y, z float32, entity *types.Entity) {
 	mat := materials[def.Material]
 
 	mesh := graphic.NewMesh(geom, mat)
-	mesh.SetPosition(x, y, z + 1)
+	mesh.SetPosition(x, y, z+1)
 	guiClient.rootScene.Add(mesh)
 	mesh.SetRotation(math32.Pi/2, 0, 0)
 
@@ -49,18 +57,14 @@ func (guiClient *GuiClient) makeEntity(x, y, z float32, entity *types.Entity) {
 func isDrawn(voxel types.Voxel) bool {
 	M := content.MATERIAL
 	v := voxel.Expand()
-	switch v.Material {
-	case M["air"]:
-		return false
-	case M["dirt"]:
-		return true
-	case M["grass"]:
-		return true
-	case M["water"]:
-		return true
-	default:
-		return false
+
+	valid := map[uint64]bool {
+		M["dirt"]: true,
+		M["grass"]: true,
+		M["water"]: true,
 	}
+
+	return valid[v.Material]
 }
 
 func makeVoxel(scene *core.Node, x, y, z float32, voxel types.Voxel) {

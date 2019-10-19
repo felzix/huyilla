@@ -29,7 +29,7 @@ type GuiClient struct {
 	username string
 	api      *client.API
 
-	displayRadius  uint
+	displayRadius uint
 
 	quitq    chan struct{}
 	quitOnce sync.Once
@@ -37,9 +37,9 @@ type GuiClient struct {
 
 	eventq chan tcell.Event
 
-	app *g3nApp.Application
-	rootScene *core.Node
-	camera *g3nCamera.Camera
+	app        *g3nApp.Application
+	rootScene  *core.Node
+	camera     *g3nCamera.Camera
 	playerNode *graphic.Mesh
 }
 
@@ -56,22 +56,22 @@ func NewGuiClient() *GuiClient {
 	})
 
 	guiClient := &GuiClient{
-		world: client.NewWorldCache(),
-		player: nil,
+		world:    client.NewWorldCache(),
+		player:   nil,
 		username: "felzix",
-		api: nil,
+		api:      nil,
 
 		displayRadius: 3,
 
-		quitq: make(chan struct{}),
+		quitq:    make(chan struct{}),
 		quitOnce: sync.Once{},
-		err: nil,
+		err:      nil,
 
-		eventq:  make(chan tcell.Event),
+		eventq: make(chan tcell.Event),
 
-		app: app,
+		app:       app,
 		rootScene: scene,
-		camera: cam,
+		camera:    cam,
 	}
 
 	app.Subscribe(window.OnKeyUp, func(_ string, event interface{}) {
@@ -194,9 +194,16 @@ func (guiClient *GuiClient) EnginePoller() {
 					point := chunks.Points[i]
 					guiClient.world.SetChunk(point, chunk)
 				}
-				guiClient.buildVoxels(guiClient.world.GetChunk(center), &types.Point{})
-				below := types.NewPoint(center.X, center.Y, center.Z - 1)
-				guiClient.buildVoxels(guiClient.world.GetChunk(below), &types.Point{Z: -1})
+
+				below := types.NewPoint(center.X, center.Y, center.Z-1)
+				guiClient.buildVoxels(
+					guiClient.world.GetPreviousChunk(center),
+					guiClient.world.GetChunk(center),
+					&types.Point{})
+				guiClient.buildVoxels(
+					guiClient.world.GetPreviousChunk(below),
+					guiClient.world.GetChunk(below),
+					&types.Point{Z: -1})
 			}
 		}
 	}

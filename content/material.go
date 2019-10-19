@@ -13,7 +13,7 @@ var MaterialDefinitions = map[uint64]*types.MaterialDefinition{
 	102: {Name: "grass"},
 
 	200: {
-		Name: "water",
+		Name:    "water",
 		PH:      7,
 		SolidAt: 273,
 		GasAt:   373},
@@ -24,23 +24,23 @@ var MaterialDefinitions = map[uint64]*types.MaterialDefinition{
 	1003: {Name: "salt"},
 
 	2000: {
-		Name: "copper",
+		Name:     "copper",
 		Metallic: true,
 		SolidAt:  1357,
 		GasAt:    2835},
 
 	3000: {
-		Name: "cow skin",
+		Name:   "cow skin",
 		Fleshy: true},
 	3001: {
-		Name: "cow leather",
+		Name:   "cow leather",
 		Fleshy: true},
 
 	4000: {
-		Name: "oakwood",
+		Name:   "oakwood",
 		Wooden: true},
 	4001: {
-		Name: "oakbark",
+		Name:   "oakbark",
 		Wooden: true},
 
 	5000: {Name: "tannin",

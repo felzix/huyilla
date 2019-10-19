@@ -9,14 +9,16 @@ import (
 type WorldCache struct {
 	sync.Mutex
 
-	age    uint64
-	chunks map[types.ComparablePoint]*types.DetailedChunk
+	age            uint64
+	chunks         map[types.ComparablePoint]*types.DetailedChunk
+	previousChunks map[types.ComparablePoint]*types.DetailedChunk
 }
 
 func NewWorldCache() *WorldCache {
 	return &WorldCache{
-		age:    0,
-		chunks: make(map[types.ComparablePoint]*types.DetailedChunk, constants.ACTIVE_CHUNK_CUBE),
+		age:            0,
+		chunks:         make(map[types.ComparablePoint]*types.DetailedChunk, constants.ACTIVE_CHUNK_CUBE),
+		previousChunks: make(map[types.ComparablePoint]*types.DetailedChunk, constants.ACTIVE_CHUNK_CUBE),
 	}
 }
 
@@ -31,11 +33,19 @@ func (cache *WorldCache) SetAge(age uint64) {
 }
 
 func (cache *WorldCache) GetChunk(coords *types.Point) *types.DetailedChunk {
-	return cache.chunks[*types.NewComparablePoint(coords)]
+	point := *types.NewComparablePoint(coords)
+	return cache.chunks[point]
+}
+
+func (cache *WorldCache) GetPreviousChunk(coords *types.Point) *types.DetailedChunk {
+	point := *types.NewComparablePoint(coords)
+	return cache.previousChunks[point]
 }
 
 func (cache *WorldCache) SetChunk(coords *types.Point, chunk *types.DetailedChunk) {
 	cache.Lock()
 	defer cache.Unlock()
-	cache.chunks[*types.NewComparablePoint(coords)] = chunk
+	point := *types.NewComparablePoint(coords)
+	cache.previousChunks[point] = cache.chunks[point]
+	cache.chunks[point] = chunk
 }
