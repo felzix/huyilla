@@ -14,7 +14,6 @@ type CameraController struct {
 	cam *camera.Camera
 
 	RotSpeed float32
-	CursorPosition math32.Vector2
 }
 
 func NewCameraController(cam *camera.Camera) {
@@ -41,18 +40,19 @@ func (controller *CameraController) winSize() float32 {
 
 func (controller *CameraController) onCursor (eventName string, event interface{}) {
 	w := window.Get()
-	w2 := w.(*window.GlfwWindow)
+	// TODO use a type switch or fork the lib to expand the interface
+	//      See https://w3c.github.io/pointerlock if choosing to fork
+	gw := w.(*window.GlfwWindow)
 	width, height := w.GetSize()
 
 	cursorEvent := event.(*window.CursorEvent)
 	cX := -2 * math32.Pi * controller.RotSpeed / float32(width)
 	cY := -2 * math32.Pi * controller.RotSpeed / float32(height)
-	xDelta := cursorEvent.Xpos - controller.CursorPosition.X
-	yDelta := cursorEvent.Ypos - controller.CursorPosition.Y
+	x0, y0 := float64(width)/2, float64(height)/2
+	xDelta := cursorEvent.Xpos - float32(x0)
+	yDelta := cursorEvent.Ypos - float32(y0)
 	controller.Rotate(cX * xDelta, cY * yDelta)
-
-	controller.CursorPosition.Set(float32(width)/2, float32(height)/2)
-	w2.SetCursorPos(float64(width)/2, float64(height)/2)
+	gw.SetCursorPos(x0, y0)
 }
 
 // Rotate rotates the camera in place.
