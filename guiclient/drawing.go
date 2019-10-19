@@ -41,6 +41,7 @@ func (guiClient *GuiClient) makeEntity(x, y, z float32, entity *types.Entity) {
 	mesh.SetRotation(math32.Pi/2, 0, 0)
 
 	if entity.PlayerName == guiClient.player.Player.Name {
+		guiClient.playerNode = mesh
 		mesh.Add(guiClient.camera)
 	}
 }

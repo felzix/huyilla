@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/felzix/huyilla/client"
 	C "github.com/felzix/huyilla/constants"
 	"github.com/felzix/huyilla/types"
@@ -54,7 +55,7 @@ func NewGuiClient() *GuiClient {
 		}
 	})
 
-	return &GuiClient{
+	guiClient := &GuiClient{
 		world: client.NewWorldCache(),
 		player: nil,
 		username: "felzix",
@@ -72,6 +73,30 @@ func NewGuiClient() *GuiClient {
 		rootScene: scene,
 		camera: cam,
 	}
+
+	app.Subscribe(window.OnKeyUp, func(_ string, event interface{}) {
+		keyEvent := event.(*window.KeyEvent)
+		switch keyEvent.Key {
+		case window.KeyEscape:
+			guiClient.app.Exit()
+		}
+	})
+
+	app.Subscribe(window.OnChar, func(_ string, event interface{}) {
+		charEvent := event.(*window.CharEvent)
+		switch charEvent.Char {
+		// TODO base move commands on player's rotation
+		case 'w':
+			fmt.Println(guiClient.player.Entity.Location.Voxel)
+			fmt.Println(guiClient.playerNode.Rotation())
+			target := guiClient.player.Entity.Location.Derive(1, 0, 0, C.CHUNK_SIZE)
+			if err := guiClient.api.IssueMoveAction(target); err != nil {
+				panic(err)
+			}
+		}
+	})
+
+	return guiClient
 }
 
 func (guiClient *GuiClient) Run() error {
