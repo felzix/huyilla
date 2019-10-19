@@ -8,6 +8,7 @@ import (
 	g3nCamera "github.com/g3n/engine/camera"
 	"github.com/g3n/engine/core"
 	"github.com/g3n/engine/gls"
+	"github.com/g3n/engine/graphic"
 	"github.com/g3n/engine/gui"
 	"github.com/g3n/engine/light"
 	"github.com/g3n/engine/math32"
@@ -38,10 +39,14 @@ type GuiClient struct {
 	app *g3nApp.Application
 	rootScene *core.Node
 	camera *g3nCamera.Camera
+	playerNode *graphic.Mesh
 }
 
 func NewGuiClient() *GuiClient {
-	app, scene, cam := setupGraphics()
+	cam := g3nCamera.NewPerspective(1, 1, 1000, 45, 0)
+	app, scene := setupGraphics(cam)
+
+	NewCameraController(cam)
 
 	return &GuiClient{
 		world: client.NewWorldCache(),
@@ -115,7 +120,6 @@ func (guiClient *GuiClient) runGraphics() {
 	})
 }
 
-
 func (guiClient *GuiClient) Quit(err error) {
 	guiClient.err = err
 	guiClient.quitOnce.Do(func() {
@@ -159,23 +163,21 @@ func (guiClient *GuiClient) EnginePoller() {
 					point := chunks.Points[i]
 					guiClient.world.SetChunk(point, chunk)
 				}
-				buildVoxels(guiClient.rootScene, guiClient.world.GetChunk(center), &types.Point{})
+				guiClient.buildVoxels(guiClient.world.GetChunk(center), &types.Point{})
 				below := types.NewPoint(center.X, center.Y, center.Z - 1)
-				buildVoxels(guiClient.rootScene, guiClient.world.GetChunk(below), &types.Point{Z: -1})
+				guiClient.buildVoxels(guiClient.world.GetChunk(below), &types.Point{Z: -1})
 			}
 		}
 	}
 }
 
-func setupGraphics() (*g3nApp.Application, *core.Node, *g3nCamera.Camera) {
+func setupGraphics(cam *g3nCamera.Camera) (*g3nApp.Application, *core.Node) {
 	// Create application and scene
 	app := g3nApp.App()
 	scene := core.NewNode()
 
 	// Set the scene to be managed by the gui manager
 	gui.Manager().Set(scene)
-
-	cam := addCamera(scene)
 
 	// Set up callback to update viewport and camera aspect ratio when the window is resized
 	onResize := func(evname string, ev interface{}) {
@@ -191,7 +193,7 @@ func setupGraphics() (*g3nApp.Application, *core.Node, *g3nCamera.Camera) {
 	makeGeometries()
 	makeMaterials()
 
-	return app, scene, cam
+	return app, scene
 }
 
 func addCamera(scene *core.Node) *g3nCamera.Camera {
@@ -200,7 +202,7 @@ func addCamera(scene *core.Node) *g3nCamera.Camera {
 	// cam := g3nCamera.New(1)
 	cam.SetPosition(0, 0, 1)
 	scene.Add(cam)
-	cam.SetRotation(1.5, 0, 0)
+	// cam.SetRotation(1.5, 0, 0)
 
 	// Set up orbit control for the camera
 	// control := g3nCamera.NewOrbitControl(cam)

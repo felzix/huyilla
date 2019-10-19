@@ -8,7 +8,7 @@ import (
 	"github.com/g3n/engine/math32"
 )
 
-func buildVoxels(scene *core.Node, chunk *types.DetailedChunk, offset *types.Point) {
+func (guiClient *GuiClient) buildVoxels(chunk *types.DetailedChunk, offset *types.Point) {
 	for x := 0; x < C.CHUNK_SIZE; x++ {
 		for y := 0; y < C.CHUNK_SIZE; y++ {
 			for z := 0; z < C.CHUNK_SIZE; z++ {
@@ -17,7 +17,7 @@ func buildVoxels(scene *core.Node, chunk *types.DetailedChunk, offset *types.Poi
 					trueX := float32(x + int(offset.X * 16))
 					trueY := float32(y + int(offset.Y * 16))
 					trueZ := float32(z + int(offset.Z * 16))
-					makeVoxel(scene, trueX, trueY, trueZ, voxel)
+					makeVoxel(guiClient.rootScene, trueX, trueY, trueZ, voxel)
 				}
 			}
 		}
@@ -26,19 +26,23 @@ func buildVoxels(scene *core.Node, chunk *types.DetailedChunk, offset *types.Poi
 		eX := float32(e.Location.Voxel.X + (offset.X * 16))
 		eY := float32(e.Location.Voxel.Y + (offset.Y * 16))
 		eZ := float32(e.Location.Voxel.Z + (offset.Z * 16))
-		makeEntity(scene, eX, eY, eZ, e)
+		guiClient.makeEntity(eX, eY, eZ, e)
 	}
 }
 
-func makeEntity(scene *core.Node, x, y, z float32, entity *types.Entity) {
+func (guiClient *GuiClient) makeEntity(x, y, z float32, entity *types.Entity) {
 	def := content.EntityDefinitions[entity.Type]
 	geom := geometries[def.Form]
 	mat := materials[def.Material]
 
 	mesh := graphic.NewMesh(geom, mat)
 	mesh.SetPosition(x, y, z + 1)
-	scene.Add(mesh)
+	guiClient.rootScene.Add(mesh)
 	mesh.SetRotation(math32.Pi/2, 0, 0)
+
+	if entity.PlayerName == guiClient.player.Player.Name {
+		mesh.Add(guiClient.camera)
+	}
 }
 
 func isDrawn(voxel types.Voxel) bool {
