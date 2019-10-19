@@ -47,6 +47,12 @@ func NewGuiClient() *GuiClient {
 	app, scene := setupGraphics(cam)
 
 	NewCameraController(cam)
+	app.Subscribe(window.OnWindowFocus, func(_ string, event interface{}) {
+		focusEvent := event.(*window.FocusEvent)
+		if focusEvent.Focused {
+			SetCursorPos(MiddleOfScreen())
+		}
+	})
 
 	return &GuiClient{
 		world: client.NewWorldCache(),
@@ -194,20 +200,6 @@ func setupGraphics(cam *g3nCamera.Camera) (*g3nApp.Application, *core.Node) {
 	makeMaterials()
 
 	return app, scene
-}
-
-func addCamera(scene *core.Node) *g3nCamera.Camera {
-	// Create perspective camera
-	cam := g3nCamera.NewPerspective(1, 1, 1000, 45, 0)
-	// cam := g3nCamera.New(1)
-	cam.SetPosition(0, 0, 1)
-	scene.Add(cam)
-	// cam.SetRotation(1.5, 0, 0)
-
-	// Set up orbit control for the camera
-	// control := g3nCamera.NewOrbitControl(cam)
-
-	return cam
 }
 
 // Create and add lights to the scene
