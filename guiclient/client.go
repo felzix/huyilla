@@ -24,7 +24,7 @@ import (
 type GuiClient struct {
 	sync.Mutex
 
-	world    *client.WorldCache
+	Cache    *Cache
 	player   *types.PlayerDetails
 	username string
 	api      *client.API
@@ -56,7 +56,7 @@ func NewGuiClient() *GuiClient {
 	})
 
 	guiClient := &GuiClient{
-		world:    client.NewWorldCache(),
+		Cache:    NewCache(scene),
 		player:   nil,
 		username: "felzix",
 		api:      nil,
@@ -84,12 +84,30 @@ func NewGuiClient() *GuiClient {
 
 	app.Subscribe(window.OnChar, func(_ string, event interface{}) {
 		charEvent := event.(*window.CharEvent)
+
+		fmt.Println(guiClient.player.Entity.Location.Voxel)
+		fmt.Println(guiClient.playerNode.Rotation())
+
 		switch charEvent.Char {
 		// TODO base move commands on player's rotation
+
 		case 'w':
-			fmt.Println(guiClient.player.Entity.Location.Voxel)
-			fmt.Println(guiClient.playerNode.Rotation())
 			target := guiClient.player.Entity.Location.Derive(1, 0, 0, C.CHUNK_SIZE)
+			if err := guiClient.api.IssueMoveAction(target); err != nil {
+				panic(err)
+			}
+		case 's':
+			target := guiClient.player.Entity.Location.Derive(-1, 0, 0, C.CHUNK_SIZE)
+			if err := guiClient.api.IssueMoveAction(target); err != nil {
+				panic(err)
+			}
+		case 'a':
+			target := guiClient.player.Entity.Location.Derive(0, 1, 0, C.CHUNK_SIZE)
+			if err := guiClient.api.IssueMoveAction(target); err != nil {
+				panic(err)
+			}
+		case 'd':
+			target := guiClient.player.Entity.Location.Derive(0, -1, 0, C.CHUNK_SIZE)
 			if err := guiClient.api.IssueMoveAction(target); err != nil {
 				panic(err)
 			}
@@ -163,7 +181,7 @@ func (guiClient *GuiClient) EnginePoller() {
 		select {
 		case <-guiClient.quitq:
 			return
-		case <-time.After(time.Millisecond * 2000): // poll engine only so often
+		case <-time.After(time.Millisecond * 500): // poll engine only so often
 			if guiClient.api == nil || guiClient.player == nil {
 				continue // user is still entering in their information
 			}
@@ -171,8 +189,8 @@ func (guiClient *GuiClient) EnginePoller() {
 			// ignores error because getting world age is eqiuvalent to querying the readiness of the server
 			age, _ := guiClient.api.GetWorldAge()
 
-			if age > guiClient.world.GetAge() {
-				guiClient.world.SetAge(age)
+			if age > guiClient.Cache.GetAge() {
+				guiClient.Cache.SetAge(age)
 
 				entity, err := guiClient.api.GetPlayer(guiClient.username)
 				if err != nil {
@@ -192,18 +210,10 @@ func (guiClient *GuiClient) EnginePoller() {
 
 				for i, chunk := range chunks.Chunks {
 					point := chunks.Points[i]
-					guiClient.world.SetChunk(point, chunk)
+					guiClient.Cache.SetChunk(point, chunk)
 				}
 
-				below := types.NewPoint(center.X, center.Y, center.Z-1)
-				guiClient.buildVoxels(
-					guiClient.world.GetPreviousChunk(center),
-					guiClient.world.GetChunk(center),
-					&types.Point{})
-				guiClient.buildVoxels(
-					guiClient.world.GetPreviousChunk(below),
-					guiClient.world.GetChunk(below),
-					&types.Point{Z: -1})
+				guiClient.Cache.Draw(guiClient)
 			}
 		}
 	}

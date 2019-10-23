@@ -15,3 +15,11 @@ func NewComparablePoint(point *Point) *ComparablePoint {
 		Z: point.Z,
 	}
 }
+
+func (point *ComparablePoint) ToPoint() *Point {
+	return &Point{
+		X: point.X,
+		Y: point.Y,
+		Z: point.Z,
+	}
+}

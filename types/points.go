@@ -73,6 +73,14 @@ func (m *AbsolutePoint) Equals(other *AbsolutePoint) bool {
 	return m.Chunk.Equals(other.Chunk) && m.Voxel.Equals(other.Voxel)
 }
 
+func (m *Point) DeriveVector(other *Point) *Point {
+	return &Point{
+		X: other.X - m.X,
+		Y: other.Y - m.Y,
+		Z: other.Z - m.Z,
+	}
+}
+
 func (m *Point) Distance(other *Point) float64 {
 	x := float64(m.X - other.X)
 	y := float64(m.Y - other.Y)

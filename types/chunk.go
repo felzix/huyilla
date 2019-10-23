@@ -19,5 +19,9 @@ func (m DetailedChunk) GetVoxel(x, y, z uint64) Voxel {
 }
 
 func (m DetailedChunk) GetVoxelIndex(x, y, z uint64) int {
+	return CalculateVoxelIndex(x, y, z)
+}
+
+func CalculateVoxelIndex(x, y, z uint64) int {
 	return int((x * C.CHUNK_SIZE * C.CHUNK_SIZE) + (y * C.CHUNK_SIZE) + z)
 }

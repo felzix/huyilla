@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/g3n/engine/camera"
 	"github.com/g3n/engine/core"
 	"github.com/g3n/engine/gui"
@@ -20,9 +21,10 @@ func NewCameraController(cam *camera.Camera) {
 	controller := new(CameraController)
 	controller.Dispatcher.Initialize()
 	controller.cam = cam
-	controller.RotSpeed = 2.0
-
-	gui.Manager().SubscribeID(window.OnCursor, &controller, controller.onCursor)
+	controller.RotSpeed = 3.0
+	gui.Manager().SetCursorFocus(controller)
+	controller.SubscribeID(window.OnCursor, &controller, controller.onCursor)
+	// gui.Manager().SubscribeID(window.OnCursor, &controller, controller.onCursor)
 }
 
 func (controller *CameraController) Dispose() {
@@ -38,17 +40,31 @@ func (controller *CameraController) winSize() float32 {
 	return float32(size)
 }
 
-func (controller *CameraController) onCursor(eventName string, event interface{}) {
-	width, height := window.Get().GetSize()
+var cursorCalls = 0
 
+func (controller *CameraController) onCursor(eventName string, event interface{}) {
 	cursorEvent := event.(*window.CursorEvent)
-	cX := -2 * math32.Pi * controller.RotSpeed / float32(width)
-	cY := -2 * math32.Pi * controller.RotSpeed / float32(height)
+
+	width, height := window.Get().GetSize()
+	c := -2 * math32.Pi * controller.RotSpeed
+	cX := c / float32(width)
+	cY := c / float32(height)
 	x0, y0 := MiddleOfScreen()
 	xDelta := cursorEvent.Xpos - float32(x0)
 	yDelta := cursorEvent.Ypos - float32(y0)
-	controller.Rotate(cX*xDelta, cY*yDelta)
-	SetCursorPos(x0, y0)
+
+
+	if math32.Abs(xDelta) >= 1 || math32.Abs(yDelta) >= 1 {
+		cursorCalls++
+		fmt.Println("cursor calls:", cursorCalls)
+		// fmt.Println("window", width, height)
+		// fmt.Println("middle", x0, y0)
+		// fmt.Println("cursor", cursorEvent.Xpos, cursorEvent.Ypos)
+		// fmt.Println("delta", xDelta, yDelta)
+
+		controller.Rotate(cX*xDelta, cY*yDelta)
+		SetCursorPos(x0, y0)
+	}
 }
 
 // Rotate rotates the camera in place.
@@ -65,10 +81,15 @@ func SetCursorPos(x, y float64) {
 	// TODO use a type switch or fork the lib to expand the interface
 	//      See https://w3c.github.io/pointerlock if choosing to fork
 	gw := w.(*window.GlfwWindow)
-	gw.SetCursorPos(x, y)
+	gw.SetCursorPos(x, y - 1) // sets it to y+1 for some reason, so subtract one
 }
 
 func MiddleOfScreen() (float64, float64) {
 	width, height := window.Get().GetSize()
-	return float64(width) / 2, float64(height) / 2
+	var halfWidth, halfHeight float64
+
+	halfWidth = float64(width) / 2
+	halfHeight = float64(height) / 2
+
+	return halfWidth, halfHeight
 }

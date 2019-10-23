@@ -269,7 +269,7 @@ func chunkHandler(engine *Engine) http.HandlerFunc {
 						return
 					}
 
-					entities := make([]*types.Entity, len(chunk.Entities))
+					entities := make(map[int64]*types.Entity, len(chunk.Entities))
 					for i := 0; i < len(chunk.Entities); i++ {
 						id := chunk.Entities[i]
 						entity, err := engine.World.Entity(id)
@@ -278,7 +278,7 @@ func chunkHandler(engine *Engine) http.HandlerFunc {
 							http.Error(w, err.Error(), http.StatusInternalServerError)
 							return
 						}
-						entities[i] = entity
+						entities[id] = entity
 					}
 
 					chunks.Chunks[i] = &types.DetailedChunk{
