@@ -21,6 +21,7 @@ type Cache struct {
 	scene        *core.Node
 	entityMeshes map[int64]*graphic.Mesh
 	voxelMeshes  map[types.ComparablePoint][]*graphic.Mesh // pt -> [mesh]
+	basis        *types.Point
 }
 
 func NewCache(scene *core.Node) *Cache {
@@ -33,6 +34,7 @@ func NewCache(scene *core.Node) *Cache {
 		scene:        scene,
 		voxelMeshes:  make(map[types.ComparablePoint][]*graphic.Mesh),
 		entityMeshes: make(map[int64]*graphic.Mesh),
+		basis:        nil,
 	}
 }
 
@@ -118,11 +120,7 @@ func (cache *Cache) CreateEntityMesh(entity *types.Entity, offset *types.Point, 
 		guiClient.playerNode = mesh
 		mesh.Add(guiClient.camera)
 		// Sets camera a bit higher. Unnecessary once player meshes have heads.
-		guiClient.camera.SetPosition(0, 0, -1)
-		// TODO figuring out why player jumps at chunk boundary
-		//      it's probably because I'm treating Point position and mesh position as the same
-		//      when in reality it's Point:Mesh => (x,y,z):(x,z,y)
-		// guiClient.camera.SetPosition(0, 0, -30)
+		guiClient.camera.SetPosition(0, 1, 0)
 	}
 }
 
@@ -180,13 +178,17 @@ func (cache *Cache) Draw(guiClient *GuiClient) {
 	cache.Lock()
 	defer cache.Unlock()
 
-	center := guiClient.player.Entity.Location.Chunk
+	// TODO handle a moving basis
+	if cache.basis == nil {
+		cache.basis = guiClient.player.Entity.Location.Chunk
+	}
+	center := cache.basis
 	currentEntities := make(map[int64]*types.Entity, 0)
 
 	for point, currentChunk := range cache.chunks {
 		previousChunk := cache.previousChunks[point]
 		if previousChunk == nil {
-			offset := center.DeriveVector(point.ToPoint())
+			offset := Offset(center, point.ToPoint())
 			cache.CreateVoxelMeshes(point, currentChunk, offset)
 			for id, entity := range currentChunk.Entities {
 				currentEntities[id] = entity
@@ -198,7 +200,7 @@ func (cache *Cache) Draw(guiClient *GuiClient) {
 		if currentChunk == nil {
 			cache.DestroyVoxelMeshes(point)
 		} else {
-			offset := center.DeriveVector(point.ToPoint())
+			offset := Offset(center, point.ToPoint())
 			cache.UpdateVoxelMeshes(point, offset, previousChunk, currentChunk)
 			for id, entity := range currentChunk.Entities {
 				currentEntities[id] = entity
@@ -209,7 +211,7 @@ func (cache *Cache) Draw(guiClient *GuiClient) {
 	for id, currentEntity := range currentEntities {
 		previousEntity := cache.previousEntities[id]
 		if previousEntity == nil {
-			offset := center.DeriveVector(currentEntity.Location.Chunk)
+			offset := Offset(center, currentEntity.Location.Chunk)
 			cache.CreateEntityMesh(currentEntity, offset, guiClient)
 		}
 	}
@@ -218,7 +220,7 @@ func (cache *Cache) Draw(guiClient *GuiClient) {
 		if currentEntity == nil {
 			cache.DestroyEntityMesh(previousEntity, guiClient)
 		} else {
-			offset := center.DeriveVector(currentEntity.Location.Chunk)
+			offset := Offset(center, currentEntity.Location.Chunk)
 			cache.UpdateEntityMesh(previousEntity, currentEntity, offset)
 		}
 	}
@@ -226,8 +228,10 @@ func (cache *Cache) Draw(guiClient *GuiClient) {
 	cache.previousEntities = currentEntities
 }
 
-// TODO I think I need to apply the y-z switching to chunks as well as meshes within chunks
-//      That means changing how offset is calculated... and just switching offsets doesn't work
+func Offset(basis, point *types.Point) *types.Point {
+	return basis.DeriveVector(point)
+}
+
 func SetMeshPosition(mesh *graphic.Mesh, point *types.Point, offset *types.Point) {
 	// mixing y and z is intended here
 	x := float32(point.X + (offset.X * 16))
