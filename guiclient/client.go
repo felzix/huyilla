@@ -48,12 +48,6 @@ func NewGuiClient() *GuiClient {
 	app, scene := setupGraphics(cam)
 
 	NewCameraController(cam)
-	app.Subscribe(window.OnWindowFocus, func(_ string, event interface{}) {
-		focusEvent := event.(*window.FocusEvent)
-		if focusEvent.Focused {
-			SetCursorPos(MiddleOfScreen())
-		}
-	})
 
 	guiClient := &GuiClient{
 		Cache:    NewCache(scene),
@@ -85,29 +79,30 @@ func NewGuiClient() *GuiClient {
 	app.Subscribe(window.OnChar, func(_ string, event interface{}) {
 		charEvent := event.(*window.CharEvent)
 
-		fmt.Println(guiClient.player.Entity.Location.Voxel)
-		fmt.Println(guiClient.playerNode.Rotation())
-
 		switch charEvent.Char {
 		// TODO base move commands on player's rotation
 
 		case 'w':
 			target := guiClient.player.Entity.Location.Derive(1, 0, 0, C.CHUNK_SIZE)
+			fmt.Println(guiClient.player.Entity.Location.Voxel.ToString(), "->", target.ToString())
 			if err := guiClient.api.IssueMoveAction(target); err != nil {
 				panic(err)
 			}
 		case 's':
 			target := guiClient.player.Entity.Location.Derive(-1, 0, 0, C.CHUNK_SIZE)
+			fmt.Println(guiClient.player.Entity.Location.Voxel.ToString(), "->", target.ToString())
 			if err := guiClient.api.IssueMoveAction(target); err != nil {
 				panic(err)
 			}
 		case 'a':
 			target := guiClient.player.Entity.Location.Derive(0, 1, 0, C.CHUNK_SIZE)
+			fmt.Println(guiClient.player.Entity.Location.Voxel.ToString(), "->", target.ToString())
 			if err := guiClient.api.IssueMoveAction(target); err != nil {
 				panic(err)
 			}
 		case 'd':
 			target := guiClient.player.Entity.Location.Derive(0, -1, 0, C.CHUNK_SIZE)
+			fmt.Println(guiClient.player.Entity.Location.Voxel.ToString(), "->", target.ToString())
 			if err := guiClient.api.IssueMoveAction(target); err != nil {
 				panic(err)
 			}
@@ -208,11 +203,7 @@ func (guiClient *GuiClient) EnginePoller() {
 					return
 				}
 
-				for i, chunk := range chunks.Chunks {
-					point := chunks.Points[i]
-					guiClient.Cache.SetChunk(point, chunk)
-				}
-
+				guiClient.Cache.SetChunks(chunks)
 				guiClient.Cache.Draw(guiClient)
 			}
 		}
