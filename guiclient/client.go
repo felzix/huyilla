@@ -157,7 +157,10 @@ func (guiClient *GuiClient) Auth() error {
 
 func (guiClient *GuiClient) runGraphics() {
 	guiClient.app.Run(func(renderer *renderer.Renderer, deltaTime time.Duration) {
+		fmt.Println("display lag:", deltaTime.String())
 		guiClient.app.Gls().Clear(gls.DEPTH_BUFFER_BIT | gls.STENCIL_BUFFER_BIT | gls.COLOR_BUFFER_BIT)
+		// TODO Render takes ~250ms with chunk radius of 3... a factor too large
+		//      Add occulusion.
 		if err := renderer.Render(guiClient.rootScene, guiClient.camera); err != nil {
 			panic(err)
 		}
@@ -181,7 +184,7 @@ func (guiClient *GuiClient) EnginePoller() {
 				continue // user is still entering in their information
 			}
 
-			// ignores error because getting world age is eqiuvalent to querying the readiness of the server
+			// ignores error because getting world age is equivalent to querying the readiness of the server
 			age, _ := guiClient.api.GetWorldAge()
 
 			if age > guiClient.Cache.GetAge() {
@@ -197,7 +200,8 @@ func (guiClient *GuiClient) EnginePoller() {
 
 				center := guiClient.player.Entity.Location.Chunk
 
-				chunks, err := guiClient.api.GetChunks(center, C.ACTIVE_CHUNK_RADIUS)
+				// chunks, err := guiClient.api.GetChunks(center, C.ACTIVE_CHUNK_RADIUS)
+				chunks, err := guiClient.api.GetChunks(center, 2)
 				if err != nil {
 					guiClient.Quit(err)
 					return
