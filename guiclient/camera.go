@@ -13,7 +13,7 @@ type CameraController struct {
 
 	cam *camera.Camera
 
-	RotSpeed float32
+	RotSpeed     float32
 	LastPosition math32.Vector2
 }
 
