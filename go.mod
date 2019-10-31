@@ -2,6 +2,7 @@ module github.com/felzix/huyilla
 
 require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
+	github.com/felzix/go-curses-react v0.0.0-20190405032759-a603622182bf
 	github.com/g3n/engine v0.0.0-20191001141548-13e8582dadaa
 	github.com/gdamore/tcell v1.3.0
 	github.com/go-gl/glfw v0.0.0-20190409004039-e6da0acd62b1

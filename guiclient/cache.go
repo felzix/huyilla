@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	C "github.com/felzix/huyilla/constants"
 	"github.com/felzix/huyilla/content"
 	"github.com/felzix/huyilla/types"
@@ -68,7 +67,7 @@ func (cache *Cache) setChunk(coords *types.Point, chunk *types.DetailedChunk) {
 }
 
 func (cache *Cache) CreateVoxelMeshes(point types.ComparablePoint, chunk *types.DetailedChunk, offset *types.Point) {
-	fmt.Println("CreateVoxelMeshes", point.ToPoint().ToString())
+	Log.Debug("CreateVoxelMeshes", point.ToPoint().ToString())
 	cache.voxelMeshes[point] = make([]*graphic.Mesh, C.CHUNK_LENGTH)
 	types.EachVoxel(func(x, y, z uint64) {
 		voxel := chunk.GetVoxel(x, y, z)
@@ -77,7 +76,7 @@ func (cache *Cache) CreateVoxelMeshes(point types.ComparablePoint, chunk *types.
 }
 
 func (cache *Cache) DestroyVoxelMeshes(point types.ComparablePoint) {
-	fmt.Println("DestroyVoxelMeshes", point.ToPoint().ToString())
+	Log.Debug("DestroyVoxelMeshes", point.ToPoint().ToString())
 	types.EachVoxel(func(x, y, z uint64) {
 		i := types.CalculateVoxelIndex(x, y, z)
 		mesh := cache.voxelMeshes[point][i]
@@ -98,14 +97,14 @@ func (cache *Cache) UpdateVoxelMeshes(
 		previousVoxel := previousChunk.GetVoxel(x, y, z)
 		voxel := currentChunk.GetVoxel(x, y, z)
 		if voxel != previousVoxel {
-			fmt.Println("UpdateVoxelMeshes", point.ToPoint().ToString(), x, y, z)
+			Log.Debug("UpdateVoxelMeshes", point.ToPoint().ToString(), x, y, z)
 			cache.DrawVoxel(voxel, point, x, y, z, offset)
 		}
 	})
 }
 
 func (cache *Cache) CreateEntityMesh(entity *types.Entity, offset *types.Point, guiClient *GuiClient) {
-	fmt.Println("CreateEntityMesh", entity.Id)
+	Log.Debug("CreateEntityMesh", entity.Id)
 	def := content.EntityDefinitions[entity.Type]
 	geom := geometries[def.Form]
 	mat := materials[def.Material]
@@ -125,7 +124,7 @@ func (cache *Cache) CreateEntityMesh(entity *types.Entity, offset *types.Point, 
 }
 
 func (cache *Cache) DestroyEntityMesh(entity *types.Entity, guiClient *GuiClient) {
-	fmt.Println("DestroyEntityMesh", entity.Id)
+	Log.Debug("DestroyEntityMesh", entity.Id)
 	if entity.PlayerName == guiClient.player.Player.Name && cache.entityMeshes[entity.Id] == guiClient.playerNode {
 		guiClient.playerNode = nil
 		// TODO do something with camera
@@ -139,7 +138,7 @@ func (cache *Cache) UpdateEntityMesh(previousEntity *types.Entity, entity *types
 	if previousEntity.Location.Equals(entity.Location) {
 		return
 	}
-	fmt.Println("UpdateEntityMesh", entity.Id)
+	Log.Debug("UpdateEntityMesh", entity.Id)
 	mesh := cache.entityMeshes[entity.Id]
 	SetMeshPosition(mesh, entity.Location.Voxel, offset)
 }

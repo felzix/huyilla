@@ -1,6 +1,8 @@
 github.com/DATA-DOG/go-sqlmock v1.3.3/go.mod h1:f/Ixk793poVmq4qj/V1dPUg2JEAKC73Q5eFN3EC/SaM=
 github.com/dgrijalva/jwt-go v3.2.0+incompatible h1:7qlOGliEKZXTDg6OTjfoBKDXWrumCAMpl/TFQ4/5kLM=
 github.com/dgrijalva/jwt-go v3.2.0+incompatible/go.mod h1:E3ru+11k8xSBh+hMPgOLZmtrrCbhqsmaPHjLKYnJCaQ=
+github.com/felzix/go-curses-react v0.0.0-20190405032759-a603622182bf h1:rhzRSb6J2xcrIFdDlmDj5HGZc1jOs8mIr6IMfQADgNI=
+github.com/felzix/go-curses-react v0.0.0-20190405032759-a603622182bf/go.mod h1:U2KfePYjI7MaJRqffuzTy6iApdtMZ0AGEDhn5AZEGMs=
 github.com/g3n/engine v0.0.0-20191001141548-13e8582dadaa h1:9L13OpvLM5fg3YboSkxcHFMulbSon7OKkF8tXs1Zcq4=
 github.com/g3n/engine v0.0.0-20191001141548-13e8582dadaa/go.mod h1:xKy4Hpi0jOiHZfIsymeTtKwQpqIyPflHBDpkLpjPjgs=
 github.com/g3n/engine v0.1.0 h1:e+HR/X4awny6sVx0CikNG/KyH17nXNR3CIyqDJaAI30=

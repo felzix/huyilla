@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/felzix/huyilla/client"
 	C "github.com/felzix/huyilla/constants"
 	"github.com/felzix/huyilla/types"
@@ -84,25 +83,25 @@ func NewGuiClient() *GuiClient {
 
 		case 'w':
 			target := guiClient.player.Entity.Location.Derive(1, 0, 0, C.CHUNK_SIZE)
-			fmt.Println(guiClient.player.Entity.Location.Voxel.ToString(), "->", target.ToString())
+			Log.Debug(guiClient.player.Entity.Location.Voxel.ToString(), "->", target.ToString())
 			if err := guiClient.api.IssueMoveAction(target); err != nil {
 				panic(err)
 			}
 		case 's':
 			target := guiClient.player.Entity.Location.Derive(-1, 0, 0, C.CHUNK_SIZE)
-			fmt.Println(guiClient.player.Entity.Location.Voxel.ToString(), "->", target.ToString())
+			Log.Debug(guiClient.player.Entity.Location.Voxel.ToString(), "->", target.ToString())
 			if err := guiClient.api.IssueMoveAction(target); err != nil {
 				panic(err)
 			}
 		case 'a':
 			target := guiClient.player.Entity.Location.Derive(0, 1, 0, C.CHUNK_SIZE)
-			fmt.Println(guiClient.player.Entity.Location.Voxel.ToString(), "->", target.ToString())
+			Log.Debug(guiClient.player.Entity.Location.Voxel.ToString(), "->", target.ToString())
 			if err := guiClient.api.IssueMoveAction(target); err != nil {
 				panic(err)
 			}
 		case 'd':
 			target := guiClient.player.Entity.Location.Derive(0, -1, 0, C.CHUNK_SIZE)
-			fmt.Println(guiClient.player.Entity.Location.Voxel.ToString(), "->", target.ToString())
+			Log.Debug(guiClient.player.Entity.Location.Voxel.ToString(), "->", target.ToString())
 			if err := guiClient.api.IssueMoveAction(target); err != nil {
 				panic(err)
 			}
@@ -157,7 +156,7 @@ func (guiClient *GuiClient) Auth() error {
 
 func (guiClient *GuiClient) runGraphics() {
 	guiClient.app.Run(func(renderer *renderer.Renderer, deltaTime time.Duration) {
-		fmt.Println("display lag:", deltaTime.String())
+		Log.Debug("display lag:", deltaTime.String())
 		guiClient.app.Gls().Clear(gls.DEPTH_BUFFER_BIT | gls.STENCIL_BUFFER_BIT | gls.COLOR_BUFFER_BIT)
 		// TODO Render takes ~250ms with chunk radius of 3... a factor too large
 		//      Add occulusion.
