@@ -3,7 +3,7 @@ package engine
 import (
 	"github.com/felzix/huyilla/types"
 	"github.com/gogo/protobuf/proto"
-	"github.com/peterbourgon/diskv"
+	"github.com/peterbourgon/diskv/v3"
 )
 
 type World struct {

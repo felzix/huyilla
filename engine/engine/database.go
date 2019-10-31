@@ -2,17 +2,14 @@ package engine
 
 import (
 	"github.com/gogo/protobuf/proto"
-	"github.com/peterbourgon/diskv"
+	"github.com/peterbourgon/diskv/v3"
 	"github.com/satori/go.uuid"
 	"regexp"
 	"strings"
 )
 
 func makeDB(saveDir string, cacheSize uint64) (*diskv.Diskv, error) {
-	unique, err := uuid.NewV4()
-	if err != nil {
-		return nil, err
-	}
+	unique := uuid.NewV4()
 
 	return diskv.New(diskv.Options{
 		BasePath:          saveDir,

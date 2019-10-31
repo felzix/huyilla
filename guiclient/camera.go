@@ -6,6 +6,7 @@ import (
 	"github.com/g3n/engine/gui"
 	"github.com/g3n/engine/math32"
 	"github.com/g3n/engine/window"
+	"github.com/go-gl/glfw/v3.2/glfw"
 )
 
 type CameraController struct {
@@ -77,5 +78,5 @@ func SetCursorInputMode(mode window.CursorMode) {
 	// TODO use a type switch or fork the lib to expand the interface
 	//      See https://w3c.github.io/pointerlock if choosing to fork
 	gw := w.(*window.GlfwWindow)
-	gw.SetInputMode(window.CursorInputMode, mode)
+	gw.SetInputMode(glfw.CursorMode, int(mode))
 }

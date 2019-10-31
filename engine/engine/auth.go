@@ -124,11 +124,8 @@ func makeToken(secret []byte, name string, expiry int64) (string, error) {
 	claims := token.Claims.(jwt.MapClaims)
 	claims["name"] = name
 	claims["exp"] = expiry
-	if id, err := uuid.NewV4(); err == nil {
-		claims["tokenId"] = id
-	} else {
-		return "", err
-	}
+	id := uuid.NewV4()
+	claims["tokenId"] = id
 
 	if tokenString, err := token.SignedString(secret); err == nil {
 		return tokenString, nil
