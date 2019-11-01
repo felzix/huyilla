@@ -16,20 +16,18 @@ type Engine struct {
 	Secret  []byte
 }
 
-func (engine *Engine) Init(saveDir string) error {
-	engine.World = &World{Seed: C.SEED}
-
-	if err := engine.World.Init(saveDir, 16*1024*1024); err != nil { // 16 MB
-		return err
+func NewEngine(seed uint64, generator WorldGenerator, db Database) (*Engine, error) {
+	world, err := NewWorld(seed, generator, db)
+	if err != nil {
+		return nil, err
 	}
-
-	engine.Actions = make([]*types.Action, 0)
-
-	// TODO not hard-coded
-	engine.Secret = []byte(`&$0C-7#o4sK"W*&Q7;8PD_pz^8%]"v),zY(b-3.v`)
-
-	return nil
+	return &Engine{
+		World: world,
+		Actions: make([]*types.Action, 0),
+		Secret: []byte(`&$0C-7#o4sK"W*&Q7;8PD_pz^8%]"v),zY(b-3.v`), // TODO not hard-coded
+	}, nil
 }
+
 
 func (engine *Engine) Tick() error {
 	// advance age by one tick

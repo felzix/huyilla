@@ -33,7 +33,7 @@ func (world *World) Chunk(p *types.Point) (*types.Chunk, error) {
 
 func (world *World) OnlyGetChunk(p *types.Point) (*types.Chunk, error) {
 	var chunk types.Chunk
-	if err := gettum(world, chunkKey(p), &chunk); err == nil {
+	if err := world.DB.Get(chunkKey(p), &chunk); err == nil {
 		return &chunk, nil
 	} else if fileIsNotFound(err) {
 		return nil, nil
@@ -54,11 +54,11 @@ func (world *World) SetChunk(p *types.Point, chunk *types.Chunk) error {
 
 	chunk.Tick = age.Ticks
 
-	return settum(world, chunkKey(p), chunk)
+	return world.DB.Set(chunkKey(p), chunk)
 }
 
 func (world *World) DeleteChunk(p *types.Point) error {
-	return enddum(world, chunkKey(p))
+	return world.DB.End(chunkKey(p))
 }
 
 func (world *World) AddEntityToChunk(entity *types.Entity) error {

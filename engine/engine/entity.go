@@ -12,7 +12,7 @@ func entityKey(id int64) string {
 
 func (world *World) Entity(id int64) (*types.Entity, error) {
 	var entity types.Entity
-	if err := gettum(world, entityKey(id), &entity); err == nil {
+	if err := world.DB.Get(entityKey(id), &entity); err == nil {
 		return &entity, nil
 	} else if fileIsNotFound(err) {
 		return nil, nil
@@ -34,7 +34,7 @@ func (world *World) CreateEntity(typeInt uint64, playerName string, location *ty
 		entity.PlayerName = playerName
 	}
 
-	if err := settum(world, entityKey(entity.Id), &entity); err == nil {
+	if err := world.DB.Set(entityKey(entity.Id), &entity); err == nil {
 		return &entity, nil
 	} else {
 		return nil, err
@@ -42,15 +42,15 @@ func (world *World) CreateEntity(typeInt uint64, playerName string, location *ty
 }
 
 func (world *World) SetEntity(id int64, entity *types.Entity) error {
-	return settum(world, entityKey(id), entity)
+	return world.DB.Set(entityKey(id), entity)
 }
 
 func (world *World) DeleteEntity(id int64) error {
-	return enddum(world, entityKey(id))
+	return world.DB.End(entityKey(id))
 }
 
 func (world *World) EntityExists(id int64) bool {
-	return hassum(world, entityKey(id))
+	return world.DB.Has(entityKey(id))
 }
 
 func (world *World) genUniqueEntityId() int64 {

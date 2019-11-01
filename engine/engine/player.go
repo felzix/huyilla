@@ -18,7 +18,7 @@ func playerNameFromKey(key string) string {
 
 func (world *World) Player(name string) (*types.Player, error) {
 	var player types.Player
-	if err := gettum(world, playerKey(name), &player); err == nil {
+	if err := world.DB.Get(playerKey(name), &player); err == nil {
 		return &player, nil
 	} else if fileIsNotFound(err) {
 		return nil, nil
@@ -35,21 +35,21 @@ func (world *World) CreatePlayer(name string, password []byte, entityId int64, s
 		Spawn:    spawn,
 		Token:    "",
 	}
-	return settum(world, playerKey(player.Name), &player)
+	return world.DB.Set(playerKey(player.Name), &player)
 }
 
 func (world *World) SetPlayer(player *types.Player) error {
-	return settum(world, playerKey(player.Name), player)
+	return world.DB.Set(playerKey(player.Name), player)
 }
 
 func (world *World) DeletePlayer(name string) error {
-	return enddum(world, playerKey(name))
+	return world.DB.End(playerKey(name))
 }
 
 func (world *World) GetActivePlayers() ([]*types.PlayerDetails, error) {
 	var activePlayers []*types.PlayerDetails
 
-	for key := range world.DB.KeysPrefix("Player", nil) {
+	for key := range world.DB.GetByPrefix("Player") {
 		name := playerNameFromKey(key)
 
 		if player, err := world.Player(name); player != nil {
