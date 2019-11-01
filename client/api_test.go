@@ -3,193 +3,179 @@ package client
 import (
 	"context"
 	"fmt"
-	. "github.com/felzix/goblin"
 	"github.com/felzix/huyilla/constants"
 	"github.com/felzix/huyilla/engine/engine"
 	"github.com/felzix/huyilla/types"
-	uuid "github.com/satori/go.uuid"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 	"net/http"
 	"testing"
 )
 
 func TestAPI(t *testing.T) {
-	g := Goblin(t)
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "Client Suite")
+}
 
-	g.Describe("http api", func() {
-		const PORT = 8085
+var _ = Describe("HTTP API", func() {
+	const PORT = 8085
 
-		api := NewAPI(fmt.Sprintf("http://localhost:%d", PORT), "arana", "murakami")
+	api := NewAPI(fmt.Sprintf("http://localhost:%d", PORT), "arana", "murakami")
 
-		var huyilla *engine.Engine
-		var webServerError chan error
-		var server *http.Server
+	var huyilla *engine.Engine
+	var webServerError chan error
+	var server *http.Server
 
-		g.Before(func() {
-			unique, err := uuid.NewV4()
-			if err != nil {
-				t.Fatal(err)
-			}
+	BeforeSuite(func() {
+		engine, err := engine.NewEngine(constants.SEED, engine.NewLakeWorldGenerator(3), engine.NewMemoryDatabase())
+		huyilla = engine
+		Expect(err).To(BeNil())
+		server = huyilla.Serve(PORT, webServerError)
+	})
 
-			huyilla = &engine.Engine{}
-			if err := huyilla.Init("/tmp/savedir-huyilla-" + unique.String()); err != nil {
-				t.Fatal(err)
-			}
-			server = huyilla.Serve(PORT, webServerError)
-		})
+	AfterSuite(func() {
+		err := server.Shutdown(context.TODO())
+		Expect(err).To(BeNil())
+	})
 
-		g.After(func() {
-			if err := huyilla.World.WipeDatabase(); err != nil {
-				t.Fatal(err)
-			}
-			if err := server.Shutdown(context.TODO()); err != nil {
-				t.Fatal(err)
-			}
-		})
-
-		g.Describe("ping", func() {
-			g.It("ping returns pong", func() {
-				response, err := api.Ping()
-				g.Assert(err).IsNil()
-				g.Assert(response).Equal("pong")
-			})
-		})
-
-		g.Describe("signup flow", func() {
-			g.It("checks if user already exists", func() {
-				exists, err := api.UserExists()
-				g.Assert(err).IsNil()
-				g.Assert(exists).Equal(false)
-			})
-
-			g.It("signs up", func() {
-				err := api.Signup()
-				g.Assert(err).IsNil()
-
-				g.Poll(5, 200, func() bool {
-					player, err := huyilla.World.Player(api.Username)
-					g.Assert(err).IsNil()
-
-					if player == nil {
-						return false
-					}
-
-					g.Assert(len(player.Token)).Equal(0)
-					g.Assert(player.Name).Equal(api.Username)
-
-					entity, err := huyilla.World.Entity(player.EntityId)
-					g.Assert(err).IsNil()
-					g.Assert(entity).IsNotNil()
-
-					return true
-				})
-			})
-
-			g.It("checks if user now exists", func() {
-				exists, err := api.UserExists()
-				g.Assert(err).IsNil()
-				g.Assert(exists).Equal(true)
-			})
-
-			g.It("logs in", func() {
-				err := api.Login()
-				g.Assert(err).IsNil()
-
-				g.Poll(5, 200, func() bool {
-					player, err := huyilla.World.Player(api.Username)
-					g.Assert(err).IsNil()
-
-					if player == nil {
-						return false
-					}
-
-					g.Assert(len(player.Token) > 0).IsTrue("Player token is not set")
-					g.Assert(player.Name).Equal(api.Username)
-
-					return true
-				})
-			})
-
-			g.It("logs out", func() {
-				err := api.Logout()
-				g.Assert(err).IsNil()
-
-				var player *types.Player
-				g.Poll(5, 200, func() bool {
-					player, err = huyilla.World.Player(api.Username)
-
-					if player == nil || len(player.Token) != 0 {
-						return false
-					}
-
-					return true
-				})
-
-				// Can log back in
-				err = api.Login()
-				g.Assert(err).IsNil()
-
-				g.Poll(5, 200, func() bool {
-					player, err = huyilla.World.Player(api.Username)
-					g.Assert(err).IsNil()
-
-					if player == nil {
-						return false
-					}
-					g.Assert(len(player.Token) > 0).IsTrue("Player token is not set")
-					g.Assert(player.Name).Equal(api.Username)
-
-					return true
-				})
-			})
-
-		})
-
-		g.Describe("world getting", func() {
-			g.It("gets world age", func() {
-				age, err := api.GetWorldAge()
-				g.Assert(err).IsNil()
-				g.Assert(age).Equal(uint64(1))
-			})
-
-			g.It("gets player", func() {
-				player, err := api.GetPlayer(api.Username)
-				g.Assert(err).IsNil()
-				g.Assert(player).IsNotNil()
-				g.Assert(player.PlayerName).Equal(api.Username)
-				g.Assert(player.Id).NotEqual(0)
-			})
-
-			g.It("gets one chunk in range", func() {
-				chunks, err := api.GetChunks(types.NewPoint(0, 0, constants.ACTIVE_CHUNK_RADIUS), 0)
-				g.Assert(err).IsNil()
-				g.Assert(len(chunks.Chunks)).Equal(1)
-				g.Assert(len(chunks.Chunks[0].Voxels)).Equal(constants.CHUNK_LENGTH)
-			})
-
-			g.It("cannot get a chunk out of range", func() {
-				_, err := api.GetChunks(types.NewPoint(0, 0, constants.ACTIVE_CHUNK_RADIUS+1), 0)
-				g.Assert(err).IsNotNil()
-				g.Assert(err.Error()).Equal("GetChunk failure: Expected status 200 but got 403. can only load nearby chunks\n")
-			})
-		})
-
-		g.Describe("action issuing", func() {
-			g.It("issues an action", func() {
-				player, err := api.GetPlayer(api.Username)
-				g.Assert(err).IsNil()
-
-				originalY := player.Location.Voxel.Y
-				player.Location.Voxel.Y++
-				err = api.IssueMoveAction(player.Location)
-				g.Assert(err).IsNil()
-
-				err = huyilla.Tick()
-				g.Assert(err).IsNil()
-
-				player, err = api.GetPlayer(api.Username)
-				g.Assert(err).IsNil()
-				g.Assert(player.Location.Voxel.Y).Equal(originalY + 1)
-			})
+	Describe("ping", func() {
+		It("ping returns pong", func() {
+			response, err := api.Ping()
+			Expect(err).To(BeNil())
+			Expect(response).To(Equal("pong"))
 		})
 	})
-}
+
+	Describe("signup flow", func() {
+		It("checks if user already exists", func() {
+			exists, err := api.UserExists()
+			Expect(err).To(BeNil())
+			Expect(exists).To(BeFalse())
+		})
+
+		It("signs up", func() {
+			err := api.Signup()
+			Expect(err).To(BeNil())
+
+			var player *types.Player
+			Eventually(func() *types.Player {
+				player, _ = huyilla.World.Player(api.Username)
+				return player
+			}).ShouldNot(BeNil())
+
+			Expect(len(player.Token)).To(Equal(0))
+			Expect(player.Name).To(Equal(api.Username))
+
+			entity, err := huyilla.World.Entity(player.EntityId)
+			Expect(err).To(BeNil())
+			Expect(entity).ToNot(BeNil())
+
+			Eventually(func() *types.Player {
+				player, _ = huyilla.World.Player(api.Username)
+				return player
+			})
+			Expect(len(player.Token)).To(Equal(0))
+			Expect(player.Name).To(Equal(api.Username))
+
+			entity, err = huyilla.World.Entity(player.EntityId)
+			Expect(err).To(BeNil())
+			Expect(entity).ToNot(BeNil())
+		})
+
+		It("checks if user now exists", func() {
+			exists, err := api.UserExists()
+			Expect(err).To(BeNil())
+			Expect(exists).To(BeTrue())
+		})
+
+		It("logs in", func() {
+			err := api.Login()
+			Expect(err).To(BeNil())
+
+			var player *types.Player
+			Eventually(func() *types.Player {
+				player, _ = huyilla.World.Player(api.Username)
+				return player
+			}).ShouldNot(BeNil())
+
+			Expect(len(player.Token) > 0).To(BeTrue(), "Player token is not set")
+			Expect(player.Name).To(Equal(api.Username))
+		})
+
+		It("logs out", func() {
+			err := api.Logout()
+			Expect(err).To(BeNil())
+
+			var player *types.Player
+			Eventually(func() *types.Player {
+				player, _ = huyilla.World.Player(api.Username)
+				if len(player.Token) != 0 {
+					return nil
+				}
+				return player
+			}).ShouldNot(BeNil())
+
+			// Can log back in
+			err = api.Login()
+			Expect(err).To(BeNil())
+
+			Eventually(func() *types.Player {
+				player, _ = huyilla.World.Player(api.Username)
+				return player
+			}).ShouldNot(BeNil())
+
+			Expect(len(player.Token) > 0).To(BeTrue(),"Player token is not set")
+			Expect(player.Name).To(Equal(api.Username))
+		})
+
+	})
+
+	Describe("world getting", func() {
+		It("gets world age", func() {
+			age, err := api.GetWorldAge()
+			Expect(err).To(BeNil())
+			Expect(age).To(Equal(uint64(1)))
+		})
+
+		It("gets player", func() {
+			player, err := api.GetPlayer(api.Username)
+			Expect(err).To(BeNil())
+			Expect(player).ToNot(BeNil())
+			Expect(player.PlayerName).To(Equal(api.Username))
+			Expect(player.Id).ToNot(Equal(0))
+		})
+
+		It("gets one chunk in range", func() {
+			chunks, err := api.GetChunks(types.NewPoint(0, 0, constants.ACTIVE_CHUNK_RADIUS), 0)
+			Expect(err).To(BeNil())
+			Expect(len(chunks.Chunks)).To(Equal(1))
+			Expect(len(chunks.Chunks[0].Voxels)).To(Equal(constants.CHUNK_LENGTH))
+		})
+
+		It("cannot get a chunk out of range", func() {
+			_, err := api.GetChunks(types.NewPoint(0, 0, constants.ACTIVE_CHUNK_RADIUS+1), 0)
+			Expect(err).ToNot(BeNil())
+			Expect(err.Error()).To(Equal("GetChunk failure: Expected status 200 but got 403. can only load nearby chunks\n"))
+		})
+	})
+
+	Describe("action issuing", func() {
+		It("issues an action", func() {
+			player, err := api.GetPlayer(api.Username)
+			Expect(err).To(BeNil())
+
+			originalY := player.Location.Voxel.Y
+			player.Location.Voxel.Y++
+			err = api.IssueMoveAction(player.Location)
+			Expect(err).To(BeNil())
+
+			err = huyilla.Tick()
+			Expect(err).To(BeNil())
+
+			player, err = api.GetPlayer(api.Username)
+			Expect(err).To(BeNil())
+			Expect(player.Location.Voxel.Y).To(Equal(originalY + 1))
+		})
+	})
+})
+

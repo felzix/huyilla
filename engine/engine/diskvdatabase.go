@@ -8,6 +8,8 @@ import (
 )
 
 type DiskVDatabase struct {
+	Database
+
 	diskV *diskv.Diskv
 }
 
@@ -27,6 +29,8 @@ func (db *DiskVDatabase) Get(key string, thing proto.Unmarshaler) error {
 		if err := thing.Unmarshal(blob); err != nil {
 			return err
 		}
+	} else if fileIsNotFound(err) {
+		return NewThingNotFoundError(key)
 	} else {
 		return err
 	}

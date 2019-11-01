@@ -6,6 +6,8 @@ import (
 )
 
 type MemoryDatabase struct {
+	Database
+
 	stuff map[string][]byte
 }
 
@@ -16,7 +18,11 @@ func NewMemoryDatabase() *MemoryDatabase {
 }
 
 func (db *MemoryDatabase) Get(key string, thing proto.Unmarshaler) error {
-	blob := db.stuff[key]
+	blob, ok := db.stuff[key]
+	if !ok {
+		return NewThingNotFoundError(key)
+	}
+
 	return thing.Unmarshal(blob)
 }
 
@@ -43,7 +49,7 @@ func (db *MemoryDatabase) Set(key string, thing proto.Marshaler) error {
 }
 
 func (db *MemoryDatabase) Has(key string) bool {
-	_, ok := db.stuff["foo"]
+	_, ok := db.stuff[key]
 	return ok
 }
 

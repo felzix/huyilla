@@ -12,17 +12,22 @@ func playerKey(name string) string {
 }
 
 func playerNameFromKey(key string) string {
-	// The "." (period) is not present because it's used as the filesystem separator.
-	return strings.TrimPrefix(key, "Player")
+	// The "." (period) is not always present because it's used as the filesystem separator.
+	s := strings.TrimPrefix(key, "Player")
+	s = strings.TrimPrefix(s, ".")
+	return s
 }
 
 func (world *World) Player(name string) (*types.Player, error) {
 	var player types.Player
-	if err := world.DB.Get(playerKey(name), &player); err == nil {
+
+	err := world.DB.Get(playerKey(name), &player)
+	switch err.(type) {
+	case nil: // player found
 		return &player, nil
-	} else if fileIsNotFound(err) {
+	case ThingNotFoundError: // player not found
 		return nil, nil
-	} else {
+	default: // something went wrong
 		return nil, err
 	}
 }

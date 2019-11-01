@@ -2,56 +2,43 @@ package engine
 
 import (
 	"fmt"
-	. "github.com/felzix/goblin"
+	C "github.com/felzix/huyilla/constants"
 	"github.com/felzix/huyilla/types"
-	uuid "github.com/satori/go.uuid"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 	"testing"
 )
 
 func TestAction(t *testing.T) {
-	g := Goblin(t)
 
-	g.Describe("Action testing", func() {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "Action Suite")
+}
+
+var _ = Describe("Action", func() {
 		NAME := "FAKE"
 		PASS := "PASS"
 		var h *Engine
 
-		g.BeforeEach(func() {
-			unique, err := uuid.NewV4()
-			if err != nil {
-				t.Fatal(err)
-			}
+		BeforeEach(func() {
+			engine, err := NewEngine(C.SEED, NewLakeWorldGenerator(3), NewMemoryDatabase())
+			h = engine
+			Expect(err).To(BeNil())
 
-			h = &Engine{}
-			if err := h.Init("/tmp/savedir-huyilla-" + unique.String()); err != nil {
-				t.Fatal(err)
-			}
+			err = h.SignUp(NAME, PASS)
+			Expect(err).To(BeNil())
 
-			if err := h.SignUp(NAME, PASS); err != nil {
-				t.Fatal(err)
-			}
-
-			g.Poll(5, 200, func() bool {
+			Eventually(func() error {
 				_, err := h.LogIn(NAME, PASS)
-				return err == nil
-			})
-
+				return err
+			}).Should(BeNil())
 		})
 
-		g.AfterEach(func() {
-			if h == nil || h.World == nil {
-				return
-			}
-			if err := h.World.WipeDatabase(); err != nil {
-				t.Fatal(err)
-			}
-		})
-
-		g.Describe("queue actions and tick", func() {
-			g.It("moves within chunk", func() {
+		Describe("queue actions and tick", func() {
+			It("moves within chunk", func() {
 				whereTo := types.NewAbsolutePoint(0, 0, 0, 2, 4, 8)
 
-				g.Assert(len(h.Actions)).Equal(0)
+				Expect(len(h.Actions)).To(Equal(0))
 
 				h.RegisterAction(&types.Action{
 					PlayerName: NAME,
@@ -60,29 +47,29 @@ func TestAction(t *testing.T) {
 							WhereTo: whereTo,
 						}}})
 
-				g.Assert(len(h.Actions)).Equal(1)
+				Expect(len(h.Actions)).To(Equal(1))
 
 				err := h.Tick()
-				g.Assert(err).IsNil()
+				Expect(err).To(BeNil())
 
-				g.Assert(len(h.Actions)).Equal(0)
+				Expect(len(h.Actions)).To(Equal(0))
 
 				player, err := h.World.Player(NAME)
-				g.Assert(err).IsNil()
-				g.Assert(player).IsNotNil()
-				g.Assert(player.EntityId).NotEqual(0)
+				Expect(err).To(BeNil())
+				Expect(player).ToNot(BeNil())
+				Expect(player.EntityId).ToNot(Equal(0))
 
 				entity, err := h.World.Entity(player.EntityId)
-				g.Assert(err).IsNil()
-				g.Assert(entity).IsNotNil()
-				g.Assert(entity.Location.Equals(whereTo)).IsTrue(fmt.Sprintf(
+				Expect(err).To(BeNil())
+				Expect(entity).ToNot(BeNil())
+				Expect(entity.Location.Equals(whereTo)).To(BeTrue(), fmt.Sprintf(
 					`Player should be at "%s" but is at "%s"`,
 					whereTo.ToString(),
 					entity.Location.ToString(),
 				))
 
 				chunk, err := h.World.Chunk(whereTo.Chunk)
-				g.Assert(err).IsNil()
+				Expect(err).To(BeNil())
 
 				entityPresent := false
 				for _, e := range chunk.Entities {
@@ -90,10 +77,10 @@ func TestAction(t *testing.T) {
 						entityPresent = true
 					}
 				}
-				g.Assert(entityPresent).IsTrue("Entity is not actually present in the chunk")
+				Expect(entityPresent).To(BeTrue(), "Entity is not actually present in the chunk")
 			})
 
-			g.It("moves to another chunk", func() {
+			It("moves to another chunk", func() {
 				whereTo := types.NewAbsolutePoint(-1, 0, 0, 15, 0, 0)
 
 				move := &types.Action{
@@ -106,25 +93,25 @@ func TestAction(t *testing.T) {
 				}
 
 				success, err := h.Move(move)
-				g.Assert(err).IsNil()
-				g.Assert(success).Equal(true)
+				Expect(err).To(BeNil())
+				Expect(success).To(Equal(true))
 
 				player, err := h.World.Player(NAME)
-				g.Assert(err).IsNil()
-				g.Assert(player).IsNotNil()
-				g.Assert(player.EntityId).NotEqual(0)
+				Expect(err).To(BeNil())
+				Expect(player).ToNot(BeNil())
+				Expect(player.EntityId).ToNot(Equal(0))
 
 				entity, err := h.World.Entity(player.EntityId)
-				g.Assert(err).IsNil()
-				g.Assert(entity).IsNotNil()
-				g.Assert(entity.Location.Equals(whereTo)).IsTrue(fmt.Sprintf(
+				Expect(err).To(BeNil())
+				Expect(entity).ToNot(BeNil())
+				Expect(entity.Location.Equals(whereTo)).To(BeTrue(), fmt.Sprintf(
 					`Player should be at "%s" but is at "%s"`,
 					whereTo.ToString(),
 					entity.Location.ToString(),
 				))
 
 				chunk, err := h.World.Chunk(whereTo.Chunk)
-				g.Assert(err).IsNil()
+				Expect(err).To(BeNil())
 
 				entityPresent := false
 				for _, e := range chunk.Entities {
@@ -132,14 +119,14 @@ func TestAction(t *testing.T) {
 						entityPresent = true
 					}
 				}
-				g.Assert(entityPresent).IsTrue("Entity is not actually present in the chunk")
+				Expect(entityPresent).To(BeTrue(), "Entity is not actually present in the chunk")
 			})
 		})
 
-		g.It("moves to another chunk, via action registration", func() {
+		It("moves to another chunk, via action registration", func() {
 			whereTo := types.NewAbsolutePoint(-1, 0, 0, 0, 0, 0)
 
-			g.Assert(len(h.Actions)).Equal(0)
+			Expect(len(h.Actions)).To(Equal(0))
 
 			h.RegisterAction(&types.Action{
 				PlayerName: NAME,
@@ -148,29 +135,29 @@ func TestAction(t *testing.T) {
 						WhereTo: whereTo,
 					}}})
 
-			g.Assert(len(h.Actions)).Equal(1)
+			Expect(len(h.Actions)).To(Equal(1))
 
 			err := h.Tick()
-			g.Assert(err).IsNil()
+			Expect(err).To(BeNil())
 
-			g.Assert(len(h.Actions)).Equal(0)
+			Expect(len(h.Actions)).To(Equal(0))
 
 			player, err := h.World.Player(NAME)
-			g.Assert(err).IsNil()
-			g.Assert(player).IsNotNil()
-			g.Assert(player.EntityId).NotEqual(0)
+			Expect(err).To(BeNil())
+			Expect(player).ToNot(BeNil())
+			Expect(player.EntityId).ToNot(Equal(0))
 
 			entity, err := h.World.Entity(player.EntityId)
-			g.Assert(err).IsNil()
-			g.Assert(entity).IsNotNil()
-			g.Assert(entity.Location.Equals(whereTo)).IsTrue(fmt.Sprintf(
+			Expect(err).To(BeNil())
+			Expect(entity).ToNot(BeNil())
+			Expect(entity.Location.Equals(whereTo)).To(BeTrue(), fmt.Sprintf(
 				`Player should be at "%s" but is at "%s"`,
 				whereTo.ToString(),
 				entity.Location.ToString(),
 			))
 
 			chunk, err := h.World.Chunk(whereTo.Chunk)
-			g.Assert(err).IsNil()
+			Expect(err).To(BeNil())
 
 			entityPresent := false
 			for _, e := range chunk.Entities {
@@ -178,8 +165,7 @@ func TestAction(t *testing.T) {
 					entityPresent = true
 				}
 			}
-			g.Assert(entityPresent).IsTrue("Entity is not actually present in the chunk")
+			Expect(entityPresent).To(BeTrue(), "Entity is not actually present in the chunk")
 		})
 
 	})
-}

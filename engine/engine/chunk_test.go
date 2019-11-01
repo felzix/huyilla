@@ -1,95 +1,82 @@
 package engine
 
 import (
-	. "github.com/felzix/goblin"
 	C "github.com/felzix/huyilla/constants"
 	"github.com/felzix/huyilla/types"
-	uuid "github.com/satori/go.uuid"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 	"testing"
 )
 
 func TestChunk(t *testing.T) {
-	g := Goblin(t)
-	g.Describe("Chunk test", func() {
-		var h *Engine
-
-		g.BeforeEach(func() {
-			unique, err := uuid.NewV4()
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			h = &Engine{}
-			if err := h.Init("/tmp/savedir-huyilla-" + unique.String()); err != nil {
-				t.Fatal(err)
-			}
-		})
-
-		g.AfterEach(func() {
-			if h == nil || h.World == nil {
-				return
-			}
-			if err := h.World.WipeDatabase(); err != nil {
-				t.Fatal(err)
-			}
-		})
-
-		g.It("implicitly generates a chunk", func() {
-			chunk, err := h.World.Chunk(&types.Point{X: 0, Y: 0, Z: 0})
-			g.Assert(err).IsNil()
-
-			expectedVoxelCount := C.CHUNK_SIZE * C.CHUNK_SIZE * C.CHUNK_SIZE
-			g.Assert(len(chunk.Voxels)).Equal(expectedVoxelCount)
-		})
-
-		g.It("generates 1,000 chunks", func() {
-			expectedVoxelCount := C.CHUNK_SIZE * C.CHUNK_SIZE * C.CHUNK_SIZE
-
-			for i := 0; i < 1000; i++ {
-				chunk, err := h.World.GenerateChunk(&types.Point{X: 0, Y: 0, Z: 0})
-				g.Assert(err).IsNil()
-				g.Assert(len(chunk.Voxels)).Equal(expectedVoxelCount)
-			}
-		})
-
-		g.It("adds entity to chunk", func() {
-			p := types.NewAbsolutePoint(0, 0, 0, 0, 0, 0)
-
-			_, err := h.World.GenerateChunk(p.Chunk)
-			g.Assert(err).IsNil()
-
-			entity, err := h.World.CreateEntity(0, "", p)
-			g.Assert(err).IsNil()
-
-			err = h.World.AddEntityToChunk(entity)
-			g.Assert(err).IsNil()
-
-			chunk, err := h.World.Chunk(p.Chunk)
-			g.Assert(err).IsNil()
-			g.Assert(chunk).IsNotNil()
-
-			g.Assert(len(chunk.Entities)).Equal(1)
-		})
-
-		g.It("removes entity from chunk", func() {
-			p := types.NewAbsolutePoint(0, 0, 0, 0, 0, 0)
-
-			_, err := h.World.GenerateChunk(p.Chunk)
-			g.Assert(err).IsNil()
-
-			entity, err := h.World.CreateEntity(0, "", p)
-			g.Assert(err).IsNil()
-
-			err = h.World.AddEntityToChunk(entity)
-			g.Assert(err).IsNil()
-
-			err = h.World.RemoveEntityFromChunk(entity.Id, p.Chunk)
-			g.Assert(err).IsNil()
-
-			chunk, err := h.World.Chunk(p.Chunk)
-			g.Assert(err).IsNil()
-
-			g.Assert(len(chunk.Entities)).Equal(0)
-		})
-	})
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "Client Suite")
 }
+
+var _ = Describe("Chunk", func() {
+	var h *Engine
+
+	BeforeEach(func() {
+		engine, err := NewEngine(C.SEED, NewLakeWorldGenerator(3), NewMemoryDatabase())
+		h = engine
+		Expect(err).To(BeNil())
+	})
+
+	It("implicitly generates a chunk", func() {
+		chunk, err := h.World.Chunk(&types.Point{X: 0, Y: 0, Z: 0})
+		Expect(err).To(BeNil())
+
+		expectedVoxelCount := C.CHUNK_SIZE * C.CHUNK_SIZE * C.CHUNK_SIZE
+		Expect(len(chunk.Voxels)).To(Equal(expectedVoxelCount))
+	})
+
+	It("generates 1,000 chunks", func() {
+		expectedVoxelCount := C.CHUNK_SIZE * C.CHUNK_SIZE * C.CHUNK_SIZE
+
+		for i := 0; i < 1000; i++ {
+			chunk, err := h.World.GenerateChunk(&types.Point{X: 0, Y: 0, Z: 0})
+			Expect(err).To(BeNil())
+			Expect(len(chunk.Voxels)).To(Equal(expectedVoxelCount))
+		}
+	})
+
+	It("adds entity to chunk", func() {
+		p := types.NewAbsolutePoint(0, 0, 0, 0, 0, 0)
+
+		_, err := h.World.GenerateChunk(p.Chunk)
+		Expect(err).To(BeNil())
+
+		entity, err := h.World.CreateEntity(0, "", p)
+		Expect(err).To(BeNil())
+
+		err = h.World.AddEntityToChunk(entity)
+		Expect(err).To(BeNil())
+
+		chunk, err := h.World.Chunk(p.Chunk)
+		Expect(err).To(BeNil())
+		Expect(chunk).ToNot(BeNil())
+
+		Expect(len(chunk.Entities)).To(Equal(1))
+	})
+
+	It("removes entity from chunk", func() {
+		p := types.NewAbsolutePoint(0, 0, 0, 0, 0, 0)
+
+		_, err := h.World.GenerateChunk(p.Chunk)
+		Expect(err).To(BeNil())
+
+		entity, err := h.World.CreateEntity(0, "", p)
+		Expect(err).To(BeNil())
+
+		err = h.World.AddEntityToChunk(entity)
+		Expect(err).To(BeNil())
+
+		err = h.World.RemoveEntityFromChunk(entity.Id, p.Chunk)
+		Expect(err).To(BeNil())
+
+		chunk, err := h.World.Chunk(p.Chunk)
+		Expect(err).To(BeNil())
+
+		Expect(len(chunk.Entities)).To(Equal(0))
+	})
+})

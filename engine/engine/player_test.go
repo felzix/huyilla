@@ -1,49 +1,37 @@
 package engine
 
 import (
-	. "github.com/felzix/goblin"
-	uuid "github.com/satori/go.uuid"
+	C "github.com/felzix/huyilla/constants"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 	"testing"
 )
 
-func Test(t *testing.T) {
-	g := Goblin(t)
-	g.Describe("Content Test", func() {
-		NAME := "felzix"
-		PASS := "murakami"
-		var h *Engine
-
-		g.BeforeEach(func() {
-			unique, err := uuid.NewV4()
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			h = &Engine{}
-			if err := h.Init("/tmp/savedir-huyilla-" + unique.String()); err != nil {
-				t.Fatal(err)
-			}
-		})
-
-		g.AfterEach(func() {
-			if h == nil || h.World == nil {
-				return
-			}
-			if err := h.World.WipeDatabase(); err != nil {
-				t.Fatal(err)
-			}
-		})
-
-		g.It("loads human type", func() {
-			err := h.SignUp(NAME, PASS)
-			g.Assert(err).IsNil()
-			_, err = h.LogIn(NAME, PASS)
-			g.Assert(err).IsNil()
-
-			player, err := h.World.Player(NAME)
-			g.Assert(err).IsNil()
-			g.Assert(player).IsNotNil()
-			g.Assert(player.Name).Equal(NAME)
-		})
-	})
+func TestPlayer(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "Player Suite")
 }
+
+var _ = Describe("Player", func () {
+	NAME := "felzix"
+	PASS := "murakami"
+	var h *Engine
+
+	BeforeEach(func() {
+		engine, err := NewEngine(C.SEED, NewLakeWorldGenerator(3), NewMemoryDatabase())
+		h = engine
+		Expect(err).To(BeNil())
+	})
+
+	It("loads human type", func() {
+		err := h.SignUp(NAME, PASS)
+		Expect(err).To(BeNil())
+		_, err = h.LogIn(NAME, PASS)
+		Expect(err).To(BeNil())
+
+		player, err := h.World.Player(NAME)
+		Expect(err).To(BeNil())
+		Expect(player).ToNot(BeNil())
+		Expect(player.Name).To(Equal(NAME))
+	})
+})

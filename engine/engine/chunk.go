@@ -33,11 +33,13 @@ func (world *World) Chunk(p *types.Point) (*types.Chunk, error) {
 
 func (world *World) OnlyGetChunk(p *types.Point) (*types.Chunk, error) {
 	var chunk types.Chunk
-	if err := world.DB.Get(chunkKey(p), &chunk); err == nil {
+	err := world.DB.Get(chunkKey(p), &chunk)
+	switch err.(type) {
+	case nil: // chunk found
 		return &chunk, nil
-	} else if fileIsNotFound(err) {
+	case ThingNotFoundError: // chunk not found
 		return nil, nil
-	} else {
+	default: // something went wrong
 		return nil, err
 	}
 }

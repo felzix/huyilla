@@ -12,11 +12,13 @@ func entityKey(id int64) string {
 
 func (world *World) Entity(id int64) (*types.Entity, error) {
 	var entity types.Entity
-	if err := world.DB.Get(entityKey(id), &entity); err == nil {
+	err := world.DB.Get(entityKey(id), &entity)
+	switch err.(type) {
+	case nil: // entity found
 		return &entity, nil
-	} else if fileIsNotFound(err) {
+	case ThingNotFoundError: // entity not found
 		return nil, nil
-	} else {
+	default: // something went wrong
 		return nil, err
 	}
 }

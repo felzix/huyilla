@@ -2,74 +2,63 @@ package engine
 
 import (
 	"fmt"
-	. "github.com/felzix/goblin"
+	C "github.com/felzix/huyilla/constants"
 	"github.com/felzix/huyilla/types"
-	uuid "github.com/satori/go.uuid"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 	"testing"
 	"time"
 )
 
 func TestAuth(t *testing.T) {
-	g := Goblin(t)
-	g.Describe("Auth", func() {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "Auth Suite")
+}
+
+var _ = Describe("Auth", func() {
 		var h *Engine
 
-		g.BeforeEach(func() {
-			unique, err := uuid.NewV4()
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			h = &Engine{}
-			if err := h.Init("/tmp/savedir-huyilla-" + unique.String()); err != nil {
-				t.Fatal(err)
-			}
+		BeforeEach(func() {
+			engine, err := NewEngine(C.SEED, NewLakeWorldGenerator(3), NewMemoryDatabase())
+			h = engine
+			Expect(err).To(BeNil())
 		})
 
-		g.AfterEach(func() {
-			if h == nil || h.World == nil {
-				return
-			}
-			if err := h.World.WipeDatabase(); err != nil {
-				t.Fatal(err)
-			}
-		})
-
-		g.It("signs up", func() {
+		It("signs up", func() {
 			err := h.SignUp("felzix", "PASS")
-			g.Assert(err).IsNil()
+			Expect(err).To(BeNil())
 
 			player, err := h.World.Player("felzix")
-			g.Assert(err).IsNil()
-			g.Assert(player).IsNotNil()
+			Expect(err).To(BeNil())
+			Expect(player).ToNot(BeNil())
 
 			entity, err := h.World.Entity(player.EntityId)
-			g.Assert(err).IsNil()
-			g.Assert(entity).IsNotNil()
+			Expect(err).To(BeNil())
+			Expect(entity).ToNot(BeNil())
 
-			g.Assert(player.Name).Equal(entity.PlayerName)
+			Expect(player.Name).To(Equal(entity.PlayerName))
 		})
 
-		g.It("logs in", func() {
+		It("logs in", func() {
 			err := h.SignUp("felzix", "PASS")
-			g.Assert(err).IsNil()
+			Expect(err).To(BeNil())
 
 			token, err := h.LogIn("felzix", "PASS")
-			g.Assert(err).IsNil()
-			g.Assert(len(token) > 100).IsTrue("token is not set or is set incorrectly")
-			g.Assert(token[0]).Equal(byte('e'))
+			Expect(err).To(BeNil())
+			Expect(len(token) > 100).To(BeTrue(), "token is not set or is set incorrectly")
+			Expect(token[0]).To(Equal(byte('e')))
 
 			player, err := h.World.Player("felzix")
-			g.Assert(err).IsNil()
-			g.Assert(player).IsNotNil()
-			g.Assert(player.Token).Equal(token)
+			Expect(err).To(BeNil())
+			Expect(player).ToNot(BeNil())
+			Expect(player.Token).To(Equal(token))
 
 			entity, err := h.World.Entity(player.EntityId)
-			g.Assert(err).IsNil()
-			g.Assert(entity).IsNotNil()
+			Expect(err).To(BeNil())
+			Expect(entity).ToNot(BeNil())
 
 			chunk, err := h.World.Chunk(entity.Location.Chunk)
-			g.Assert(err).IsNil()
+			Expect(err).To(BeNil())
 
 			entityIsPresent := false
 			for i := 0; i < len(chunk.Entities); i++ {
@@ -78,34 +67,34 @@ func TestAuth(t *testing.T) {
 					entityIsPresent = true
 				}
 			}
-			g.Assert(entityIsPresent).IsTrue(fmt.Sprintf(
+			Expect(entityIsPresent).To(BeTrue(), fmt.Sprintf(
 				`Expected entity at chunk (%d,%d,%d) but it was not there`,
 				entity.Location.Chunk.X,
 				entity.Location.Chunk.Y,
 				entity.Location.Chunk.Z))
 		})
 
-		g.It("logs out", func() {
+		It("logs out", func() {
 			err := h.SignUp("felzix", "PASS")
-			g.Assert(err).IsNil()
+			Expect(err).To(BeNil())
 
 			_, err = h.LogIn("felzix", "PASS")
-			g.Assert(err).IsNil()
+			Expect(err).To(BeNil())
 
 			err = h.LogOut("felzix")
-			g.Assert(err).IsNil()
+			Expect(err).To(BeNil())
 
 			player, err := h.World.Player("felzix")
-			g.Assert(err).IsNil()
-			g.Assert(player).IsNotNil()
-			g.Assert(player.Token).Equal("")
+			Expect(err).To(BeNil())
+			Expect(player).ToNot(BeNil())
+			Expect(player.Token).To(Equal(""))
 
 			entity, err := h.World.Entity(player.EntityId)
-			g.Assert(err).IsNil()
-			g.Assert(entity).IsNotNil()
+			Expect(err).To(BeNil())
+			Expect(entity).ToNot(BeNil())
 
 			chunk, err := h.World.Chunk(entity.Location.Chunk)
-			g.Assert(err).IsNil()
+			Expect(err).To(BeNil())
 
 			entityIsPresent := false
 			for i := 0; i < len(chunk.Entities); i++ {
@@ -114,38 +103,37 @@ func TestAuth(t *testing.T) {
 					entityIsPresent = true
 				}
 			}
-			g.Assert(entityIsPresent).IsFalse(fmt.Sprintf(
+			Expect(entityIsPresent).To(BeFalse(), fmt.Sprintf(
 				`Expected entity to NOT be at chunk (%d,%d,%d) but it was there.`,
 				entity.Location.Chunk.X,
 				entity.Location.Chunk.Y,
 				entity.Location.Chunk.Z))
 		})
 
-		g.It("fails to log in", func() {
+		It("fails to log in", func() {
 			token, err := h.LogIn("felzix", "PASS")
-			g.Assert(token).Equal("")
-			g.Assert(err).IsNotNil()
-			g.Assert(err.Error()).Equal(`No such player "felzix"`)
+			Expect(token).To(Equal(""))
+			Expect(err).ToNot(BeNil())
+			Expect(err.Error()).To(Equal(`No such player "felzix"`))
 
 			player, err := h.World.Player("felzix")
-			g.Assert(err).IsNil()
-			g.Assert(player).Equal((*types.Player)(nil))
+			Expect(err).To(BeNil())
+			Expect(player).To(Equal((*types.Player)(nil)))
 		})
 
-		g.It("token test", func() {
+		It("token test", func() {
 			SECRET := []byte("secret")
 			NAME := "camian"
 			EXPIRY := time.Now().Add(time.Hour * 24).Unix()
 
 			token, err := makeToken(SECRET, NAME, EXPIRY)
-			g.Assert(err).IsNil()
+			Expect(err).To(BeNil())
 
 			name, tokenId, expiry, err := readToken(SECRET, token)
-			g.Assert(err).IsNil()
+			Expect(err).To(BeNil())
 
-			g.Assert(name).Equal(NAME)
-			g.Assert(expiry).Equal(EXPIRY)
-			g.Assert(len(tokenId) > 0).IsTrue("Expected a token id but it's empty")
+			Expect(name).To(Equal(NAME))
+			Expect(expiry).To(Equal(EXPIRY))
+			Expect(len(tokenId) > 0).To(BeTrue(), "Expected a token id but it's empty")
 		})
 	})
-}
