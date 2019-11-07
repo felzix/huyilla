@@ -94,13 +94,13 @@ func NewGuiClient() *GuiClient {
 				panic(err)
 			}
 		case 'a':
-			target := guiClient.player.Entity.Location.Derive(0, 1, 0, C.CHUNK_SIZE)
+			target := guiClient.player.Entity.Location.Derive(0, -1, 0, C.CHUNK_SIZE)
 			Log.Debug(guiClient.player.Entity.Location.Voxel.ToString(), "->", target.ToString())
 			if err := guiClient.api.IssueMoveAction(target); err != nil {
 				panic(err)
 			}
 		case 'd':
-			target := guiClient.player.Entity.Location.Derive(0, -1, 0, C.CHUNK_SIZE)
+			target := guiClient.player.Entity.Location.Derive(0, 1, 0, C.CHUNK_SIZE)
 			Log.Debug(guiClient.player.Entity.Location.Voxel.ToString(), "->", target.ToString())
 			if err := guiClient.api.IssueMoveAction(target); err != nil {
 				panic(err)
