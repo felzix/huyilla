@@ -1,8 +1,19 @@
 package types
 
 import (
+	"github.com/felzix/huyilla/constants"
 	"math"
 )
+
+func (m *AbsolutePoint) X() int64 {
+	return (m.Chunk.X * constants.CHUNK_SIZE) + m.Voxel.X
+}
+func (m *AbsolutePoint) Y() int64 {
+	return (m.Chunk.Y * constants.CHUNK_SIZE) + m.Voxel.Y
+}
+func (m *AbsolutePoint) Z() int64 {
+	return (m.Chunk.Z * constants.CHUNK_SIZE) + m.Voxel.Z
+}
 
 func (m *AbsolutePoint) Derive(deltaX, deltaY, deltaZ int64, chunkSize uint64) *AbsolutePoint {
 	size := int64(chunkSize)

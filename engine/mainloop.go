@@ -14,17 +14,17 @@ import (
 
 type Options struct {
 	DBType string
-	Port int
+	Port   int
 }
 
 func parse() (*Options, error) {
 	parser := argparse.NewParser("Huyilla Engine", "")
 	dbType := parser.Selector("D", "database", []string{"diskv", "memory"}, &argparse.Options{
-		Help:     "use diskv for persistence",
-		Default:  "diskv",
+		Help:    "use diskv for persistence",
+		Default: "diskv",
 	})
 	port := parser.Int("p", "port", &argparse.Options{
-		Default:  8080,
+		Default: 8080,
 	})
 	err := parser.Parse(os.Args)
 	if err != nil {
@@ -34,7 +34,7 @@ func parse() (*Options, error) {
 
 	return &Options{
 		DBType: *dbType,
-		Port: *port,
+		Port:   *port,
 	}, nil
 }
 
@@ -59,7 +59,8 @@ func main() {
 
 	huyilla, err := engine.NewEngine(
 		constants.SEED,
-		engine.NewLakeWorldGenerator(3),
+		engine.NewGrassWorldGenerator(),
+		//engine.NewLakeWorldGenerator(3),
 		db)
 
 	if err != nil {
