@@ -1,22 +1,22 @@
 package types
 
 import (
-	"github.com/felzix/huyilla/constants"
+	C "github.com/felzix/huyilla/constants"
 	"math"
 )
 
 func (m *AbsolutePoint) X() int64 {
-	return (m.Chunk.X * constants.CHUNK_SIZE) + m.Voxel.X
+	return (m.Chunk.X * C.CHUNK_SIZE) + m.Voxel.X
 }
 func (m *AbsolutePoint) Y() int64 {
-	return (m.Chunk.Y * constants.CHUNK_SIZE) + m.Voxel.Y
+	return (m.Chunk.Y * C.CHUNK_SIZE) + m.Voxel.Y
 }
 func (m *AbsolutePoint) Z() int64 {
-	return (m.Chunk.Z * constants.CHUNK_SIZE) + m.Voxel.Z
+	return (m.Chunk.Z * C.CHUNK_SIZE) + m.Voxel.Z
 }
 
-func (m *AbsolutePoint) Derive(deltaX, deltaY, deltaZ int64, chunkSize uint64) *AbsolutePoint {
-	size := int64(chunkSize)
+func (m *AbsolutePoint) Derive(deltaX, deltaY, deltaZ int64) *AbsolutePoint {
+	size := int64(C.CHUNK_SIZE)
 	derived := m.Clone()
 
 	derived.Chunk.X += deltaX / size
@@ -65,7 +65,7 @@ func (m *AbsolutePoint) Neighbors(chunkSize uint64) []*AbsolutePoint {
 				if x == 0 && y == 0 && z == 0 {
 					continue
 				}
-				voxels[i] = m.Derive(x, y, z, chunkSize)
+				voxels[i] = m.Derive(x, y, z)
 				i++
 			}
 		}

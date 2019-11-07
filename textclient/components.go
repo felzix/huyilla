@@ -125,7 +125,7 @@ func GameBoard() *react.ReactElement {
 					Type: "gameboard-container",
 					Key:  "only",
 					DrawFn: func(element *react.ReactElement, maxWidth int, maxHeight int) (*react.DrawResult, error) {
-						center := client.player.Entity.Location.Derive(0, 0, *zLevelDelta, C.CHUNK_SIZE)
+						center := client.player.Entity.Location.Derive(0, 0, *zLevelDelta)
 						return &react.DrawResult{
 							Elements: []react.Child{
 								{
@@ -166,13 +166,13 @@ func GameBoard() *react.ReactElement {
 
 						switch e.Rune() {
 						case 'w': // move up
-							to = client.player.Entity.Location.Derive(0, -1, 0, C.CHUNK_SIZE)
+							to = client.player.Entity.Location.Derive(0, -1, 0)
 						case 's': // move down
-							to = client.player.Entity.Location.Derive(0, +1, 0, C.CHUNK_SIZE)
+							to = client.player.Entity.Location.Derive(0, +1, 0)
 						case 'a': // move left
-							to = client.player.Entity.Location.Derive(-1, 0, 0, C.CHUNK_SIZE)
+							to = client.player.Entity.Location.Derive(-1, 0, 0)
 						case 'd': // move right
-							to = client.player.Entity.Location.Derive(+1, 0, 0, C.CHUNK_SIZE)
+							to = client.player.Entity.Location.Derive(+1, 0, 0)
 						case '<': // increase view z-level (look up)
 							*zLevelDelta++
 							return true, nil
@@ -229,7 +229,7 @@ func Tiles() *react.ReactElement {
 						height = maxHeight - localY
 					}
 
-					point := center.Derive(int64(chunkX*C.CHUNK_SIZE), int64(chunkY*C.CHUNK_SIZE), 0, C.CHUNK_SIZE)
+					point := center.Derive(int64(chunkX*C.CHUNK_SIZE), int64(chunkY*C.CHUNK_SIZE), 0)
 					chunk := client.world.GetChunk(point.Chunk)
 
 					zLevel := int(point.Voxel.Z)

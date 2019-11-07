@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/felzix/huyilla/client"
-	C "github.com/felzix/huyilla/constants"
 	"github.com/felzix/huyilla/types"
 	g3nApp "github.com/g3n/engine/app"
 	g3nCamera "github.com/g3n/engine/camera"
@@ -82,25 +81,25 @@ func NewGuiClient() *GuiClient {
 		// TODO base move commands on player's rotation
 
 		case 'w':
-			target := guiClient.player.Entity.Location.Derive(1, 0, 0, C.CHUNK_SIZE)
+			target := guiClient.player.Entity.Location.Derive(1, 0, 0)
 			Log.Debug(guiClient.player.Entity.Location.Voxel.ToString(), "->", target.ToString())
 			if err := guiClient.api.IssueMoveAction(target); err != nil {
 				panic(err)
 			}
 		case 's':
-			target := guiClient.player.Entity.Location.Derive(-1, 0, 0, C.CHUNK_SIZE)
+			target := guiClient.player.Entity.Location.Derive(-1, 0, 0)
 			Log.Debug(guiClient.player.Entity.Location.Voxel.ToString(), "->", target.ToString())
 			if err := guiClient.api.IssueMoveAction(target); err != nil {
 				panic(err)
 			}
 		case 'a':
-			target := guiClient.player.Entity.Location.Derive(0, 1, 0, C.CHUNK_SIZE)
+			target := guiClient.player.Entity.Location.Derive(0, 1, 0)
 			Log.Debug(guiClient.player.Entity.Location.Voxel.ToString(), "->", target.ToString())
 			if err := guiClient.api.IssueMoveAction(target); err != nil {
 				panic(err)
 			}
 		case 'd':
-			target := guiClient.player.Entity.Location.Derive(0, -1, 0, C.CHUNK_SIZE)
+			target := guiClient.player.Entity.Location.Derive(0, -1, 0)
 			Log.Debug(guiClient.player.Entity.Location.Voxel.ToString(), "->", target.ToString())
 			if err := guiClient.api.IssueMoveAction(target); err != nil {
 				panic(err)

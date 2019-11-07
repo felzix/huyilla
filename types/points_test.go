@@ -1,6 +1,5 @@
 package types
 
-
 import (
 	"fmt"
 	. "github.com/onsi/ginkgo"
@@ -60,25 +59,22 @@ var _ = Describe("Point Calculations", func() {
 	})
 
 	It("derives a positive delta", func() {
-		const CHUNK_SIZE = 16
 		p := NewAbsolutePoint(1, 2, 3, 4, 5, 6)
-		d := p.Derive(40, 40, 10, CHUNK_SIZE)
+		d := p.Derive(40, 40, 10)
 		e := NewAbsolutePoint(3, 4, 4, 12, 13, 0)
 		Expect(d.Equals(e)).To(Equal(true), fmt.Sprintf("%s != %s", d.ToString(), e.ToString()))
 	})
 
 	It("derives a negative delta", func() {
-		const CHUNK_SIZE = 16
 		p := NewAbsolutePoint(1, 2, 3, 4, 5, 6)
-		d := p.Derive(-40, -40, -40, CHUNK_SIZE)
+		d := p.Derive(-40, -40, -40)
 		e := NewAbsolutePoint(-2, -1, 0, 12, 13, 14)
 		Expect(d.Equals(e)).To(Equal(true), fmt.Sprintf("%s != %s", d.ToString(), e.ToString()))
 	})
 
 	It("derives a neighbor", func() {
-		const CHUNK_SIZE = 16
 		p := NewAbsolutePoint(1, 2, 3, 0, 2, 15)
-		d := p.Derive(-1, -1, -1, CHUNK_SIZE)
+		d := p.Derive(-1, -1, -1)
 		e := NewAbsolutePoint(0, 2, 3, 15, 1, 14)
 		Expect(d.Equals(e)).To(Equal(true), fmt.Sprintf("%s != %s", d.ToString(), e.ToString()))
 	})
@@ -86,7 +82,7 @@ var _ = Describe("Point Calculations", func() {
 	It("derives chunkSize", func() {
 		const CHUNK_SIZE = 16
 		p := NewAbsolutePoint(1, 1, 1, 1, 0, 1)
-		d := p.Derive(-CHUNK_SIZE, -CHUNK_SIZE*2, +CHUNK_SIZE, CHUNK_SIZE)
+		d := p.Derive(-CHUNK_SIZE, -CHUNK_SIZE*2, +CHUNK_SIZE)
 		e := NewAbsolutePoint(0, -1, 2, 1, 0, 1)
 		Expect(d.Equals(e)).To(Equal(true), fmt.Sprintf("%s != %s", d.ToString(), e.ToString()))
 	})
