@@ -3,10 +3,12 @@ package engine
 import (
 	"github.com/gogo/protobuf/proto"
 	"strings"
+	"sync"
 )
 
 type MemoryDatabase struct {
 	Database
+	sync.Mutex
 
 	stuff map[string][]byte
 }
@@ -18,6 +20,8 @@ func NewMemoryDatabase() *MemoryDatabase {
 }
 
 func (db *MemoryDatabase) Get(key string, thing proto.Unmarshaler) error {
+	db.Lock()
+	defer db.Unlock()
 	blob, ok := db.stuff[key]
 	if !ok {
 		return NewThingNotFoundError(key)
@@ -40,6 +44,8 @@ func (db *MemoryDatabase) GetByPrefix(prefix string) <-chan string {
 }
 
 func (db *MemoryDatabase) Set(key string, thing proto.Marshaler) error {
+	db.Lock()
+	defer db.Unlock()
 	blob, err := thing.Marshal()
 	if err != nil {
 		return err
@@ -49,16 +55,22 @@ func (db *MemoryDatabase) Set(key string, thing proto.Marshaler) error {
 }
 
 func (db *MemoryDatabase) Has(key string) bool {
+	db.Lock()
+	defer db.Unlock()
 	_, ok := db.stuff[key]
 	return ok
 }
 
 func (db *MemoryDatabase) End(key string) error {
+	db.Lock()
+	defer db.Unlock()
 	delete(db.stuff, key)
 	return nil
 }
 
 func (db *MemoryDatabase) EndAll() error {
+	db.Lock()
+	defer db.Unlock()
 	db.stuff = makeStuff()
 	return nil
 }

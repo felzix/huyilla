@@ -1,7 +1,6 @@
 package types
 
 import (
-	C "github.com/felzix/huyilla/constants"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"testing"
