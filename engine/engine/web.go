@@ -253,7 +253,6 @@ func chunkHandler(engine *Engine) http.HandlerFunc {
 
 		chunks := types.NewChunks(radius)
 
-		i := 0
 		for _, x := range makeRange(center.X-int64(radius), center.X+int64(radius)) {
 			for _, y := range makeRange(center.Y-int64(radius), center.Y+int64(radius)) {
 				for _, z := range makeRange(center.Z-int64(radius), center.Z+int64(radius)) {
@@ -269,7 +268,8 @@ func chunkHandler(engine *Engine) http.HandlerFunc {
 						return
 					}
 
-					entities := make(map[int64]*types.Entity, len(chunk.Entities))
+					chunks.Chunks[point] = *chunk
+
 					for i := 0; i < len(chunk.Entities); i++ {
 						id := chunk.Entities[i]
 						entity, err := engine.World.Entity(id)
@@ -278,20 +278,19 @@ func chunkHandler(engine *Engine) http.HandlerFunc {
 							http.Error(w, err.Error(), http.StatusInternalServerError)
 							return
 						}
-						entities[id] = entity
+						chunks.Entities[id] = *entity
 					}
 
-					chunks.Chunks[i] = &types.DetailedChunk{
-						Tick:     chunk.Tick,
-						Voxels:   chunk.Voxels,
-						Compound: chunk.Compound,
-						Entities: entities,
-						Items:    chunk.Items,
+					for i := 0; i < len(chunk.Items); i++ {
+						id := chunk.Items[i]
+						item, err := engine.World.Item(id)
+						if err != nil {
+							Log.Errorf("web:chunk: error=%v", err)
+							http.Error(w, err.Error(), http.StatusInternalServerError)
+							return
+						}
+						chunks.Items[id] = *item
 					}
-
-					chunks.Points[i] = point
-
-					i++
 				}
 			}
 		}
@@ -318,9 +317,14 @@ func worldAgeHandler(engine *Engine) http.HandlerFunc {
 			return
 		}
 
-		ticks := []byte(strconv.FormatUint(age.Ticks, 10))
-
-		if _, err := w.Write(ticks); err != nil {
+		if blob, err := age.Marshal(); err == nil {
+			w.Header().Set("Content-Type", "application/protobuf")
+			if _, err := w.Write(blob); err != nil {
+				Log.Errorf("web:age: error=%v", err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
+		} else {
+			Log.Errorf("web:age: error=%v", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	}
@@ -328,7 +332,7 @@ func worldAgeHandler(engine *Engine) http.HandlerFunc {
 
 func actHandler(engine *Engine) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		Log.Debug("web: act")
+		Log.Debug("web:act")
 		if r.Body == nil {
 			http.Error(w, "Must supply body", http.StatusBadRequest)
 			return
@@ -340,7 +344,7 @@ func actHandler(engine *Engine) http.HandlerFunc {
 			return
 		}
 
-		var action types.Action
+		action := types.Action{}
 		if err := action.Unmarshal(blob); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

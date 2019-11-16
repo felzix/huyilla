@@ -10,5 +10,5 @@ var FORM = content.FORM
 var MATERIAL = content.MATERIAL
 
 func (engine *Engine) GetContent() *types.Content {
-	return &content.ContentDefinitions
+	return &content.Definitions
 }

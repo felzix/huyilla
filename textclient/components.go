@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	react "github.com/felzix/go-curses-react"
+	"github.com/felzix/huyilla/client"
 	C "github.com/felzix/huyilla/constants"
 	"github.com/felzix/huyilla/types"
 	"github.com/gdamore/tcell"
@@ -162,17 +163,25 @@ func GameBoard() *react.ReactElement {
 						}, nil
 					},
 					HandleKeyFn: func(element *react.ReactElement, e *tcell.EventKey) (bool, error) {
-						var to *types.AbsolutePoint
+						var to types.AbsolutePoint
 
 						switch e.Rune() {
 						case 'w': // move up
 							to = client.player.Entity.Location.Derive(0, -1, 0)
+							err := client.api.IssueMoveAction(client.player.Player, to)
+							return false, err
 						case 's': // move down
 							to = client.player.Entity.Location.Derive(0, +1, 0)
+							err := client.api.IssueMoveAction(client.player.Player, to)
+							return false, err
 						case 'a': // move left
 							to = client.player.Entity.Location.Derive(-1, 0, 0)
+							err := client.api.IssueMoveAction(client.player.Player, to)
+							return false, err
 						case 'd': // move right
 							to = client.player.Entity.Location.Derive(+1, 0, 0)
+							err := client.api.IssueMoveAction(client.player.Player, to)
+							return false, err
 						case '<': // increase view z-level (look up)
 							*zLevelDelta++
 							return true, nil
@@ -181,12 +190,7 @@ func GameBoard() *react.ReactElement {
 							return true, nil
 						}
 
-						if to != nil {
-							err := client.api.IssueMoveAction(to)
-							return false, err
-						} else {
-							return true, nil
-						}
+						return true, nil
 					},
 				}
 
@@ -207,8 +211,6 @@ func Tiles() *react.ReactElement {
 		DrawFn: func(r *react.ReactElement, maxWidth, maxHeight int) (*react.DrawResult, error) {
 			client := r.Props["client"].(*TextClient)
 			center := r.Props["center"].(*types.AbsolutePoint)
-
-			// Log.Debugf("MARINA %v", center)
 
 			result := react.DrawResult{
 				Region: react.NewRegion(0, 0, maxWidth, maxHeight),
@@ -238,7 +240,7 @@ func Tiles() *react.ReactElement {
 						drawMissingChunk(result, localX, localY, width, height)
 					} else {
 						drawChunk(result, localX, localY, width, height, zLevel, chunk)
-						drawEntitiesForChunk(result, localX, localY, width, height, zLevel, chunk)
+						drawEntitiesForChunk(result, localX, localY, width, height, zLevel, chunk, client.world)
 					}
 
 					localY += height
@@ -267,7 +269,7 @@ func drawMissingTile(result react.DrawResult, x, y, localX, localY int) {
 	}
 }
 
-func drawChunk(result react.DrawResult, localX, localY, width, height, zLevel int, chunk *types.DetailedChunk) {
+func drawChunk(result react.DrawResult, localX, localY, width, height, zLevel int, chunk *types.Chunk) {
 	for y := 0; y < height; y++ {
 		for x := 0; x < width; x++ {
 			drawTile(result, x, y, localX, localY, zLevel, chunk)
@@ -275,7 +277,7 @@ func drawChunk(result react.DrawResult, localX, localY, width, height, zLevel in
 	}
 }
 
-func drawTile(result react.DrawResult, x, y, localX, localY, zLevel int, chunk *types.DetailedChunk) {
+func drawTile(result react.DrawResult, x, y, localX, localY, zLevel int, chunk *types.Chunk) {
 	index := (x * C.CHUNK_SIZE * C.CHUNK_SIZE) + (y * C.CHUNK_SIZE) + zLevel
 	voxel := types.Voxel(chunk.Voxels[index])
 	rune_ := voxelToRune(voxel)
@@ -285,8 +287,10 @@ func drawTile(result react.DrawResult, x, y, localX, localY, zLevel int, chunk *
 	}
 }
 
-func drawEntitiesForChunk(result react.DrawResult, localX, localY, width, height, zLevel int, chunk *types.DetailedChunk) {
-	for _, entity := range chunk.Entities {
+func drawEntitiesForChunk(result react.DrawResult, localX, localY, width, height, zLevel int, chunk *types.Chunk, world *client.WorldCache) {
+	for _, id := range chunk.Entities {
+
+		entity := world.GetEntity(id)
 		x := int(entity.Location.Voxel.X)
 		y := int(entity.Location.Voxel.Y)
 		z := int(entity.Location.Voxel.Z)
@@ -295,7 +299,7 @@ func drawEntitiesForChunk(result react.DrawResult, localX, localY, width, height
 			continue
 		}
 
-		drawEntity(result, x, y, localX, localY, entity)
+		drawEntity(result, x, y, localX, localY, &entity)
 	}
 }
 

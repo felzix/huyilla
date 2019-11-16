@@ -12,36 +12,36 @@ import (
 type Cache struct {
 	sync.Mutex
 
-	age              uint64
-	previousChunks   map[types.ComparablePoint]*types.DetailedChunk
-	chunks           map[types.ComparablePoint]*types.DetailedChunk
-	previousEntities map[int64]*types.Entity
+	age              types.Age
+	previousChunks   map[types.Point]*types.Chunk
+	chunks           map[types.Point]*types.Chunk
+	previousEntities map[types.EntityId]*types.Entity
 
 	scene        *core.Node
-	entityMeshes map[int64]*graphic.Mesh
-	voxelMeshes  map[types.ComparablePoint][]*graphic.Mesh // pt -> [mesh]
+	entityMeshes map[types.EntityId]*graphic.Mesh
+	voxelMeshes  map[types.Point][]*graphic.Mesh // pt -> [mesh]
 	basis        *types.Point
 }
 
 func NewCache(scene *core.Node) *Cache {
 	return &Cache{
-		age:              0,
-		previousChunks:   make(map[types.ComparablePoint]*types.DetailedChunk, 0),
-		chunks:           make(map[types.ComparablePoint]*types.DetailedChunk, 0),
-		previousEntities: make(map[int64]*types.Entity),
+		age:              types.Age(0),
+		previousChunks:   make(map[types.Point]*types.Chunk, 0),
+		chunks:           make(map[types.Point]*types.Chunk, 0),
+		previousEntities: make(map[types.EntityId]*types.Entity),
 
 		scene:        scene,
-		voxelMeshes:  make(map[types.ComparablePoint][]*graphic.Mesh),
-		entityMeshes: make(map[int64]*graphic.Mesh),
+		voxelMeshes:  make(map[types.Point][]*graphic.Mesh),
+		entityMeshes: make(map[types.EntityId]*graphic.Mesh),
 		basis:        nil,
 	}
 }
 
-func (cache *Cache) GetAge() uint64 {
+func (cache *Cache) GetAge() types.Age {
 	return cache.age
 }
 
-func (cache *Cache) SetAge(age uint64) {
+func (cache *Cache) SetAge(age types.Age) {
 	cache.Lock()
 	defer cache.Unlock()
 	cache.age = age
@@ -51,14 +51,12 @@ func (cache *Cache) SetChunks(chunks *types.Chunks) {
 	// TODO do the same thing here as you do with meshes
 	// Possibly combine this and Draw(), or rearrange them, so the client just gives the cache an update
 	// No need, I think, for the client to call SetChunks then call Draw.
-	for i, chunk := range chunks.Chunks {
-		point := chunks.Points[i]
-		cache.setChunk(point, chunk)
+	for point, chunk := range chunks.Chunks {
+		cache.setChunk(point, &chunk)
 	}
 }
 
-func (cache *Cache) setChunk(coords *types.Point, chunk *types.DetailedChunk) {
-	point := *types.NewComparablePoint(coords)
+func (cache *Cache) setChunk(point types.Point, chunk *types.Chunk) {
 	if cache.chunks[point] != nil {
 		cache.previousChunks[point] = cache.chunks[point]
 	}
@@ -66,8 +64,8 @@ func (cache *Cache) setChunk(coords *types.Point, chunk *types.DetailedChunk) {
 	cache.chunks[point] = chunk
 }
 
-func (cache *Cache) CreateVoxelMeshes(point types.ComparablePoint, chunk *types.DetailedChunk, offset *types.Point) {
-	Log.Debug("CreateVoxelMeshes", point.ToPoint().ToString())
+func (cache *Cache) CreateVoxelMeshes(point types.Point, chunk *types.Chunk, offset types.Point) {
+	Log.Debug("CreateVoxelMeshes", point.ToString())
 	cache.voxelMeshes[point] = make([]*graphic.Mesh, C.CHUNK_LENGTH)
 	types.EachVoxel(func(x, y, z uint64) {
 		voxel := chunk.GetVoxel(x, y, z)
@@ -75,8 +73,8 @@ func (cache *Cache) CreateVoxelMeshes(point types.ComparablePoint, chunk *types.
 	})
 }
 
-func (cache *Cache) DestroyVoxelMeshes(point types.ComparablePoint) {
-	Log.Debug("DestroyVoxelMeshes", point.ToPoint().ToString())
+func (cache *Cache) DestroyVoxelMeshes(point types.Point) {
+	Log.Debug("DestroyVoxelMeshes", point.ToString())
 	types.EachVoxel(func(x, y, z uint64) {
 		i := types.CalculateVoxelIndex(x, y, z)
 		mesh := cache.voxelMeshes[point][i]
@@ -88,22 +86,22 @@ func (cache *Cache) DestroyVoxelMeshes(point types.ComparablePoint) {
 }
 
 func (cache *Cache) UpdateVoxelMeshes(
-	point types.ComparablePoint,
-	offset *types.Point,
-	previousChunk *types.DetailedChunk,
-	currentChunk *types.DetailedChunk,
+	point types.Point,
+	offset types.Point,
+	previousChunk *types.Chunk,
+	currentChunk *types.Chunk,
 ) {
 	types.EachVoxel(func(x, y, z uint64) {
 		previousVoxel := previousChunk.GetVoxel(x, y, z)
 		voxel := currentChunk.GetVoxel(x, y, z)
 		if voxel != previousVoxel {
-			Log.Debug("UpdateVoxelMeshes", point.ToPoint().ToString(), x, y, z)
+			Log.Debug("UpdateVoxelMeshes", point.ToString(), x, y, z)
 			cache.DrawVoxel(voxel, point, x, y, z, offset)
 		}
 	})
 }
 
-func (cache *Cache) CreateEntityMesh(entity *types.Entity, offset *types.Point, guiClient *GuiClient) {
+func (cache *Cache) CreateEntityMesh(entity *types.Entity, offset types.Point, guiClient *GuiClient) {
 	Log.Debug("CreateEntityMesh", entity.Id)
 	def := content.EntityDefinitions[entity.Type]
 	geom := geometries[def.Form]
@@ -134,7 +132,7 @@ func (cache *Cache) DestroyEntityMesh(entity *types.Entity, guiClient *GuiClient
 	delete(cache.entityMeshes, entity.Id)
 }
 
-func (cache *Cache) UpdateEntityMesh(previousEntity *types.Entity, entity *types.Entity, offset *types.Point) {
+func (cache *Cache) UpdateEntityMesh(previousEntity *types.Entity, entity *types.Entity, offset types.Point) {
 	if previousEntity.Location.Equals(entity.Location) {
 		return
 	}
@@ -145,9 +143,9 @@ func (cache *Cache) UpdateEntityMesh(previousEntity *types.Entity, entity *types
 
 func (cache *Cache) DrawVoxel(
 	voxel types.Voxel,
-	point types.ComparablePoint,
+	point types.Point,
 	x, y, z uint64,
-	offset *types.Point,
+	offset types.Point,
 ) {
 	v := voxel.Expand()
 	if isDrawn(v) {
@@ -163,7 +161,7 @@ func (cache *Cache) DrawVoxel(
 	}
 }
 
-func (cache *Cache) SetVoxelMesh(point types.ComparablePoint, x, y, z uint64, mesh *graphic.Mesh) {
+func (cache *Cache) SetVoxelMesh(point types.Point, x, y, z uint64, mesh *graphic.Mesh) {
 	i := types.CalculateVoxelIndex(x, y, z)
 	oldMesh := cache.voxelMeshes[point][i]
 	if oldMesh != nil {
@@ -179,18 +177,18 @@ func (cache *Cache) Draw(guiClient *GuiClient) {
 
 	// TODO handle a moving basis
 	if cache.basis == nil {
-		cache.basis = guiClient.player.Entity.Location.Chunk
+		cache.basis = &guiClient.player.Entity.Location.Chunk
 	}
-	center := cache.basis
-	currentEntities := make(map[int64]*types.Entity, 0)
+	center := *cache.basis
+	currentEntities := make(map[types.EntityId]*types.Entity, 0)
 
 	for point, currentChunk := range cache.chunks {
 		previousChunk := cache.previousChunks[point]
 		if previousChunk == nil {
-			offset := Offset(center, point.ToPoint())
+			offset := Offset(center, point)
 			cache.CreateVoxelMeshes(point, currentChunk, offset)
-			for id, entity := range currentChunk.Entities {
-				currentEntities[id] = entity
+			for _, id := range currentChunk.Entities {
+				currentEntities[id] = cache.previousEntities[id]
 			}
 		}
 	}
@@ -199,10 +197,10 @@ func (cache *Cache) Draw(guiClient *GuiClient) {
 		if currentChunk == nil {
 			cache.DestroyVoxelMeshes(point)
 		} else {
-			offset := Offset(center, point.ToPoint())
+			offset := Offset(center, point)
 			cache.UpdateVoxelMeshes(point, offset, previousChunk, currentChunk)
-			for id, entity := range currentChunk.Entities {
-				currentEntities[id] = entity
+			for _, id := range currentChunk.Entities {
+				currentEntities[id] = cache.previousEntities[id]
 			}
 		}
 	}
@@ -227,11 +225,11 @@ func (cache *Cache) Draw(guiClient *GuiClient) {
 	cache.previousEntities = currentEntities
 }
 
-func Offset(basis, point *types.Point) *types.Point {
+func Offset(basis, point types.Point) types.Point {
 	return basis.DeriveVector(point)
 }
 
-func SetMeshPosition(mesh *graphic.Mesh, point *types.Point, offset *types.Point) {
+func SetMeshPosition(mesh *graphic.Mesh, point types.Point, offset types.Point) {
 	// mixing y and z is intended here
 	x := float32(point.X + (offset.X * 16))
 	y := float32(point.Z + (offset.Z * 16))
@@ -242,7 +240,7 @@ func SetMeshPosition(mesh *graphic.Mesh, point *types.Point, offset *types.Point
 func isDrawn(v types.ExpandedVoxel) bool {
 	M := content.MATERIAL
 
-	valid := map[uint64]bool{
+	valid := map[types.Material]bool{
 		M["dirt"]:  true,
 		M["grass"]: true,
 		M["water"]: true,

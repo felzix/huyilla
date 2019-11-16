@@ -20,8 +20,8 @@ const (
 )
 
 type ExpandedVoxel struct {
-	Form        uint64
-	Material    uint64
+	Form        Form
+	Material    Material
 	Other       uint64
 	Temperature uint64
 	Pressure    uint64 // TODO consider using a different struct where only this field is named differently
@@ -32,8 +32,8 @@ type Voxel uint64
 
 func (v Voxel) Expand() ExpandedVoxel {
 	return ExpandedVoxel{
-		Form:        uint64(v & 0xFFFF000000000000 >> 48),
-		Material:    uint64(v & 0x0000FFFF00000000 >> 32),
+		Form:        Form(v & 0xFFFF000000000000 >> 48),
+		Material:    Material(v & 0x0000FFFF00000000 >> 32),
 		Other:       uint64(v & 0x00000000FFFC0000 >> 18),
 		Temperature: uint64(v & 0x000000000003FFE0 >> 5),
 		Pressure:    uint64(v & 0x000000000000001E >> 1),
@@ -45,8 +45,8 @@ func (v Voxel) Expand() ExpandedVoxel {
 // If e.g. Pressure were more than 4 bits then Temperature would be corrupted.
 func (voxel ExpandedVoxel) Compress() Voxel {
 	v := uint64(0)
-	v |= voxel.Form << 48
-	v |= voxel.Material << 32
+	v |= uint64(voxel.Form) << 48
+	v |= uint64(voxel.Material) << 32
 	v |= voxel.Other << 18
 	v |= voxel.Temperature << 5
 	v |= voxel.Pressure << 1

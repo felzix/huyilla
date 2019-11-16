@@ -120,7 +120,6 @@ func (textClient *TextClient) handleKey(e *tcell.EventKey) error {
 
 func (textClient *TextClient) handleMouse(e *tcell.EventMouse) error {
 	// x, y := e.Position()
-	// fmt.Printf("(%d,%d)", x, y)
 	return nil
 }
 
@@ -188,9 +187,8 @@ func (textClient *TextClient) EnginePoller() {
 					return
 				}
 
-				for i, chunk := range chunks.Chunks {
-					point := chunks.Points[i]
-					textClient.world.SetChunk(point, chunk)
+				for point, chunk := range chunks.Chunks {
+					textClient.world.SetChunk(point, &chunk)
 				}
 			}
 		}

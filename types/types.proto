@@ -154,7 +154,6 @@ message Action {
         MoveAction move = 2;
         CraftAction craft = 3;
     }
-
 }
 
 message Content {

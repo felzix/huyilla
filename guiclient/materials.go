@@ -2,11 +2,12 @@ package main
 
 import (
 	"github.com/felzix/huyilla/content"
+	"github.com/felzix/huyilla/types"
 	"github.com/g3n/engine/material"
 	"github.com/g3n/engine/math32"
 )
 
-var materials = make(map[uint64]material.IMaterial)
+var materials = make(map[types.Material]material.IMaterial)
 
 func makeMaterials() {
 	materials[content.MATERIAL["dirt"]] = material.NewStandard(math32.NewColor("SaddleBrown"))

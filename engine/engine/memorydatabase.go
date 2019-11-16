@@ -1,13 +1,13 @@
 package engine
 
 import (
-	"github.com/gogo/protobuf/proto"
+	"github.com/felzix/huyilla/types"
 	"strings"
 	"sync"
 )
 
 type MemoryDatabase struct {
-	Database
+	types.Database
 	sync.Mutex
 
 	stuff map[string][]byte
@@ -19,12 +19,12 @@ func NewMemoryDatabase() *MemoryDatabase {
 	}
 }
 
-func (db *MemoryDatabase) Get(key string, thing proto.Unmarshaler) error {
+func (db *MemoryDatabase) Get(key string, thing types.Serializable) error {
 	db.Lock()
 	defer db.Unlock()
 	blob, ok := db.stuff[key]
 	if !ok {
-		return NewThingNotFoundError(key)
+		return types.NewThingNotFoundError(key)
 	}
 
 	return thing.Unmarshal(blob)
@@ -43,7 +43,7 @@ func (db *MemoryDatabase) GetByPrefix(prefix string) <-chan string {
 	return c
 }
 
-func (db *MemoryDatabase) Set(key string, thing proto.Marshaler) error {
+func (db *MemoryDatabase) Set(key string, thing types.Serializable) error {
 	db.Lock()
 	defer db.Unlock()
 	blob, err := thing.Marshal()

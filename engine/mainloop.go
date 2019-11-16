@@ -5,6 +5,7 @@ import (
 	"github.com/akamensky/argparse"
 	"github.com/felzix/huyilla/constants"
 	"github.com/felzix/huyilla/engine/engine"
+	"github.com/felzix/huyilla/types"
 	uuid "github.com/satori/go.uuid"
 	"os"
 	"os/signal"
@@ -44,7 +45,7 @@ func main() {
 		return // only errors on bad usage and help was already printed
 	}
 
-	var db engine.Database
+	var db types.Database
 	switch opts.DBType {
 	case "diskv":
 		db = engine.NewDisKVDatabase(

@@ -3,7 +3,7 @@ package content
 import "github.com/felzix/huyilla/types"
 
 // 16 bits available: 0 - 65535
-var MaterialDefinitions = map[uint64]*types.MaterialDefinition{
+var MaterialDefinitions = types.MaterialDefinitions{
 	0: {Name: "air",
 		SolidAt: uint32(types.MaxTemperature),
 		GasAt:   uint32(types.MinTemperature)},
@@ -14,7 +14,7 @@ var MaterialDefinitions = map[uint64]*types.MaterialDefinition{
 
 	200: {
 		Name:    "water",
-		PH:      7,
+		Ph:      7,
 		SolidAt: 273,
 		GasAt:   373},
 
@@ -44,7 +44,7 @@ var MaterialDefinitions = map[uint64]*types.MaterialDefinition{
 		Wooden: true},
 
 	5000: {Name: "tannin",
-		PH: 3},
+		Ph: 3},
 
 	10000: {Name: "human"},
 	10001: {Name: "snake"},

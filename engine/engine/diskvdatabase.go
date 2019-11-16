@@ -1,14 +1,14 @@
 package engine
 
 import (
-	"github.com/gogo/protobuf/proto"
+	"github.com/felzix/huyilla/types"
 	"github.com/peterbourgon/diskv/v3"
 	"regexp"
 	"strings"
 )
 
 type DiskVDatabase struct {
-	Database
+	types.Database
 
 	diskV *diskv.Diskv
 }
@@ -24,13 +24,13 @@ func NewDisKVDatabase(saveDir, tempDir string, cacheSize uint64) *DiskVDatabase 
 		})}
 }
 
-func (db *DiskVDatabase) Get(key string, thing proto.Unmarshaler) error {
+func (db *DiskVDatabase) Get(key string, thing types.Serializable) error {
 	if blob, err := db.diskV.Read(key); err == nil {
 		if err := thing.Unmarshal(blob); err != nil {
 			return err
 		}
 	} else if fileIsNotFound(err) {
-		return NewThingNotFoundError(key)
+		return types.NewThingNotFoundError(key)
 	} else {
 		return err
 	}
@@ -41,7 +41,7 @@ func (db *DiskVDatabase) GetByPrefix(prefix string) <-chan string {
 	return db.diskV.KeysPrefix(prefix, nil)
 }
 
-func (db *DiskVDatabase) Set(key string, thing proto.Marshaler) error {
+func (db *DiskVDatabase) Set(key string, thing types.Serializable) error {
 	if blob, err := thing.Marshal(); err == nil {
 		if err := db.diskV.Write(key, blob); err != nil {
 			return err

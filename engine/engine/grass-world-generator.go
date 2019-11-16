@@ -21,12 +21,12 @@ func NewGrassWorldGenerator() *GrassWorldGenerator {
 func (gen *GrassWorldGenerator) SetupForWorld() {
 }
 
-func (gen *GrassWorldGenerator) SetupForChunk(_ *types.Point) {
+func (gen *GrassWorldGenerator) SetupForChunk(_ types.Point) {
 	center := types.RandomPoint(C.CHUNK_SIZE)
 	center.Z = 0
 }
 
-func (gen *GrassWorldGenerator) GenVoxel(p *types.AbsolutePoint) types.Voxel {
+func (gen *GrassWorldGenerator) GenVoxel(p types.AbsolutePoint) types.Voxel {
 	m := MATERIAL
 	f := FORM
 

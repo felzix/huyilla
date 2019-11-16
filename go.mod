@@ -2,6 +2,7 @@ module github.com/felzix/huyilla
 
 require (
 	github.com/akamensky/argparse v0.0.0-20191006154803-1427fe674291
+	github.com/davecgh/go-xdr v0.0.0-20161123171359-e6a2ba005892
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/felzix/go-curses-react v0.0.0-20190405032759-a603622182bf
 	github.com/felzix/goblin v0.0.0-20190410063513-ec5a222faa2a

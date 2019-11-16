@@ -14,16 +14,16 @@ func TestVoxel(t *testing.T) {
 var _ = Describe("Basic", func() {
 	It("compress-expand preserves typical values", func() {
 		voxel := ExpandedVoxel{
-			Form:        12,
-			Material:    9004,
+			Form:        Form(12),
+			Material:    Material(9004),
 			Other:       0,
 			Temperature: RoomTemperature,
 			Pressure:    0,
 			Multiblock:  0,
 		}.Compress().Expand()
 
-		Expect(voxel.Form).To(Equal(uint64(12)))
-		Expect(voxel.Material).To(Equal(uint64(9004)))
+		Expect(voxel.Form).To(Equal(Form(12)))
+		Expect(voxel.Material).To(Equal(Material(9004)))
 		Expect(voxel.Other).To(Equal(uint64(0)))
 		Expect(voxel.Temperature).To(Equal(RoomTemperature))
 		Expect(voxel.Pressure).To(Equal(uint64(0)))
@@ -35,7 +35,7 @@ var _ = Describe("Basic", func() {
 			Form: 0xFFFF,
 		}.Compress().Expand()
 
-		Expect(voxel.Form).To(Equal(uint64(0xFFFF)))
+		Expect(voxel.Form).To(Equal(Form(0xFFFF)))
 	})
 
 	It("compress-expand preserves material", func() {
@@ -43,7 +43,7 @@ var _ = Describe("Basic", func() {
 			Material: 0xFFFF,
 		}.Compress().Expand()
 
-		Expect(voxel.Material).To(Equal(uint64(0xFFFF)))
+		Expect(voxel.Material).To(Equal(Material(0xFFFF)))
 	})
 
 	It("compress-expand preserves other", func() {

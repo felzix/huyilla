@@ -3,7 +3,7 @@ package content
 import "github.com/felzix/huyilla/types"
 
 // 16 bits available: 0 - 65535
-var FormDefinitions = map[uint64]*types.FormDefinition{
+var FormDefinitions = types.FormDefintions{
 	// Forms typical of voxels
 
 	0: {Name: "cube"},
@@ -90,7 +90,7 @@ var FormDefinitions = map[uint64]*types.FormDefinition{
 		Sharpness:        50},
 
 	35000: {Name: "helm",
-		WearableSlot:       types.FormDefinition_WearableHead,
+		WearableSlot:       types.WEARABLE_HEAD,
 		PiercingProtection: 3,
 		BluntProtection:    3,
 		Insulation:         2},

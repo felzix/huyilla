@@ -133,7 +133,7 @@ var _ = Describe("Web", func() {
 				Expect(res.Code).To(Equal(http.StatusOK))
 				body, err := ioutil.ReadAll(res.Body)
 				Expect(err).To(BeNil())
-				Expect(body).To(Equal([]byte("1")))
+				Expect(body).To(Equal([]byte{0, 0, 0, 0, 0, 0, 0, 1}))
 			})
 		})
 
@@ -157,7 +157,8 @@ var _ = Describe("Web", func() {
 
 		Describe("get chunk", func() {
 			It("in range", func() {
-				res := requesty("GET", fmt.Sprintf("/world/chunk/%d/%d/%d", 0, 0, constants.ACTIVE_CHUNK_RADIUS), nil, engine, map[string]string{
+				point := types.NewPoint(0, 0, constants.ACTIVE_CHUNK_RADIUS)
+				res := requesty("GET", fmt.Sprintf("/world/chunk/%d/%d/%d", point.X, point.Y, point.Z), nil, engine, map[string]string{
 					"contentType": "application/protobuf",
 					"token":       token,
 				})
@@ -170,12 +171,13 @@ var _ = Describe("Web", func() {
 				err = chunks.Unmarshal(body)
 				Expect(err).To(BeNil())
 				Expect(len(chunks.Chunks)).To(Equal(1))
-				Expect(chunks.Chunks[0]).ToNot(BeNil())
-				Expect(len(chunks.Chunks[0].Voxels)).To(Equal(constants.CHUNK_LENGTH))
+				Expect(chunks.Chunks[point]).ToNot(BeNil())
+				Expect(len(chunks.Chunks[point].Voxels)).To(Equal(constants.CHUNK_LENGTH))
 			})
 
 			It("in range, radius=1", func() {
-				res := requesty("GET", fmt.Sprintf("/world/chunk/%d/%d/%d?radius=1", 0, 0, constants.ACTIVE_CHUNK_RADIUS), nil, engine, map[string]string{
+				point := types.NewPoint(0, 0, constants.ACTIVE_CHUNK_RADIUS)
+				res := requesty("GET", fmt.Sprintf("/world/chunk/%d/%d/%d?radius=1", point.X, point.Y, point.Z), nil, engine, map[string]string{
 					"contentType": "application/protobuf",
 					"token":       token,
 				})
@@ -188,13 +190,13 @@ var _ = Describe("Web", func() {
 				err = chunks.Unmarshal(body)
 				Expect(err).To(BeNil())
 				Expect(len(chunks.Chunks)).To(Equal(27))
-				Expect(chunks.Chunks[0]).ToNot(BeNil())
-				Expect(chunks.Chunks[26]).ToNot(BeNil())
-				Expect(len(chunks.Chunks[0].Voxels)).To(Equal(constants.CHUNK_LENGTH))
+				Expect(chunks.Chunks[point]).ToNot(BeNil())
+				Expect(len(chunks.Chunks[point].Voxels)).To(Equal(constants.CHUNK_LENGTH))
 			})
 
 			It("barely in range, radius is max", func() {
-				res := requesty("GET", fmt.Sprintf("/world/chunk/%d/%d/%d?radius=%d", 0, 0, 0, constants.ACTIVE_CHUNK_RADIUS), nil, engine, map[string]string{
+				point := types.NewPoint(0, 0, constants.ACTIVE_CHUNK_RADIUS)
+				res := requesty("GET", fmt.Sprintf("/world/chunk/%d/%d/%d?radius=%d", point.X, point.Y, point.Z, constants.ACTIVE_CHUNK_RADIUS), nil, engine, map[string]string{
 					"contentType": "application/protobuf",
 					"token":       token,
 				})
@@ -207,13 +209,13 @@ var _ = Describe("Web", func() {
 				err = chunks.Unmarshal(body)
 				Expect(err).To(BeNil())
 				Expect(len(chunks.Chunks)).To(Equal(7 * 7 * 7))
-				Expect(chunks.Chunks[0]).ToNot(BeNil())
-				Expect(chunks.Chunks[7*7*7-1]).ToNot(BeNil())
-				Expect(len(chunks.Chunks[0].Voxels)).To(Equal(constants.CHUNK_LENGTH))
+				Expect(chunks.Chunks[point]).ToNot(BeNil())
+				Expect(len(chunks.Chunks[point].Voxels)).To(Equal(constants.CHUNK_LENGTH))
 			})
 
 			// The idea is that the initial readtime is so large that two of them don't fit into the per-test duration set on the commandline (15s)
 			It("database caching works", func() {
+				point := types.NewPoint(0, 0, constants.ACTIVE_CHUNK_RADIUS)
 				// fill cache
 				requesty("GET", fmt.Sprintf("/world/chunk/%d/%d/%d?radius=3", 0, 0, constants.ACTIVE_CHUNK_RADIUS), nil, engine, map[string]string{
 					"contentType": "application/protobuf",
@@ -234,9 +236,8 @@ var _ = Describe("Web", func() {
 				err = chunks.Unmarshal(body)
 				Expect(err).To(BeNil())
 				Expect(len(chunks.Chunks)).To(Equal(7 * 7 * 7))
-				Expect(chunks.Chunks[0]).ToNot(BeNil())
-				Expect(chunks.Chunks[7*7*7-1]).ToNot(BeNil())
-				Expect(len(chunks.Chunks[0].Voxels)).To(Equal(constants.CHUNK_LENGTH))
+				Expect(chunks.Chunks[point]).ToNot(BeNil())
+				Expect(len(chunks.Chunks[point].Voxels)).To(Equal(constants.CHUNK_LENGTH))
 			})
 
 			It("out of range", func() {

@@ -8,7 +8,6 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"strconv"
 )
 
 type API struct {
@@ -163,7 +162,7 @@ func (api *API) GetPlayer(name string) (*types.Entity, error) {
 	return &entity, nil
 }
 
-func (api *API) GetWorldAge() (uint64, error) {
+func (api *API) GetWorldAge() (types.Age, error) {
 	res, err := api.Request("GET", "/world/age", nil, nil)
 	if err != nil {
 		return 0, errors.New(fmt.Sprintf("GetWorldAge failure: %v", err))
@@ -176,15 +175,14 @@ func (api *API) GetWorldAge() (uint64, error) {
 		return 0, errors.New(fmt.Sprintf(`GetWorldAge failure: Expected status 200 but got %d. %s`, res.StatusCode, blob))
 	}
 
-	age, err := strconv.ParseUint(string(blob), 10, 64)
-	if err != nil {
-		return 0, errors.New(fmt.Sprintf("GetWorldAge failure: %v", err))
+	var age types.Age
+	if err := age.Unmarshal(blob); err != nil {
+		return types.Age(0), errors.New(fmt.Sprintf("GetWorldAge failure: %v", err))
 	}
-
 	return age, nil
 }
 
-func (api *API) GetChunks(point *types.Point, radius uint64) (*types.Chunks, error) {
+func (api *API) GetChunks(point types.Point, radius uint64) (*types.Chunks, error) {
 	res, err := api.Request("GET", fmt.Sprintf("/world/chunk/%d/%d/%d?radius=%d", point.X, point.Y, point.Z, radius), nil, map[string]string{
 		"Content-Type": "application/protobuf",
 		"token":        string(api.token),
@@ -215,7 +213,6 @@ func (api *API) IssueAction(action *types.Action) error {
 	}
 
 	_, err = api.Request("POST", fmt.Sprintf("/world/act"), bytes.NewReader(blob), map[string]string{
-		"Content-Type": "application/protobuf",
 		"token":        string(api.token),
 	})
 	if err != nil {
@@ -225,6 +222,6 @@ func (api *API) IssueAction(action *types.Action) error {
 	return nil
 }
 
-func (api *API) IssueMoveAction(whereTo *types.AbsolutePoint) error {
-	return api.IssueAction(types.NewMove(api.Username, whereTo))
+func (api *API) IssueMoveAction(player *types.Player, whereTo types.AbsolutePoint) error {
+	return api.IssueAction(types.NewMoveAction(player.EntityId, player.EntityId, whereTo))
 }

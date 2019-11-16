@@ -2,10 +2,11 @@ package main
 
 import (
 	"github.com/felzix/huyilla/content"
+	"github.com/felzix/huyilla/types"
 	"github.com/g3n/engine/geometry"
 )
 
-var geometries = make(map[uint64]geometry.IGeometry)
+var geometries = make(map[types.Form]geometry.IGeometry)
 
 func makeGeometries() {
 	geometries[content.FORM["cube"]] = geometry.NewCube(1)

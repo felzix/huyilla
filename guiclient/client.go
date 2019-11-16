@@ -83,25 +83,25 @@ func NewGuiClient() *GuiClient {
 		case 'w':
 			target := guiClient.player.Entity.Location.Derive(1, 0, 0)
 			Log.Debug(guiClient.player.Entity.Location.Voxel.ToString(), "->", target.ToString())
-			if err := guiClient.api.IssueMoveAction(target); err != nil {
+			if err := guiClient.api.IssueMoveAction(guiClient.player.Player, target); err != nil {
 				panic(err)
 			}
 		case 's':
 			target := guiClient.player.Entity.Location.Derive(-1, 0, 0)
 			Log.Debug(guiClient.player.Entity.Location.Voxel.ToString(), "->", target.ToString())
-			if err := guiClient.api.IssueMoveAction(target); err != nil {
+			if err := guiClient.api.IssueMoveAction(guiClient.player.Player, target); err != nil {
 				panic(err)
 			}
 		case 'a':
 			target := guiClient.player.Entity.Location.Derive(0, -1, 0)
 			Log.Debug(guiClient.player.Entity.Location.Voxel.ToString(), "->", target.ToString())
-			if err := guiClient.api.IssueMoveAction(target); err != nil {
+			if err := guiClient.api.IssueMoveAction(guiClient.player.Player, target); err != nil {
 				panic(err)
 			}
 		case 'd':
 			target := guiClient.player.Entity.Location.Derive(0, 1, 0)
 			Log.Debug(guiClient.player.Entity.Location.Voxel.ToString(), "->", target.ToString())
-			if err := guiClient.api.IssueMoveAction(target); err != nil {
+			if err := guiClient.api.IssueMoveAction(guiClient.player.Player, target); err != nil {
 				panic(err)
 			}
 		}
@@ -142,13 +142,9 @@ func (guiClient *GuiClient) Auth() error {
 		return err
 	}
 
-	guiClient.player = &types.PlayerDetails{
-		Player: &types.Player{
-			Name:     guiClient.username,
-			EntityId: entity.Id,
-		},
-		Entity: entity,
-	}
+	guiClient.player = types.NewPlayerDetails(
+		types.NewPlayer(guiClient.username, []byte{}, entity.Id, types.AbsolutePoint{}),
+		entity)
 
 	return nil
 }

@@ -23,7 +23,7 @@ var _ = Describe("Chunk", func() {
 	})
 
 	It("implicitly generates a chunk", func() {
-		chunk, err := h.World.Chunk(&types.Point{X: 0, Y: 0, Z: 0})
+		chunk, err := h.World.Chunk(types.Point{X: 0, Y: 0, Z: 0})
 		Expect(err).To(BeNil())
 
 		expectedVoxelCount := C.CHUNK_SIZE * C.CHUNK_SIZE * C.CHUNK_SIZE
@@ -34,7 +34,7 @@ var _ = Describe("Chunk", func() {
 		expectedVoxelCount := C.CHUNK_SIZE * C.CHUNK_SIZE * C.CHUNK_SIZE
 
 		for i := 0; i < 1000; i++ {
-			chunk, err := h.World.GenerateChunk(&types.Point{X: 0, Y: 0, Z: 0})
+			chunk, err := h.World.GenerateChunk(types.Point{X: 0, Y: 0, Z: 0})
 			Expect(err).To(BeNil())
 			Expect(len(chunk.Voxels)).To(Equal(expectedVoxelCount))
 		}

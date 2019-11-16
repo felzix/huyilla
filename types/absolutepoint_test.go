@@ -21,21 +21,21 @@ var _ = Describe("Point Calculations", func() {
 	It("creates an absolute point", func() {
 		p := NewAbsolutePoint(-1, 1, 2, 3, 4, 5)
 
-		Expect(p.Chunk.Equals(&Point{X: -1, Y: 1, Z: 2})).To(Equal(true))
-		Expect(p.Voxel.Equals(&Point{X: 3, Y: 4, Z: 5})).To(Equal(true))
+		Expect(p.Chunk.Equals(NewPoint(-1, 1, 2))).To(Equal(true))
+		Expect(p.Voxel.Equals(Point{X: 3, Y: 4, Z: 5})).To(Equal(true))
 	})
 
 	It("creates a point", func() {
 		p := NewPoint(-1, 1, 2)
 
-		Expect(p.Equals(&Point{X: -1, Y: 1, Z: 2})).To(Equal(true))
+		Expect(p.Equals(Point{X: -1, Y: 1, Z: 2})).To(Equal(true))
 	})
 
 	It("creates a random point", func() {
 		rand.Seed(42)
 		p := RandomPoint(16)
 
-		Expect(p.Equals(&Point{X: 3, Y: 11, Z: 8})).To(Equal(true))
+		Expect(p.Equals(NewPoint(3, 11, 8))).To(Equal(true))
 	})
 
 	It("distance calc", func() {
@@ -80,19 +80,19 @@ var _ = Describe("Point Calculations", func() {
 	})
 
 	It("derives chunkSize", func() {
-		const CHUNK_SIZE = 16
+		const chunkSize = 16
 		p := NewAbsolutePoint(1, 1, 1, 1, 0, 1)
-		d := p.Derive(-CHUNK_SIZE, -CHUNK_SIZE*2, +CHUNK_SIZE)
+		d := p.Derive(-chunkSize, -chunkSize*2, +chunkSize)
 		e := NewAbsolutePoint(0, -1, 2, 1, 0, 1)
 		Expect(d.Equals(e)).To(Equal(true), fmt.Sprintf("%s != %s", d.ToString(), e.ToString()))
 	})
 
 	It("knows its neighbors", func() {
-		const CHUNK_SIZE = 16
+		const chunkSize = 16
 		p := NewAbsolutePoint(1, 2, 3, 0, 2, 15)
-		n := p.Neighbors(CHUNK_SIZE)
+		n := p.Neighbors(chunkSize)
 
-		test := func(i int, e *AbsolutePoint) {
+		test := func(i int, e AbsolutePoint) {
 			Expect(n[i].Equals(e)).To(Equal(true), fmt.Sprintf("neighbor %d: %s != %s", i, n[i].ToString(), e.ToString()))
 		}
 

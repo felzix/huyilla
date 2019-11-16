@@ -8,7 +8,7 @@ import (
 type LakeWorldGenerator struct {
 	worldSeed  uint64
 	lakeRadius float64
-	lakeCenter *types.Point
+	lakeCenter types.Point
 }
 
 func NewLakeWorldGenerator(lakeRadius uint8) *LakeWorldGenerator {
@@ -19,13 +19,13 @@ func NewLakeWorldGenerator(lakeRadius uint8) *LakeWorldGenerator {
 
 func (gen *LakeWorldGenerator) SetupForWorld() {}
 
-func (gen *LakeWorldGenerator) SetupForChunk(_ *types.Point) {
+func (gen *LakeWorldGenerator) SetupForChunk(_ types.Point) {
 	center := types.RandomPoint(C.CHUNK_SIZE)
 	center.Z = 0
 	gen.lakeCenter = center
 }
 
-func (gen *LakeWorldGenerator) GenVoxel(p *types.AbsolutePoint) types.Voxel {
+func (gen *LakeWorldGenerator) GenVoxel(p types.AbsolutePoint) types.Voxel {
 	m := MATERIAL
 	f := FORM
 

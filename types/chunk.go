@@ -4,22 +4,37 @@ import (
 	C "github.com/felzix/huyilla/constants"
 )
 
-func (m Chunk) GetVoxel(x, y, z uint64) Voxel {
-	index := m.GetVoxelIndex(x, y, z)
-	return Voxel(m.Voxels[index])
+type Chunk struct {
+	Tick Age
+	Voxels []uint64
+	Entities []EntityId
+	Items []ItemId
 }
 
-func (m Chunk) GetVoxelIndex(x, y, z uint64) int {
+func NewChunk(tick Age, chunkLength uint64) *Chunk {
+	return &Chunk{
+		Tick:   tick,
+		Voxels: make([]uint64, chunkLength),
+		Entities: make([]EntityId, 0),
+		Items: make([]ItemId, 0),
+	}
+}
+
+func (c Chunk) GetVoxel(x, y, z uint64) Voxel {
+	index := c.GetVoxelIndex(x, y, z)
+	return Voxel(c.Voxels[index])
+}
+
+func (c Chunk) GetVoxelIndex(x, y, z uint64) int {
 	return CalculateVoxelIndex(x, y, z)
 }
 
-func (m DetailedChunk) GetVoxel(x, y, z uint64) Voxel {
-	index := m.GetVoxelIndex(x, y, z)
-	return Voxel(m.Voxels[index])
+func (c Chunk) Marshal() ([]byte, error) {
+	return ToBytes(c)
 }
 
-func (m DetailedChunk) GetVoxelIndex(x, y, z uint64) int {
-	return CalculateVoxelIndex(x, y, z)
+func (c *Chunk) Unmarshal(blob []byte) error {
+	return FromBytes(blob, &c)
 }
 
 func CalculateVoxelIndex(x, y, z uint64) int {

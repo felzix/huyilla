@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"fmt"
 	C "github.com/felzix/huyilla/constants"
 	"github.com/felzix/huyilla/types"
 	"github.com/pkg/errors"
@@ -11,13 +10,13 @@ import (
 type Engine struct {
 	sync.Mutex
 
-	World   *World
+	World   *types.World
 	Actions []*types.Action
 	Secret  []byte
 }
 
-func NewEngine(seed uint64, generator WorldGenerator, db Database) (*Engine, error) {
-	world, err := NewWorld(seed, generator, db)
+func NewEngine(seed uint64, generator types.WorldGenerator, db types.Database) (*Engine, error) {
+	world, err := types.NewWorld(seed, generator, db)
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +42,7 @@ func (engine *Engine) Tick() error {
 
 	vitalizedVoxels := make([]types.Point, C.PASSIVE_VITALITY)
 	for i := 0; i < C.PASSIVE_VITALITY; i++ {
-		vitalizedVoxels[i] = *types.RandomPoint(C.CHUNK_SIZE)
+		vitalizedVoxels[i] = types.RandomPoint(C.CHUNK_SIZE)
 	}
 
 	for i := 0; i < len(players); i++ {
@@ -56,15 +55,15 @@ func (engine *Engine) Tick() error {
 					if chunk, err := engine.World.Chunk(p); err == nil {
 						// voxel physics
 						for i := 0; i < C.PASSIVE_VITALITY; i++ {
-							point := types.AbsolutePoint{Chunk: p, Voxel: &vitalizedVoxels[i]}
-							if err := engine.voxelPhysics(chunk, &point); err != nil {
+							point := types.AbsolutePoint{Chunk: p, Voxel: vitalizedVoxels[i]}
+							if err := engine.voxelPhysics(chunk, point); err != nil {
 								return errors.Wrap(err, "voxel physics of random voxels")
 							}
 						}
 
 						// entity physics
-						for i := 0; i < len(chunk.Entities); i++ {
-							entity, err := engine.World.Entity(chunk.Entities[i])
+						for _, id := range chunk.Entities {
+							entity, err := engine.World.Entity(id)
 							if err != nil {
 								return err
 							}
@@ -86,20 +85,10 @@ func (engine *Engine) Tick() error {
 	engine.Unlock()
 
 	for _, action := range actions {
-		var fn func(*types.Action) (bool, error)
-
-		switch a := action.Action.(type) {
-		case *types.Action_Move:
-			fn = engine.Move
-		default:
-			// only log error - if the action is broken then don't block the engine
-			return errors.New(fmt.Sprintf("Invalid action %v", a))
-		}
-
-		if success, err := fn(action); success {
-			// TODO success no error
+		if success, err := action.Apply(engine.World); success {
+			Log.Debug("success no error")
 		} else if err == nil {
-			// TODO failure no error
+			Log.Debug("failure no error")
 		} else {
 			return errors.Wrap(err, "action failure")
 		}
@@ -108,7 +97,7 @@ func (engine *Engine) Tick() error {
 	return nil
 }
 
-func (engine *Engine) voxelPhysics(chunk *types.Chunk, location *types.AbsolutePoint) error {
+func (engine *Engine) voxelPhysics(chunk *types.Chunk, location types.AbsolutePoint) error {
 	return nil
 }
 

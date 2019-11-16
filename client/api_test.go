@@ -134,7 +134,7 @@ var _ = Describe("HTTP API", func() {
 		It("gets world age", func() {
 			age, err := api.GetWorldAge()
 			Expect(err).To(BeNil())
-			Expect(age).To(Equal(uint64(1)))
+			Expect(age).To(Equal(types.Age(1)))
 		})
 
 		It("gets player", func() {
@@ -146,10 +146,11 @@ var _ = Describe("HTTP API", func() {
 		})
 
 		It("gets one chunk in range", func() {
-			chunks, err := api.GetChunks(types.NewPoint(0, 0, constants.ACTIVE_CHUNK_RADIUS), 0)
+			point := types.NewPoint(0, 0, constants.ACTIVE_CHUNK_RADIUS)
+			chunks, err := api.GetChunks(types.NewPoint(point.X, point.Y, point.Z), 0)
 			Expect(err).To(BeNil())
 			Expect(len(chunks.Chunks)).To(Equal(1))
-			Expect(len(chunks.Chunks[0].Voxels)).To(Equal(constants.CHUNK_LENGTH))
+			Expect(len(chunks.Chunks[point].Voxels)).To(Equal(constants.CHUNK_LENGTH))
 		})
 
 		It("cannot get a chunk out of range", func() {
@@ -166,7 +167,7 @@ var _ = Describe("HTTP API", func() {
 
 			originalY := player.Location.Voxel.Y
 			player.Location.Voxel.Y++
-			err = api.IssueMoveAction(player.Location)
+			err = api.IssueMoveAction(&types.Player{EntityId: player.Id}, player.Location)
 			Expect(err).To(BeNil())
 
 			err = huyilla.Tick()
